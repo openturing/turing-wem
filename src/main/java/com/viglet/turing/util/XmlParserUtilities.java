@@ -12,7 +12,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 
-import com.viglet.turing.beans.NsteinTag;
+import com.viglet.turing.beans.TuringTag;
 import com.viglet.turing.mappers.CTDMappings;
 import com.viglet.turing.mappers.MappingDefinitions;
 import com.vignette.logging.context.ContextLogger;
@@ -55,7 +55,7 @@ public class XmlParserUtilities {
 			System.out.println("\nCommon Data: ");
 			CTDMappings ctdMappings = mappings.get(entry.getKey());
 			for (String key : ctdMappings.getIndexAttrs()) {
-				for (NsteinTag tag : ctdMappings.getIndexAttrTag(key)) {
+				for (TuringTag tag : ctdMappings.getIndexAttrTag(key)) {
 					System.out.println("Key: " + key + " Tag: " + tag.getTagName() + " content Type: "
 							+ tag.getSrcAttributeType());
 				}
@@ -100,14 +100,14 @@ public class XmlParserUtilities {
 	// Loading mapping definitions
 	public static HashMap<String, CTDMappings> readCTDMappings(Element rootElement) {
 		HashMap<String, CTDMappings> mappings = new HashMap<String, CTDMappings>();
-		HashMap<String, ArrayList<NsteinTag>> commonMappings = readIndexAttributeMappings(rootElement,
+		HashMap<String, ArrayList<TuringTag>> commonMappings = readIndexAttributeMappings(rootElement,
 				TAG_COMMON_INDEX_DATA);
 		NodeList ctdMappingDefList = rootElement.getElementsByTagName(TAG_MAPPING_DEF);
 		for (int i = 0; i < ctdMappingDefList.getLength(); i++) {
 			Element mappingDefinition = (Element) ctdMappingDefList.item(i);
 			if (mappingDefinition.hasAttribute(TAG_ATT_MAPPING_DEF)) {
 				String ctdXmlName = mappingDefinition.getAttribute(TAG_ATT_MAPPING_DEF);
-				HashMap<String, ArrayList<NsteinTag>> ctdSpecificMappings = readIndexAttributeMappings(
+				HashMap<String, ArrayList<TuringTag>> ctdSpecificMappings = readIndexAttributeMappings(
 						(Element) ctdMappingDefList.item(i), TAG_INDEX_DATA);
 				CTDMappings ctdMapping = new CTDMappings(commonMappings, ctdSpecificMappings);
 				if (mappingDefinition.hasAttribute(TAG_ATT_CUSTOM_CLASS)) {
@@ -141,9 +141,9 @@ public class XmlParserUtilities {
 		return mscConfig;
 	}
 
-	public static HashMap<String, ArrayList<NsteinTag>> readIndexAttributeMappings(Element rootElement,
+	public static HashMap<String, ArrayList<TuringTag>> readIndexAttributeMappings(Element rootElement,
 			String tagName) {
-		HashMap<String, ArrayList<NsteinTag>> commonMappings = new HashMap<String, ArrayList<NsteinTag>>();
+		HashMap<String, ArrayList<TuringTag>> commonMappings = new HashMap<String, ArrayList<TuringTag>>();
 		NodeList commonMappingList = rootElement.getElementsByTagName(tagName);
 		for (int i = 0; i < commonMappingList.getLength(); i++) {
 			loadAtributesFromAttrsElement((Element) commonMappingList.item(i), commonMappings);
@@ -152,7 +152,7 @@ public class XmlParserUtilities {
 	}
 
 	public static void loadAtributesFromAttrsElement(Element AttrsElement,
-			HashMap<String, ArrayList<NsteinTag>> indexAttrMap) {
+			HashMap<String, ArrayList<TuringTag>> indexAttrMap) {
 		NodeList srcNodeList = AttrsElement.getElementsByTagName("srcAttr");
 		for (int i = 0; i < srcNodeList.getLength(); i++) {
 			Element srcAttrNode = (Element) srcNodeList.item(i);
@@ -213,7 +213,7 @@ public class XmlParserUtilities {
 						log.debug("Node.getLength(): " + tagList.getLength());
 					}
 
-					ArrayList<NsteinTag> nsteinTags = new ArrayList<NsteinTag>();
+					ArrayList<TuringTag> TuringTags = new ArrayList<TuringTag>();
 
 					for (int nodePos = 0; nodePos < tagList.getLength(); nodePos++) {
 						if (log.isDebugEnabled()) {
@@ -229,13 +229,13 @@ public class XmlParserUtilities {
 							if ((srcAttXmlName == null) && (srcAttClassName != null)) {
 								srcAttXmlName = "CLASSNAME_" + tagName;
 							}
-							nsteinTags.add(new NsteinTag(tagName, srcAttXmlName, srcAttValueType, srcAttRelation,
+							TuringTags.add(new TuringTag(tagName, srcAttXmlName, srcAttValueType, srcAttRelation,
 									srcAttClassName, srcMandatory, srcUniqueValues));
 
 						}
 					}
-					if (nsteinTags.size() > 0) {
-						indexAttrMap.put(srcAttXmlName, nsteinTags);
+					if (TuringTags.size() > 0) {
+						indexAttrMap.put(srcAttXmlName, TuringTags);
 					}
 				}
 			}

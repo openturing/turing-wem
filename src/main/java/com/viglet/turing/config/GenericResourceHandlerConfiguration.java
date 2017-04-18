@@ -22,7 +22,7 @@ import java.util.Properties;
 public class GenericResourceHandlerConfiguration implements IHandlerConfiguration {
 
 	public static final String RESOURCE_TYPE = "Properties";
-	public static final String RESOURCE_NAME = "OTSN";
+	public static final String RESOURCE_NAME = "Turing";
 
 	// <string, CollabClientServiceConfigAdapter>
 	private String otsnServer;

@@ -1,0 +1,8 @@
+cda.default.server=localhost
+cda.default.port=80
+cda.default.contextname=sites
+turing.server.host=api.viglet.ai
+turing.server.port=443
+turing.server.protocol=https
+turing.locale=pt
+turing.mappingsxml=/opt/viglet/turing/conf/CTD-Turing-Mappings.xml

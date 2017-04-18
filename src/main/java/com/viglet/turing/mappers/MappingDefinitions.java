@@ -2,21 +2,14 @@ package com.viglet.turing.mappers;
 
 import java.util.HashMap;
 
-import com.viglet.turing.broker.OTSN;
+import com.viglet.turing.broker.Turing;
 import com.vignette.logging.context.ContextLogger;
 
-/**
- * Created by IntelliJ IDEA.
- * User: spinnama
- * Date: Feb 3, 2011
- * Time: 11:38:52 AM
- * To change this template use File | Settings | File Templates.
- */
 public class MappingDefinitions {
     private HashMap<String,CTDMappings> mappingDefinitions;
     private HashMap<String,String> mscConfig;
     private String mappingsXML;
- 	private static final ContextLogger log = ContextLogger.getLogger(OTSN.class);
+ 	private static final ContextLogger log = ContextLogger.getLogger(Turing.class);
 
     public String getMappingsXML() {
         return mappingsXML;

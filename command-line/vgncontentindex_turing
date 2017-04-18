@@ -50,8 +50,7 @@ CP=$CP$SEP$CLASSDIR/apache-httpcore.jar
 CP=$CP$SEP$CLASSDIR/apache-httpmime.jar
 CP=$CP$SEP$CLASSDIR/jackson-core.jar
 
-CP=$CP$SEP$CLASSDIR/wem-nstein.jar
-CP=$CP$SEP/opentext/otwork/WEM/Extensions/Extension_Nstein/src/config/
+CP=$CP$SEP$CLASSDIR/turing-wem.jar
 # JDBC drivers
 JDBCDIR=$BINDIR/../jdbc
 CP=$CP$SEP$JDBCDIR/ojdbc6.jar
@@ -62,4 +61,4 @@ CP=$CP$SEP$BINDIR/.
 CP=$CP$SEP$CLASSPATH
 
 
-exec $JAVAPROG $JAVAARGS -cp $CP -Xmx512m com.opentext.demo.otsn.apps.contentIndex.ContentIndexDriver "$@"
+exec $JAVAPROG $JAVAARGS -cp $CP -Xmx512m com.viglet.turing.apps.contentIndex.ContentIndexDriver "$@"

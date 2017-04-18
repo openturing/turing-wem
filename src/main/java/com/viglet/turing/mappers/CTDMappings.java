@@ -6,19 +6,19 @@ import java.util.HashSet;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import com.viglet.turing.beans.NsteinTag;
+import com.viglet.turing.beans.TuringTag;
 import com.vignette.logging.context.ContextLogger;
 
 public class CTDMappings {
-	private HashMap<String, ArrayList<NsteinTag>> commonDataMappings;
-	private HashMap<String, ArrayList<NsteinTag>> ctdSpecificMappings;
+	private HashMap<String, ArrayList<TuringTag>> commonDataMappings;
+	private HashMap<String, ArrayList<TuringTag>> ctdSpecificMappings;
 	private String customClassName = null;
 	private String classValidToIndex = null;
 	private static final ContextLogger log = ContextLogger.getLogger(CTDMappings.class);
 
-	public ArrayList<NsteinTag> getIndexAttrTag(String ctdAttribute) {
+	public ArrayList<TuringTag> getIndexAttrTag(String ctdAttribute) {
 
-		ArrayList<NsteinTag> indexAttrTags = null;
+		ArrayList<TuringTag> indexAttrTags = null;
 		if (log.isDebugEnabled()) {
 			log.debug("CTDMappings attribute: " + ctdAttribute);
 		}
@@ -26,7 +26,7 @@ public class CTDMappings {
 		if (ctdSpecificMappings != null) {
 			indexAttrTags = ctdSpecificMappings.get(ctdAttribute);
 			if (indexAttrTags != null) {
-				for (NsteinTag indexAttrTag : indexAttrTags)
+				for (TuringTag indexAttrTag : indexAttrTags)
 					if (commonDataMappings != null && indexAttrTag != null && indexAttrTag.getSrcClassName() == null) {
 
 						if (commonDataMappings.get("CLASSNAME_" + indexAttrTag.getTagName()) != null) {
@@ -43,13 +43,13 @@ public class CTDMappings {
 		return indexAttrTags != null ? indexAttrTags : null;
 	}
 
-	public NsteinTag findIndexTagInMappings(String nsteinTagName) {
-		NsteinTag indexAttrTag = null;
-		NsteinTag dummyNsteinTag = new NsteinTag(nsteinTagName, null, null, null, null, false, false);
-		if (ctdSpecificMappings != null && ctdSpecificMappings.values().contains(dummyNsteinTag)) {
-			for (ArrayList<NsteinTag> nTags : ctdSpecificMappings.values()) {
-				for (NsteinTag nTag : nTags) {
-					if (nTag.getTagName().equals(nsteinTagName)) {
+	public TuringTag findIndexTagInMappings(String TuringTagName) {
+		TuringTag indexAttrTag = null;
+		TuringTag dummyTuringTag = new TuringTag(TuringTagName, null, null, null, null, false, false);
+		if (ctdSpecificMappings != null && ctdSpecificMappings.values().contains(dummyTuringTag)) {
+			for (ArrayList<TuringTag> nTags : ctdSpecificMappings.values()) {
+				for (TuringTag nTag : nTags) {
+					if (nTag.getTagName().equals(TuringTagName)) {
 						if (log.isDebugEnabled()) {
 							log.debug("Found the value in ctdSpecificMappings");
 						}
@@ -59,10 +59,10 @@ public class CTDMappings {
 			}
 		}
 		if (indexAttrTag == null && commonDataMappings != null
-				&& commonDataMappings.values().contains(dummyNsteinTag)) {
-			for (ArrayList<NsteinTag> nTags : commonDataMappings.values()) {
-				for (NsteinTag nTag : nTags) {
-					if (nTag.getTagName().equals(nsteinTagName)) {
+				&& commonDataMappings.values().contains(dummyTuringTag)) {
+			for (ArrayList<TuringTag> nTags : commonDataMappings.values()) {
+				for (TuringTag nTag : nTags) {
+					if (nTag.getTagName().equals(TuringTagName)) {
 						if (log.isDebugEnabled()) {
 							log.debug("Found the value in commonDataMappings");
 						}
@@ -79,18 +79,18 @@ public class CTDMappings {
 		Set<String> returnSet = new HashSet<String>();
 
 		HashMap<String, String> tagCtds = new HashMap<String, String>();
-		for (Entry<String, ArrayList<NsteinTag>> entryCtd : ctdSpecificMappings.entrySet()) {
+		for (Entry<String, ArrayList<TuringTag>> entryCtd : ctdSpecificMappings.entrySet()) {
 			String keyCtd = entryCtd.getKey();
-			for (NsteinTag tagCtd : entryCtd.getValue()) {
+			for (TuringTag tagCtd : entryCtd.getValue()) {
 				tagCtds.put(tagCtd.getTagName(), keyCtd);
 				returnSet.add(keyCtd);
 			}
 		}
 
 		// Add only Mandatory Attributes
-		for (Entry<String, ArrayList<NsteinTag>> entry : commonDataMappings.entrySet()) {
+		for (Entry<String, ArrayList<TuringTag>> entry : commonDataMappings.entrySet()) {
 			String key = entry.getKey();
-			for (NsteinTag tag : entry.getValue()) {
+			for (TuringTag tag : entry.getValue()) {
 				// Doesn't repeat tags that exist in Ctd
 				if (tag.getSrcMandatory()) {
 					if ((!key.startsWith("CLASSNAME_"))
@@ -110,25 +110,25 @@ public class CTDMappings {
 		return returnSet;
 	}
 
-	public CTDMappings(HashMap<String, ArrayList<NsteinTag>> commonDataMappings,
-			HashMap<String, ArrayList<NsteinTag>> ctdSpecificMappings) {
+	public CTDMappings(HashMap<String, ArrayList<TuringTag>> commonDataMappings,
+			HashMap<String, ArrayList<TuringTag>> ctdSpecificMappings) {
 		this.commonDataMappings = commonDataMappings;
 		this.ctdSpecificMappings = ctdSpecificMappings;
 	}
 
-	public void setCommonDataMappings(HashMap<String, ArrayList<NsteinTag>> commonDataMappings) {
+	public void setCommonDataMappings(HashMap<String, ArrayList<TuringTag>> commonDataMappings) {
 		this.commonDataMappings = commonDataMappings;
 	}
 
-	public void setCtdSpecificMappings(HashMap<String, ArrayList<NsteinTag>> ctdSpecificMappings) {
+	public void setCtdSpecificMappings(HashMap<String, ArrayList<TuringTag>> ctdSpecificMappings) {
 		this.ctdSpecificMappings = ctdSpecificMappings;
 	}
 
-	public HashMap<String, ArrayList<NsteinTag>> getCommonDataMappings() {
+	public HashMap<String, ArrayList<TuringTag>> getCommonDataMappings() {
 		return commonDataMappings;
 	}
 
-	public HashMap<String, ArrayList<NsteinTag>> getCtdSpecificMappings() {
+	public HashMap<String, ArrayList<TuringTag>> getCtdSpecificMappings() {
 		return ctdSpecificMappings;
 	}
 

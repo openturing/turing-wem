@@ -6,11 +6,7 @@ import com.vignette.as.client.javabean.ManagedObject;
 import com.vignette.as.server.event.AsDeploymentEvent;
 import com.vignette.logging.context.ContextLogger;
 
-/**
- * User: Bertrand de Coatpont
- * Date: 13/05/2010
- * Time: 21:26:23
- */
+
 public class DeploymentHandler {
 
     /**

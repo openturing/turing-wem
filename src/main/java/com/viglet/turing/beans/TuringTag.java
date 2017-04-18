@@ -1,13 +1,6 @@
 package com.viglet.turing.beans;
 
-/**
- * Created by IntelliJ IDEA.
- * User: spinnama
- * Date: Feb 2, 2011
- * Time: 3:05:45 PM
- * To change this template use File | Settings | File Templates.
- */
-public class NsteinTag {
+public class TuringTag {
     private String tagName;
     private String srcAttributeRelation;
     private String srcAttributeType;
@@ -16,7 +9,7 @@ public class NsteinTag {
     private boolean srcMandatory;
     private boolean srcUniqueValues;
     
-    public NsteinTag(String tagName,String srcAttribute,String srcAttributeType, String srcAttributeRelation, String srcClassName, boolean srcMandatory, boolean srcUniqueValues) {
+    public TuringTag(String tagName,String srcAttribute,String srcAttributeType, String srcAttributeRelation, String srcClassName, boolean srcMandatory, boolean srcUniqueValues) {
         setTagName(tagName);
         setSrcAttribute(srcAttribute);
         setSrcAttributeType(srcAttributeType);
@@ -26,7 +19,7 @@ public class NsteinTag {
         setSrcUniqueValues(srcUniqueValues);
     }
 
-    public NsteinTag() {
+    public TuringTag() {
     }
 
     public String getSrcAttributeType() {
@@ -80,8 +73,8 @@ public class NsteinTag {
 
     @Override
     public boolean equals(Object obj){
-        if(obj instanceof NsteinTag){
-            return this.getTagName().equals(((NsteinTag)obj).getTagName());
+        if(obj instanceof TuringTag){
+            return this.getTagName().equals(((TuringTag)obj).getTagName());
         }else{
             return false;
         }

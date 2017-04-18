@@ -13,7 +13,7 @@ public class Indexer {
         if (log.isDebugEnabled()) {
         	log.debug("Creating Object in OTSN index");
         }
-		OTSN.indexCreate( mo, config);
+		Turing.indexCreate( mo, config);
     	return true;
     }
 
@@ -21,7 +21,7 @@ public class Indexer {
         if (log.isDebugEnabled()) {
         	log.debug("Updating Object in OTSN index");
         }
-        OTSN.indexCreate( mo, config);
+        Turing.indexCreate( mo, config);
         return true;
     }
 
@@ -29,7 +29,7 @@ public class Indexer {
         if (log.isDebugEnabled()) {
         	log.debug("Deleting Object in OTSN index");
         }
-        OTSN.indexDelete( GUID, config);
+        Turing.indexDelete( GUID, config);
         return true;
     }
 
@@ -37,7 +37,7 @@ public class Indexer {
         if (log.isDebugEnabled()) {
         	log.debug("Deleting Object in OTSN index");
         }
-        OTSN.indexDeleteByType(typeName, config);
+        Turing.indexDeleteByType(typeName, config);
         return true;
     }
 
@@ -45,7 +45,7 @@ public class Indexer {
         if (log.isDebugEnabled()) {
         	log.debug("Creating Object in OTSN index");
         }
-		OTSN.indexCreate(mo, typeName, config);
+		Turing.indexCreate(mo, typeName, config);
 		return true;
 	}
 

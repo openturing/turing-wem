@@ -22,7 +22,7 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.w3c.dom.Document;
 
-import com.viglet.turing.beans.NsteinTag;
+import com.viglet.turing.beans.TuringTag;
 import com.viglet.turing.config.GenericResourceHandlerConfiguration;
 import com.viglet.turing.config.IHandlerConfiguration;
 import com.viglet.turing.exceptions.MappingNotFoundException;
@@ -49,24 +49,17 @@ import com.vignette.ext.templating.util.ContentUtil;
 import com.vignette.ext.templating.util.RequestContext;
 import com.vignette.logging.context.ContextLogger;
 
-/**
- * User: Bertrand de Coatpont Date: 13/05/2010 Time: 21:26:23
- */
-/*
- * Updated getXML() to fetch host, port, cdaContext, siteFormat from config
- * space
- */
 
-public class OTSN {
+public class Turing {
 
 	// Initializing the logger component - log4j.properties must be in the
 	// classpath
 	private static MappingDefinitions mappingDefinitions = null;
-	private static final ContextLogger log = ContextLogger.getLogger(OTSN.class);
+	private static final ContextLogger log = ContextLogger.getLogger(Turing.class);
 
-	private static boolean isTMETag(String tagName) {
-		return (tagName.equals("tmeSentimentTone") || tagName.equals("tmeGL") || tagName.equals("tmeON")
-				|| tagName.equals("tmePN") || tagName.equals("tmeSentimentSubj") || tagName.equals("tmeSimpleConcept"));
+	private static boolean isTuringTag(String tagName) {
+		return (tagName.equals("turingSentimentTone") || tagName.equals("turingGL") || tagName.equals("turingON")
+				|| tagName.equals("turingPN") || tagName.equals("turingSentimentSubj") || tagName.equals("turingSimpleConcept"));
 	}
 
 	private static boolean isSinlgeValueTMETag(String tagName) {
@@ -96,7 +89,7 @@ public class OTSN {
 					+ ci.getObjectType().getData().getName());
 		}
 
-		NsteinTag typeTag = ctdMappings.findIndexTagInMappings("type");
+		TuringTag typeTag = ctdMappings.findIndexTagInMappings("type");
 		if (typeTag == null || ci.getAttributeValue(typeTag.getSrcAttribute()) == null
 				|| ci.getAttributeValue(typeTag.getSrcAttribute()).toString().trim().equals("")) {
 			xml.append("<type>" + ci.getObjectType().getData().getName() + "</type>");
@@ -120,7 +113,7 @@ public class OTSN {
 				"<original_date>" + modDate + "</original_date><last_published>" + publishDate + "</last_published>");
 
 		for (String key : ctdMappings.getIndexAttrs()) {
-			for (NsteinTag tag : ctdMappings.getIndexAttrTag(key)) {
+			for (TuringTag tag : ctdMappings.getIndexAttrTag(key)) {
 				if (key != null && tag != null && tag.getTagName() != null) {
 
 					if (log.isDebugEnabled()) {
@@ -196,7 +189,7 @@ public class OTSN {
 					"Mapping definition is not found in the mappingXML for the CTD: " + ci.getTypeName());
 		}
 
-		NsteinTag typeTag = ctdMappings.findIndexTagInMappings("type");
+		TuringTag typeTag = ctdMappings.findIndexTagInMappings("type");
 		if (typeTag == null || ci.get(typeTag.getSrcAttribute()) == null
 				|| ci.get(typeTag.getSrcAttribute()).toString().trim().equals("")) {
 			xml.append("<type>" + ci.getTypeName() + "</type>");
@@ -220,7 +213,7 @@ public class OTSN {
 				"<original_date>" + modDate + "</original_date><last_published>" + publishDate + "</last_published>");
 
 		for (String key : ctdMappings.getIndexAttrs()) {
-			for (NsteinTag tag : ctdMappings.getIndexAttrTag(key)) {
+			for (TuringTag tag : ctdMappings.getIndexAttrTag(key)) {
 				if (key != null && tag != null && tag.getTagName() != null) {
 
 					if (log.isDebugEnabled()) {
@@ -259,7 +252,7 @@ public class OTSN {
 	}
 
 	public static HashMap<String, List<String>> attributeXML(ContentInstance ci,
-			HashMap<String, List<String>> attributesDefs, NsteinTag tag, String key, IHandlerConfiguration config)
+			HashMap<String, List<String>> attributesDefs, TuringTag tag, String key, IHandlerConfiguration config)
 			throws Exception {
 
 		// Relator
@@ -305,7 +298,7 @@ public class OTSN {
 
 	@SuppressWarnings("unchecked")
 	public static HashMap<String, List<String>> attributeXML(ExternalResourceObject ci,
-			HashMap<String, List<String>> attributesDefs, NsteinTag tag, String key, IHandlerConfiguration config)
+			HashMap<String, List<String>> attributesDefs, TuringTag tag, String key, IHandlerConfiguration config)
 			throws Exception {
 
 		// Relator
@@ -350,7 +343,7 @@ public class OTSN {
 	}
 
 	public static HashMap<String, List<String>> attributeByWidget(ContentInstance ci,
-			HashMap<String, List<String>> attributesDefs, NsteinTag tag, String key, AttributeData attributeData,
+			HashMap<String, List<String>> attributesDefs,TuringTag tag, String key, AttributeData attributeData,
 			IHandlerConfiguration config) throws Exception {
 
 		String widgetName = null;
@@ -381,7 +374,7 @@ public class OTSN {
 	}
 
 	public static HashMap<String, List<String>> attributeByClass(ContentInstance ci,
-			HashMap<String, List<String>> attributesDefs, NsteinTag tag, String key, AttributeData attributeData,
+			HashMap<String, List<String>> attributesDefs, TuringTag tag, String key, AttributeData attributeData,
 			IHandlerConfiguration config) throws Exception {
 		if (attributesDefs.get(tag.getTagName()) == null) {
 			attributesDefs.put(tag.getTagName(), new ArrayList<String>());
@@ -411,7 +404,7 @@ public class OTSN {
 	}
 
 	public static HashMap<String, List<String>> attributeByClass(ExternalResourceObject ci,
-			HashMap<String, List<String>> attributesDefs, NsteinTag tag, String key, String attributeData,
+			HashMap<String, List<String>> attributesDefs, TuringTag tag, String key, String attributeData,
 			IHandlerConfiguration config) throws Exception {
 		if (attributesDefs.get(tag.getTagName()) == null) {
 			attributesDefs.put(tag.getTagName(), new ArrayList<String>());
@@ -441,7 +434,7 @@ public class OTSN {
 	}
 
 	public static HashMap<String, List<String>> attributeContentSelectUpdate(ContentInstance ci,
-			HashMap<String, List<String>> attributesDefs, NsteinTag tag, String key, AttributeData attributeData,
+			HashMap<String, List<String>> attributesDefs, TuringTag tag, String key, AttributeData attributeData,
 			IHandlerConfiguration config) throws Exception {
 
 		ContentInstance ciRelated = (ContentInstance) ManagedObject
@@ -466,7 +459,7 @@ public class OTSN {
 			}
 
 			for (String keyRelated : ctdRelatedMappings.getIndexAttrs()) {
-				for (NsteinTag tagRelated : ctdRelatedMappings.getIndexAttrTag(keyRelated)) {
+				for (TuringTag tagRelated : ctdRelatedMappings.getIndexAttrTag(keyRelated)) {
 					if (keyRelated != null && tagRelated != null && tagRelated.getTagName() != null
 							&& tagRelated.getTagName().equals("url")) {
 
@@ -486,7 +479,7 @@ public class OTSN {
 	}
 
 	public static HashMap<String, List<String>> attributeXMLUpdate(ContentInstance ci,
-			HashMap<String, List<String>> attributesDefs, NsteinTag tag, String key, AttributeData attributeData,
+			HashMap<String, List<String>> attributesDefs, TuringTag tag, String key, AttributeData attributeData,
 			IHandlerConfiguration config) throws Exception {
 
 		if (log.isDebugEnabled()) {
@@ -497,7 +490,7 @@ public class OTSN {
 		// Semantic Attributes
 		if (attributeData != null && attributeData.getValue().toString() != null
 				&& !attributeData.getValue().toString().trim().equals("")) {
-			if (isTMETag(tag.getTagName())) {
+			if (isTuringTag(tag.getTagName())) {
 				List<String> listAttributeValues = new ArrayList<String>();
 				StringTokenizer tokenizer = new StringTokenizer(attributeData.getValue().toString(), ",");
 				while (tokenizer.hasMoreTokens()) {
@@ -523,7 +516,7 @@ public class OTSN {
 	}
 
 	public static HashMap<String, List<String>> attributeXMLUpdate(ExternalResourceObject ci,
-			HashMap<String, List<String>> attributesDefs, NsteinTag tag, String key, String attributeData,
+			HashMap<String, List<String>> attributesDefs, TuringTag tag, String key, String attributeData,
 			IHandlerConfiguration config) throws Exception {
 
 		if (log.isDebugEnabled()) {
@@ -533,7 +526,7 @@ public class OTSN {
 		}
 		// Semantic Attributes
 		if (attributeData != null && !attributeData.trim().equals("")) {
-			if (isTMETag(tag.getTagName())) {
+			if (isTuringTag(tag.getTagName())) {
 				StringTokenizer tokenizer = new StringTokenizer(attributeData, ",");
 				while (tokenizer.hasMoreTokens()) {
 					String token = tokenizer.nextToken();

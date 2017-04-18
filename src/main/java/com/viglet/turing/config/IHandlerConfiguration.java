@@ -1,13 +1,5 @@
 package com.viglet.turing.config;
 
-/**
- * User: bedecoat
- * Date: 13/09/2010
- * Time: 21:43:29
- * To change this template use File | Settings | File Templates.
- */
-
-/* Updated on 02/11 to include cda properties*/
 public interface IHandlerConfiguration {
 
     String getOTSNServer();

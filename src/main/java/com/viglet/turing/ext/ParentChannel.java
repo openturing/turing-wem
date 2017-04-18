@@ -1,6 +1,6 @@
 package com.viglet.turing.ext;
 
-import com.viglet.turing.beans.NsteinTag;
+import com.viglet.turing.beans.TuringTag;
 import com.viglet.turing.config.IHandlerConfiguration;
 import com.viglet.turing.index.ExternalResourceObject;
 import com.vignette.as.client.common.AttributeData;
@@ -14,7 +14,7 @@ import com.vignette.logging.context.ContextLogger;
 public class ParentChannel implements ExtAttributeInterface {
 	private static final ContextLogger log = ContextLogger.getLogger(ParentChannel.class);
 
-	public String consume(NsteinTag tag, ContentInstance ci, AttributeData attributeData, IHandlerConfiguration config) throws Exception {
+	public String consume(TuringTag tag, ContentInstance ci, AttributeData attributeData, IHandlerConfiguration config) throws Exception {
 
 		String cdaContextName = "/" + config.getCDAContextName() + "/";
 		String cdaServer = config.getCDAServer() + ":";
@@ -48,7 +48,7 @@ public class ParentChannel implements ExtAttributeInterface {
 	}
 
 	@Override
-	public String consume(NsteinTag tag, ExternalResourceObject ci,
+	public String consume(TuringTag tag, ExternalResourceObject ci,
 			String attributeData, IHandlerConfiguration config)
 			throws Exception {
 		// TODO Auto-generated method stub

@@ -11,12 +11,6 @@ import com.vignette.as.server.event.AsEvent;
 import com.vignette.as.server.event.IAsEventListener;
 import com.vignette.logging.context.ContextLogger;
 
-/**
- * User: Bertrand de Coatpont
- * Date: 13/05/2010
- * Time: 21:26:23
- */
-
 public class DeploymentEventListener implements IAsEventListener {
 
     /**
