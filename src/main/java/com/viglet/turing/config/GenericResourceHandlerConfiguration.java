@@ -25,17 +25,14 @@ public class GenericResourceHandlerConfiguration implements IHandlerConfiguratio
 	public static final String RESOURCE_NAME = "Turing";
 
 	// <string, CollabClientServiceConfigAdapter>
-	private String otsnServer;
-	private String otcaServer;
-	private String indexPort;
-	private String queryPort;
-	private String solrPort;
+	private String turingHost;
+	private String turingPort;
+	private String turingProtocol;
 	private String index;
 	private String config;
 	private String locale;
 	private String channel;
 	private String mappingsXML;
-	private String tmePort;
 	private String cdaContextName;
 	private String cdaServer;
 	private String cdaPort;
@@ -49,36 +46,28 @@ public class GenericResourceHandlerConfiguration implements IHandlerConfiguratio
 		parsePropertiesFromResource();
 	}
 
-	public String getOTSNServer() {
-		return otsnServer;
+	public String getTuringHost() {
+		return turingHost;
 	}
 
-	public void setOTSNServer(String otsnServer) {
-		this.otsnServer = otsnServer;
+	public void setTuringHost(String turingHost) {
+		this.turingHost = turingHost;
 	}
 
-	public String getOTCAServer() {
-		return otcaServer;
+	public String getTuringPort() {
+		return this.turingPort;
 	}
 
-	public void setOTCAServer(String otcaServer) {
-		this.otcaServer = otcaServer;
+	public void setTuringPort(String turingPort) {
+		this.turingPort = turingPort;
 	}
 
-	public String getQueryPort() {
-		return this.queryPort;
+	public String getTuringProtocol() {
+		return this.turingProtocol;
 	}
 
-	public void setQueryPort(String queryPort) {
-		this.queryPort = queryPort;
-	}
-
-	public String getIndexPort() {
-		return this.indexPort;
-	}
-
-	public void setIndexPort(String indexPort) {
-		this.indexPort = indexPort;
+	public void setTuringProtocol(String turingProtocol) {
+		this.turingProtocol = turingProtocol;
 	}
 
 	public String getConfig() {
@@ -95,14 +84,6 @@ public class GenericResourceHandlerConfiguration implements IHandlerConfiguratio
 
 	public String getLocale() {
 		return locale;
-	}
-
-	public String getSOLRPort() {
-		return solrPort;
-	}
-
-	public String getTMEPort() {
-		return tmePort;
 	}
 
 	public String getMappingsXML() {
@@ -218,12 +199,9 @@ public class GenericResourceHandlerConfiguration implements IHandlerConfiguratio
 
 	private void parseProperties(Properties properties) {
 
-		otsnServer = properties.getProperty("otsn.server");
-		otcaServer = properties.getProperty("otca.server");
-		indexPort = properties.getProperty("otsn.index.port");
-		queryPort = properties.getProperty("otsn.query.port");
-		solrPort = properties.getProperty("otsn.solrport");
-		tmePort = properties.getProperty("otsn.tmeport");
+		turingHost = properties.getProperty("turing.host");
+		turingPort = properties.getProperty("turing.port");
+		turingProtocol = properties.getProperty("turing.protocol");
 		config = properties.getProperty("otsn.config");
 		index = properties.getProperty("otsn.index");
 		locale = properties.getProperty("otsn.locale");

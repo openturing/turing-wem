@@ -26,8 +26,7 @@
 			<tag>turingSentimentSubj</tag>
 		</srcAttr>
 
-		<srcAttr className="com.viglet.turing.ext.DPSUrl"
-			mandatory="true">
+		<srcAttr className="com.viglet.turing.ext.DPSUrl" mandatory="true">
 			<tag>url</tag>
 		</srcAttr>
 	</common-index-attrs>

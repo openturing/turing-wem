@@ -69,12 +69,12 @@ public class Turing {
 	public static String getXML(ContentInstance ci, IHandlerConfiguration config) throws Exception {
 
 		if (log.isDebugEnabled()) {
-			log.debug("Generating OTSN XML for a content instance");
+			log.debug("Generating Viglet Turing XML for a content instance");
 		}
 		StringBuffer xml = new StringBuffer("<?xml version=\"1.0\" encoding=\"UTF-8\" ?><document>");
 		xml.append("<id>" + ci.getContentManagementId().getId() + "</id>");
 
-		// we force the type on the OTSN side
+		// we force the type on the Viglet Turing side
 		HashMap<String, CTDMappings> mappings = mappingDefinitions.getMappingDefinitions();
 
 		CTDMappings ctdMappings = mappings.get(ci.getObjectType().getData().getName());
@@ -160,7 +160,7 @@ public class Turing {
 		xml.append("</document>");
 
 		if (log.isDebugEnabled()) {
-			log.debug("OTSN XML content: " + xml.toString());
+			log.debug("Viglet Turing XML content: " + xml.toString());
 		}
 
 		return xml.toString();
@@ -170,12 +170,12 @@ public class Turing {
 	public static String getXML(ExternalResourceObject ci, IHandlerConfiguration config) throws Exception {
 
 		if (log.isDebugEnabled()) {
-			log.debug("Generating OTSN XML for a content instance");
+			log.debug("Generating Viglet Turing XML for a content instance");
 		}
 		StringBuffer xml = new StringBuffer("<?xml version=\"1.0\" encoding=\"UTF-8\" ?><document>");
 		xml.append("<id>" + ci.getId() + "</id>");
 
-		// we force the type on the OTSN side
+		// we force the type on the Viglet Turing side
 		HashMap<String, CTDMappings> mappings = mappingDefinitions.getMappingDefinitions();
 
 		CTDMappings ctdMappings = mappings.get(ci.getTypeName());
@@ -244,7 +244,7 @@ public class Turing {
 		xml.append("</document>");
 
 		if (log.isDebugEnabled()) {
-			log.debug("OTSN XML content: " + xml.toString());
+			log.debug("Viglet Turing XML content: " + xml.toString());
 		}
 
 		return xml.toString();
@@ -443,7 +443,7 @@ public class Turing {
 			if (log.isDebugEnabled()) {
 				log.debug("CTD Related: " + ciRelated.getObjectType().getData().getName());
 			}
-			// we force the type on the OTSN side
+			// we force the type on the Viglet Turing side
 			HashMap<String, CTDMappings> relatedMappings = mappingDefinitions.getMappingDefinitions();
 
 			CTDMappings ctdRelatedMappings = relatedMappings.get(ciRelated.getObjectType().getData().getName());
@@ -544,7 +544,7 @@ public class Turing {
 		return attributesDefs;
 	}
 
-	// This method post the content to the OTSN broker
+	// This method post the content to the Viglet Turing broker
 	public static boolean indexCreate(ManagedObject mo, IHandlerConfiguration config) {
 
 		boolean success = false;
@@ -582,9 +582,9 @@ public class Turing {
 					 * 
 					 */
 
-					log.info("OTSN indexer Processing Content Type: " + mo.getObjectType().getData().getName());
+					log.info("Viglet Turing indexer Processing Content Type: " + mo.getObjectType().getData().getName());
 					if (log.isDebugEnabled()) {
-						log.debug("OTSN indexer Processing Content Type: " + mo.getObjectType().getData().getName());
+						log.debug("Viglet Turing indexer Processing Content Type: " + mo.getObjectType().getData().getName());
 					}
 
 					// class to indicate if the content will be indexed or not
@@ -610,49 +610,44 @@ public class Turing {
 					success = true;
 					/*
 					 * } else { if (log.isDebugEnabled()) { log.debug(
-					 * "OTSN indexer ignoring a CI with the wrong locale"); } }
+					 * "Viglet Turing indexer ignoring a CI with the wrong locale"); } }
 					 */
 				} else {
 					if (log.isDebugEnabled()) {
 						log.debug("Mapping definition is not found in the mappingXML for the CTD: "
 								+ mo.getObjectType().getData().getName());
-						log.debug("OTSN indexer Ingnoring Content Type: " + mo.getObjectType().getData().getName());
+						log.debug("Viglet Turing indexer Ingnoring Content Type: " + mo.getObjectType().getData().getName());
 					}
 				}
 
 			} catch (Exception e) {
-				log.error("Can't CREATE to OTSN indexer: " + e.getMessage());
+				log.error("Can't CREATE to Viglet Turing indexer: " + e.getMessage());
 				e.printStackTrace();
 			}
 		}
 		return success;
 	}
 
-	// This method deletes the content to the OTSN broker
+	// This method deletes the content to the Viglet Turing broker
 	public static boolean indexDelete(String guid, IHandlerConfiguration config) {
 
 		boolean success = false;
 		try {
-
-			// GetMethod get = new GetMethod("http://" + config.getOTSNServer()
-			// + ":" + config.getPort() + "/broker/?action=delete&index=" +
-			// config.getIndex() + "&id=" + guid + "&config=" +
-			// config.getConfig());
-			GetMethod get = new GetMethod("http://" + config.getOTSNServer() + ":" + config.getIndexPort()
+			GetMethod get = new GetMethod(config.getTuringProtocol() + "://" + config.getTuringHost() + ":" + config.getTuringPort()
 					+ "/?action=delete&index=" + config.getIndex() + "&config=" + config.getConfig() + "&id=" + guid);
 			HttpClient httpclient = new HttpClient();
 			int result = httpclient.executeMethod(get);
 			if (log.isDebugEnabled()) {
-				log.debug("OTSN Delete Request URI:" + get.getURI());
-				log.debug("OTSN indexer response HTTP result is: " + result);
-				log.debug("OTSN indexer response HTTP result is: " + get.getResponseBodyAsString());
+				log.debug("Viglet Turing Delete Request URI:" + get.getURI());
+				log.debug("Viglet Turing indexer response HTTP result is: " + result);
+				log.debug("Viglet Turing indexer response HTTP result is: " + get.getResponseBodyAsString());
 			}
 			get.releaseConnection();
 			success = true;
 
 		} catch (Exception e) {
 
-			log.error("Can't DELETE in OTSN index: " + e.getMessage());
+			log.error("Can't DELETE in Viglet Turing index: " + e.getMessage());
 		}
 
 		return success;
@@ -662,21 +657,21 @@ public class Turing {
 	public static boolean indexDeleteByType(String typeName, IHandlerConfiguration config) {
 		boolean success = false;
 		try {
-			GetMethod get = new GetMethod("http://" + config.getOTSNServer() + ":" + config.getSOLRPort() + "/solr/"
+			GetMethod get = new GetMethod(config.getTuringProtocol() + "://" + config.getTuringHost() + ":" + config.getTuringPort() + "/solr/"
 					+ config.getIndex() + "update/?stream.body=<delete><query>type:" + typeName + "</query></delete>");
 			HttpClient httpclient = new HttpClient();
 			int result = httpclient.executeMethod(get);
 			if (log.isDebugEnabled()) {
-				log.debug("OTSN Delete Request URI:" + get.getURI());
-				log.debug("OTSN indexer response HTTP result is: " + result);
-				log.debug("OTSN indexer response HTTP result is: " + get.getResponseBodyAsString());
+				log.debug("Viglet Turing Delete Request URI:" + get.getURI());
+				log.debug("Viglet Turing indexer response HTTP result is: " + result);
+				log.debug("Viglet Turing indexer response HTTP result is: " + get.getResponseBodyAsString());
 			}
 			get.releaseConnection();
 			success = true;
 
 		} catch (Exception e) {
 
-			log.error("Can't DELETE in OTSN index: " + e.getMessage());
+			log.error("Can't DELETE in Viglet Turing index: " + e.getMessage());
 		}
 
 		return success;
@@ -692,7 +687,7 @@ public class Turing {
 	// This method returns the link to the primary Channel for Semantic
 	// Navigation
 	@SuppressWarnings("unchecked")
-	public static String getSemanticLink(GenericResourceHandlerConfiguration otsnConfig, RequestContext rc) {
+	public static String getSemanticLink(GenericResourceHandlerConfiguration turingConfig, RequestContext rc) {
 
 		// Looking up the Semantic Navigation channel, or pick the current
 		// channel if not available
@@ -710,7 +705,7 @@ public class Turing {
 		}
 		String link = "";
 		try {
-			String channelName = otsnConfig.getChannel();
+			String channelName = turingConfig.getChannel();
 			if (currentSite != null) {
 				if (log.isDebugEnabled()) {
 					log.debug("Loading the channel [" + channelName + "] using the site:"
@@ -752,20 +747,20 @@ public class Turing {
 	}
 
 	// Gets a widget content...
-	public static Document otsnRequest(IHandlerConfiguration otsnConfig, String query) {
+	public static Document turingRequest(IHandlerConfiguration turingConfig, String query) {
 
 		// A formalized XML document will be returned
 		Document doc = null;
 
-		if (query == null || otsnConfig == null) {
+		if (query == null || turingConfig == null) {
 			return doc;
 		}
 
 		try {
 
 			// Primary query
-			String request = "http://" + otsnConfig.getOTSNServer() + ":" + otsnConfig.getQueryPort() + "/"
-					+ otsnConfig.getIndex() + query;
+			String request = turingConfig.getTuringProtocol() + "://" + turingConfig.getTuringHost() + ":" + turingConfig.getTuringPort() + "/"
+					+ turingConfig.getIndex() + query;
 
 			// Depending on the form , we need either &format=xml or /format/xml
 			if (query.indexOf('?') > 0) {
@@ -776,7 +771,7 @@ public class Turing {
 			if (log.isDebugEnabled()) {
 				log.debug("OSTN request is " + request);
 			}
-			// Performs a simple GET request to the OTSN server
+			// Performs a simple GET request to the Viglet Turing server
 			GetMethod get = new GetMethod(request);
 			// setting the header as below is also not helping in converting the
 			// response body to utf-8 string.
@@ -820,7 +815,7 @@ public class Turing {
 
 	}
 
-	public static boolean createAndRegisterOTSNIndex(IHandlerConfiguration config, String indexName,
+	public static boolean createAndRegisterTuringIndex(IHandlerConfiguration config, String indexName,
 			String templateName) {
 		boolean success = false;
 		if (templateName == null || templateName.trim().equals("")) {
@@ -831,27 +826,27 @@ public class Turing {
 				log.debug("Creating the index with the indexname:" + indexName);
 			}
 			PostMethod post = new PostMethod(
-					"http://" + config.getOTSNServer() + ":" + config.getSOLRPort() + "/sse/index/" + indexName);
+					config.getTuringProtocol() + "://" + config.getTuringHost() + ":" + config.getTuringPort() + "/sse/index/" + indexName);
 			post.setParameter("template", templateName);
 			post.setRequestHeader("Accept", "*/*");
 			HttpClient httpclient = new HttpClient();
 			int result = httpclient.executeMethod(post);
 			if (log.isDebugEnabled()) {
-				log.debug("OTSN create indexer response HTTP result is: " + result);
-				log.debug("OTSN create indexer response HTTP response body is: " + post.getResponseBodyAsString());
+				log.debug("Viglet Turing create indexer response HTTP result is: " + result);
+				log.debug("Viglet Turing create indexer response HTTP response body is: " + post.getResponseBodyAsString());
 			}
 			post.releaseConnection();
 			if (result == 201) {
 				if (log.isDebugEnabled()) {
 					log.debug("Created the index, now registering the index with the solr indexname:" + indexName);
 				}
-				GetMethod get = new GetMethod("http://" + config.getOTSNServer() + ":" + config.getSOLRPort()
+				GetMethod get = new GetMethod(config.getTuringProtocol() + "://" + config.getTuringHost() + ":" + config.getTuringPort()
 						+ "/solr/admin/cores?action=CREATE&name=" + indexName + "&instanceDir=" + indexName);
 				get.setRequestHeader("Accept", "*/*");
 				result = httpclient.executeMethod(get);
 				if (log.isDebugEnabled()) {
-					log.debug("OTSN register indexer response HTTP result is: " + result);
-					log.debug("OTSN register indexer response HTTP response body is: " + get.getResponseBodyAsString());
+					log.debug("Viglet Turing register indexer response HTTP result is: " + result);
+					log.debug("Viglet Turing register indexer response HTTP response body is: " + get.getResponseBodyAsString());
 				}
 				get.releaseConnection();
 				success = true;
@@ -862,17 +857,17 @@ public class Turing {
 		return success;
 	}
 
-	public static boolean deleteOTSNIndex(IHandlerConfiguration config, String indexName) {
+	public static boolean deleteTuringIndex(IHandlerConfiguration config, String indexName) {
 		boolean success = false;
 		try {
 			HttpClient httpclient = new HttpClient();
 			DeleteMethod del = new DeleteMethod(
-					"http://" + config.getOTSNServer() + ":" + config.getSOLRPort() + "/sse/index/" + indexName);
+					config.getTuringProtocol() + "://" + config.getTuringHost() + ":" + config.getTuringPort() + "/sse/index/" + indexName);
 			del.setRequestHeader("Accept", "*/*");
 			int result = httpclient.executeMethod(del);
 			if (log.isDebugEnabled()) {
-				log.debug("OTSN Delete indexer response HTTP result is: " + result);
-				log.debug("OTSN Delete indexer response HTTP response body is: " + del.getResponseBodyAsString());
+				log.debug("Viglet Turing Delete indexer response HTTP result is: " + result);
+				log.debug("Viglet Turing Delete indexer response HTTP response body is: " + del.getResponseBodyAsString());
 			}
 			del.releaseConnection();
 			success = true;
@@ -882,17 +877,17 @@ public class Turing {
 		return success;
 	}
 
-	public static void printOTSNIndexes(IHandlerConfiguration config) {
+	public static void printTuringIndexes(IHandlerConfiguration config) {
 		try {
 			HttpClient httpclient = new HttpClient();
 			GetMethod get = new GetMethod(
-					"http://" + config.getOTSNServer() + ":" + config.getSOLRPort() + "/sse/index");
+					config.getTuringProtocol() + "://" + config.getTuringHost() + ":" + config.getTuringPort() + "/sse/index");
 			get.setRequestHeader("Accept", "*/*");
 			int result = httpclient.executeMethod(get);
 			if (log.isDebugEnabled()) {
 				log.debug("executing query:" + get.getURI());
-				log.debug("OTSN list indexer response HTTP result is: " + result);
-				log.debug("OTSN list indexer response HTTP response body is: " + get.getResponseBodyAsString());
+				log.debug("Viglet Turing list indexer response HTTP result is: " + result);
+				log.debug("Viglet Turing list indexer response HTTP response body is: " + get.getResponseBodyAsString());
 			}
 			get.releaseConnection();
 		} catch (Exception e) {
@@ -943,9 +938,9 @@ public class Turing {
 	public static boolean indexCreate(ExternalResourceObject mo, String typeName, IHandlerConfiguration config) {
 		boolean success = false;
 		try {
-			log.info("OTSN indexer Processing Content Type: " + typeName);
+			log.info("Viglet Turing indexer Processing Content Type: " + typeName);
 			if (log.isDebugEnabled()) {
-				log.debug("OTSN indexer Processing Content Type: " + typeName);
+				log.debug("Viglet Turing indexer Processing Content Type: " + typeName);
 			}
 			// class to indicate if the content will be indexed or not
 			String className = getClassValidToIndex(typeName, config);
@@ -969,14 +964,14 @@ public class Turing {
 			postIndex(getXML(mo, config), config);
 			success = true;
 		} catch (Exception e) {
-			log.error("Can't CREATE to OTSN indexer: " + e.getMessage());
+			log.error("Can't CREATE to Viglet Turing indexer: " + e.getMessage());
 			e.printStackTrace();
 		}
 		return success;
 	}
 
 	public static void postIndex(String xml, IHandlerConfiguration config) throws HttpException, IOException {
-		PostMethod post = new PostMethod("http://" + config.getOTSNServer() + ":" + config.getIndexPort() + "/?index="
+		PostMethod post = new PostMethod( config.getTuringProtocol() + "://" + config.getTuringHost() + ":" + config.getTuringPort() + "/?index="
 				+ config.getIndex() + "&config=" + config.getConfig());
 		post.setParameter("data", xml);
 		post.setParameter("index", config.getIndex());
@@ -985,46 +980,26 @@ public class Turing {
 		HttpClient httpclient = new HttpClient();
 		int result = httpclient.executeMethod(post);
 		if (log.isDebugEnabled()) {
-			log.debug("OTSN Index Request URI:" + post.getURI());
+			log.debug("Viglet Turing Index Request URI:" + post.getURI());
 			log.debug("Using the index:" + config.getIndex() + ", config:" + config.getConfig());
 			log.debug("XML:" + xml);
-			log.debug("OTSN indexer response HTTP result is: " + result + ", for request uri:" + post.getURI());
-			log.debug("OTSN indexer response HTTP result is: " + post.getResponseBodyAsString());
+			log.debug("Viglet Turing indexer response HTTP result is: " + result + ", for request uri:" + post.getURI());
+			log.debug("Viglet Turing indexer response HTTP result is: " + post.getResponseBodyAsString());
 		}
 		post.releaseConnection();
-	}
-
-	public static void commit(IHandlerConfiguration config) {
-		try {
-			PostMethod post = new PostMethod("http://" + config.getOTSNServer() + ":" + config.getSOLRPort() + "/solr/"
-					+ config.getIndex() + "/update/?stream.body=%3Ccommit/%3E");
-			post.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=utf-8");
-			HttpClient httpclient = new HttpClient();
-			int result = httpclient.executeMethod(post);
-			if (log.isDebugEnabled()) {
-				log.debug("OTSN Index Request URI:" + post.getURI());
-				log.debug("Using the index:" + config.getIndex() + ", config:" + config.getConfig());
-				log.debug("OTSN indexer response HTTP result is: " + result + ", for request uri:" + post.getURI());
-				log.debug("OTSN indexer response HTTP result is: " + post.getResponseBodyAsString());
-			}
-			post.releaseConnection();
-		} catch (Exception e) {
-			log.error("Can't COMMIT to OTSN indexer: " + e.getMessage());
-			e.printStackTrace();
-		}
 	}
 
 	private static boolean isIndexed(ContentInstance mo, IHandlerConfiguration config) {
 		try {
 			HttpClient httpclient = new HttpClient();
-			GetMethod get = new GetMethod("http://" + config.getOTSNServer() + ":" + config.getSOLRPort() + "/solr/"
+			GetMethod get = new GetMethod(config.getTuringProtocol() + "://" + config.getTuringHost() + ":" + config.getTuringPort() + "/solr/"
 					+ config.getIndex() + "/select/?q=id%3A" + mo.getContentManagementId().getId());
 			get.setRequestHeader("Accept", "*/*");
 			int result = httpclient.executeMethod(get);
 			if (log.isDebugEnabled()) {
 				log.debug("executing query:" + get.getURI());
-				log.debug("OTSN indexer response HTTP result is: " + result);
-				log.debug("OTSN indexer response HTTP response body is: " + get.getResponseBodyAsString());
+				log.debug("Viglet Turing indexer response HTTP result is: " + result);
+				log.debug("Viglet Turing indexer response HTTP response body is: " + get.getResponseBodyAsString());
 			}
 			if (result == 200) {
 				if (!"numFound=\"0\"".equals(get.getResponseBodyAsString())) {
@@ -1041,14 +1016,14 @@ public class Turing {
 	private static boolean isIndexed(ExternalResourceObject mo, IHandlerConfiguration config) {
 		try {
 			HttpClient httpclient = new HttpClient();
-			GetMethod get = new GetMethod("http://" + config.getOTSNServer() + ":" + config.getSOLRPort() + "/solr/"
+			GetMethod get = new GetMethod(config.getTuringProtocol() + "://" + config.getTuringHost() + ":" + config.getTuringPort() + "/solr/"
 					+ config.getIndex() + "/select/?q=id%3A" + mo.getId());
 			get.setRequestHeader("Accept", "*/*");
 			int result = httpclient.executeMethod(get);
 			if (log.isDebugEnabled()) {
 				log.debug("executing query:" + get.getURI());
-				log.debug("OTSN indexer response HTTP result is: " + result);
-				log.debug("OTSN indexer response HTTP response body is: " + get.getResponseBodyAsString());
+				log.debug("Viglet Turing indexer response HTTP result is: " + result);
+				log.debug("Viglet Turing indexer response HTTP response body is: " + get.getResponseBodyAsString());
 			}
 			if (result == 200) {
 				if (!"numFound=\"0\"".equals(get.getResponseBodyAsString())) {

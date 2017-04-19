@@ -17,7 +17,6 @@
 	<classpathentry kind="lib" path="/Applications/MAMP/htdocs/wem-nstein/lib/vcm-ui.jar"/>
 	<classpathentry kind="lib" path="/Applications/MAMP/htdocs/wem-nstein/lib/vui.jar"/>
 	<classpathentry kind="lib" path="/Applications/MAMP/htdocs/wem-nstein/lib/commons-httpclient.jar"/>
-	<classpathentry kind="lib" path="/Applications/MAMP/htdocs/wem-nstein/lib/jsafe.jar"/>
 	<classpathentry kind="con" path="org.eclipse.m2e.MAVEN2_CLASSPATH_CONTAINER">
 		<attributes>
 			<attribute name="maven.pomderived" value="true"/>

@@ -2,17 +2,14 @@ package com.viglet.turing.config;
 
 public interface IHandlerConfiguration {
 
-    String getOTSNServer();
-    String getOTCAServer();
-    String getQueryPort();
-    String getIndexPort();
-    String getSOLRPort();
+    String getTuringHost();
+    String getTuringPort();
+    String getTuringProtocol();
     String getIndex();
     String getConfig();
     String getLocale();
     String getChannel();
     String getMappingsXML();
-    String getTMEPort();
     String getCDAContextName(); 
     String getCDAServer();
     String getCDAPort();

@@ -10,94 +10,14 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 	</properties>
-
-	<dependencies>
-		<dependency>
-			<groupId>javax.activation</groupId>
-			<artifactId>activation</artifactId>
-			<version>1.0.2</version>
-			<scope>system</scope>
-			<systemPath>${basedir}/lib/activation.jar</systemPath>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-httpclient</artifactId>
-			<version>3.1</version>
-			<scope>system</scope>
-			<systemPath>${basedir}/lib/commons-httpclient.jar</systemPath>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-io</artifactId>
-			<version>1.2</version>
-			<scope>system</scope>
-			<systemPath>${basedir}/lib/commons-io-1.2.jar</systemPath>
-		</dependency>
-		<dependency>
-			<groupId>org</groupId>
-			<artifactId>json</artifactId>
-			<version>1.0.0</version>
-			<scope>system</scope>
-			<systemPath>${basedir}/lib/json.jar</systemPath>
-		</dependency>
-		<dependency>
-			<groupId>org.apache</groupId>
-			<artifactId>log4j</artifactId>
-			<version>1.2.17</version>
-			<scope>system</scope>
-			<systemPath>${basedir}/lib/log4j.jar</systemPath>
-		</dependency>
-		<dependency>
-			<groupId>com.ice</groupId>
-			<artifactId>tar</artifactId>
-			<version>2.3</version>
-			<scope>system</scope>
-			<systemPath>${basedir}/lib/tar.jar</systemPath>
-		</dependency>
-		<dependency>
-			<groupId>com.vignette</groupId>
-			<artifactId>vcm-api</artifactId>
-			<version>8.5</version>
-			<scope>system</scope>
-			<systemPath>${basedir}/lib/vcm-api.jar</systemPath>
-		</dependency>
-		<dependency>
-			<groupId>com.vignette</groupId>
-			<artifactId>vcm-ui</artifactId>
-			<version>8.5</version>
-			<scope>system</scope>
-			<systemPath>${basedir}/lib/vcm-ui.jar</systemPath>
-		</dependency>
-		<dependency>
-			<groupId>com.vignette</groupId>
-			<artifactId>vgn-appsvcs-cma</artifactId>
-			<version>8.5</version>
-			<scope>system</scope>
-			<systemPath>${basedir}/lib/vgn-appsvcs-cma.jar</systemPath>
-		</dependency>
-		<dependency>
-			<groupId>com.vignette</groupId>
-			<artifactId>vgn-shared-logging</artifactId>
-			<version>8.5</version>
-			<scope>system</scope>
-			<systemPath>${basedir}/lib/vgn-shared-logging.jar</systemPath>
-		</dependency>
-		<dependency>
-			<groupId>com.vignette</groupId>
-			<artifactId>vui</artifactId>
-			<version>8.5</version>
-			<scope>system</scope>
-			<systemPath>${basedir}/lib/vui.jar</systemPath>
-		</dependency>
-		<dependency>
-			<groupId>com.vignette</groupId>
-			<artifactId>thirdparty-combined</artifactId>
-			<version>8.5</version>
-			<scope>system</scope>
-			<systemPath>${basedir}/lib/thirdparty-combined.jar</systemPath>
-		</dependency>
-	</dependencies>
-
+	<repositories>
+		<repository>
+			<id>project_lib</id>
+			<name>Repository in project's lib dir</name>
+			<layout>default</layout>
+			<url>file:///${basedir}/lib</url>
+		</repository>
+	</repositories>
 	<build>
 		<finalName>turing-wem</finalName>
 		<plugins>
@@ -124,6 +44,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
+				<version>3.0.2</version>
 				<configuration>
 					<archive>
 						<manifest>
