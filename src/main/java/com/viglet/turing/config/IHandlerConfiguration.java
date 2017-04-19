@@ -2,9 +2,7 @@ package com.viglet.turing.config;
 
 public interface IHandlerConfiguration {
 
-    String getTuringHost();
-    String getTuringPort();
-    String getTuringProtocol();
+    String getTuringURL();
     String getIndex();
     String getConfig();
     String getLocale();

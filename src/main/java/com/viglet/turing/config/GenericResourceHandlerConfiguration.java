@@ -22,12 +22,10 @@ import java.util.Properties;
 public class GenericResourceHandlerConfiguration implements IHandlerConfiguration {
 
 	public static final String RESOURCE_TYPE = "Properties";
-	public static final String RESOURCE_NAME = "Turing";
+	public static final String RESOURCE_NAME = "VigletTuring";
 
 	// <string, CollabClientServiceConfigAdapter>
-	private String turingHost;
-	private String turingPort;
-	private String turingProtocol;
+	private String turingURL;
 	private String index;
 	private String config;
 	private String locale;
@@ -46,28 +44,12 @@ public class GenericResourceHandlerConfiguration implements IHandlerConfiguratio
 		parsePropertiesFromResource();
 	}
 
-	public String getTuringHost() {
-		return turingHost;
+	public String getTuringURL() {
+		return turingURL;
 	}
 
-	public void setTuringHost(String turingHost) {
-		this.turingHost = turingHost;
-	}
-
-	public String getTuringPort() {
-		return this.turingPort;
-	}
-
-	public void setTuringPort(String turingPort) {
-		this.turingPort = turingPort;
-	}
-
-	public String getTuringProtocol() {
-		return this.turingProtocol;
-	}
-
-	public void setTuringProtocol(String turingProtocol) {
-		this.turingProtocol = turingProtocol;
+	public void setTuringURL(String turingURL) {
+		this.turingURL = turingURL;
 	}
 
 	public String getConfig() {
@@ -199,14 +181,12 @@ public class GenericResourceHandlerConfiguration implements IHandlerConfiguratio
 
 	private void parseProperties(Properties properties) {
 
-		turingHost = properties.getProperty("turing.host");
-		turingPort = properties.getProperty("turing.port");
-		turingProtocol = properties.getProperty("turing.protocol");
-		config = properties.getProperty("otsn.config");
-		index = properties.getProperty("otsn.index");
-		locale = properties.getProperty("otsn.locale");
-		channel = properties.getProperty("otsn.channel");
-		mappingsXML = properties.getProperty("otsn.mappingsxml", "/CTD-Nstein-Mappings.xml");
+		turingURL = properties.getProperty("turing.url");	
+		config = properties.getProperty("turing.config");
+		index = properties.getProperty("turing.index");
+		locale = properties.getProperty("turing.locale");
+		channel = properties.getProperty("turing.channel");
+		mappingsXML = properties.getProperty("turing.mappingsxml", "/CTD-Nstein-Mappings.xml");
 		cdaContextName = properties.getProperty("cda.default.contextname");
 		cdaServer = properties.getProperty("cda.default.server");
 		cdaPort = properties.getProperty("cda.default.port");

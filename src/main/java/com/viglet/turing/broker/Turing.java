@@ -52,8 +52,6 @@ import com.vignette.logging.context.ContextLogger;
 
 public class Turing {
 
-	// Initializing the logger component - log4j.properties must be in the
-	// classpath
 	private static MappingDefinitions mappingDefinitions = null;
 	private static final ContextLogger log = ContextLogger.getLogger(Turing.class);
 
@@ -63,7 +61,7 @@ public class Turing {
 	}
 
 	private static boolean isSinlgeValueTMETag(String tagName) {
-		return (tagName.equals("tmeSentimentTone") || tagName.equals("tmeSentimentSubj"));
+		return (tagName.equals("turingSentimentTone") || tagName.equals("turingSentimentSubj"));
 	}
 
 	public static String getXML(ContentInstance ci, IHandlerConfiguration config) throws Exception {
@@ -633,7 +631,7 @@ public class Turing {
 
 		boolean success = false;
 		try {
-			GetMethod get = new GetMethod(config.getTuringProtocol() + "://" + config.getTuringHost() + ":" + config.getTuringPort()
+			GetMethod get = new GetMethod(config.getTuringURL()
 					+ "/?action=delete&index=" + config.getIndex() + "&config=" + config.getConfig() + "&id=" + guid);
 			HttpClient httpclient = new HttpClient();
 			int result = httpclient.executeMethod(get);
@@ -657,7 +655,7 @@ public class Turing {
 	public static boolean indexDeleteByType(String typeName, IHandlerConfiguration config) {
 		boolean success = false;
 		try {
-			GetMethod get = new GetMethod(config.getTuringProtocol() + "://" + config.getTuringHost() + ":" + config.getTuringPort() + "/solr/"
+			GetMethod get = new GetMethod(config.getTuringURL() + "/solr/"
 					+ config.getIndex() + "update/?stream.body=<delete><query>type:" + typeName + "</query></delete>");
 			HttpClient httpclient = new HttpClient();
 			int result = httpclient.executeMethod(get);
@@ -759,7 +757,7 @@ public class Turing {
 		try {
 
 			// Primary query
-			String request = turingConfig.getTuringProtocol() + "://" + turingConfig.getTuringHost() + ":" + turingConfig.getTuringPort() + "/"
+			String request = turingConfig.getTuringURL() + "/"
 					+ turingConfig.getIndex() + query;
 
 			// Depending on the form , we need either &format=xml or /format/xml
@@ -826,7 +824,7 @@ public class Turing {
 				log.debug("Creating the index with the indexname:" + indexName);
 			}
 			PostMethod post = new PostMethod(
-					config.getTuringProtocol() + "://" + config.getTuringHost() + ":" + config.getTuringPort() + "/sse/index/" + indexName);
+					config.getTuringURL() + "/sse/index/" + indexName);
 			post.setParameter("template", templateName);
 			post.setRequestHeader("Accept", "*/*");
 			HttpClient httpclient = new HttpClient();
@@ -840,7 +838,7 @@ public class Turing {
 				if (log.isDebugEnabled()) {
 					log.debug("Created the index, now registering the index with the solr indexname:" + indexName);
 				}
-				GetMethod get = new GetMethod(config.getTuringProtocol() + "://" + config.getTuringHost() + ":" + config.getTuringPort()
+				GetMethod get = new GetMethod(config.getTuringURL()
 						+ "/solr/admin/cores?action=CREATE&name=" + indexName + "&instanceDir=" + indexName);
 				get.setRequestHeader("Accept", "*/*");
 				result = httpclient.executeMethod(get);
@@ -862,7 +860,7 @@ public class Turing {
 		try {
 			HttpClient httpclient = new HttpClient();
 			DeleteMethod del = new DeleteMethod(
-					config.getTuringProtocol() + "://" + config.getTuringHost() + ":" + config.getTuringPort() + "/sse/index/" + indexName);
+					config.getTuringURL() + "/sse/index/" + indexName);
 			del.setRequestHeader("Accept", "*/*");
 			int result = httpclient.executeMethod(del);
 			if (log.isDebugEnabled()) {
@@ -881,7 +879,7 @@ public class Turing {
 		try {
 			HttpClient httpclient = new HttpClient();
 			GetMethod get = new GetMethod(
-					config.getTuringProtocol() + "://" + config.getTuringHost() + ":" + config.getTuringPort() + "/sse/index");
+					config.getTuringURL() + "/sse/index");
 			get.setRequestHeader("Accept", "*/*");
 			int result = httpclient.executeMethod(get);
 			if (log.isDebugEnabled()) {
@@ -971,7 +969,7 @@ public class Turing {
 	}
 
 	public static void postIndex(String xml, IHandlerConfiguration config) throws HttpException, IOException {
-		PostMethod post = new PostMethod( config.getTuringProtocol() + "://" + config.getTuringHost() + ":" + config.getTuringPort() + "/?index="
+		PostMethod post = new PostMethod( config.getTuringURL() + "/?index="
 				+ config.getIndex() + "&config=" + config.getConfig());
 		post.setParameter("data", xml);
 		post.setParameter("index", config.getIndex());
@@ -992,7 +990,7 @@ public class Turing {
 	private static boolean isIndexed(ContentInstance mo, IHandlerConfiguration config) {
 		try {
 			HttpClient httpclient = new HttpClient();
-			GetMethod get = new GetMethod(config.getTuringProtocol() + "://" + config.getTuringHost() + ":" + config.getTuringPort() + "/solr/"
+			GetMethod get = new GetMethod(config.getTuringURL() + "/solr/"
 					+ config.getIndex() + "/select/?q=id%3A" + mo.getContentManagementId().getId());
 			get.setRequestHeader("Accept", "*/*");
 			int result = httpclient.executeMethod(get);
@@ -1016,7 +1014,7 @@ public class Turing {
 	private static boolean isIndexed(ExternalResourceObject mo, IHandlerConfiguration config) {
 		try {
 			HttpClient httpclient = new HttpClient();
-			GetMethod get = new GetMethod(config.getTuringProtocol() + "://" + config.getTuringHost() + ":" + config.getTuringPort() + "/solr/"
+			GetMethod get = new GetMethod(config.getTuringURL() + "/solr/"
 					+ config.getIndex() + "/select/?q=id%3A" + mo.getId());
 			get.setRequestHeader("Accept", "*/*");
 			int result = httpclient.executeMethod(get);
