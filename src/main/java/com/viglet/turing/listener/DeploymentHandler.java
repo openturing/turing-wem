@@ -22,18 +22,18 @@ public class DeploymentHandler {
 
     public void onManagedObjectCreate(ManagedObject mo, AsDeploymentEvent deploymentEvent) {
         boolean result = Indexer.IndexCreate(mo, config, deploymentEvent.getSiteId().getId(), deploymentEvent.getSiteName());
-        log.debug("OTSN Indexing Create: " + result);
+        log.debug("Viglet Turing Indexing Create: " + result);
      }
 
     public void onManagedObjectUpdate(ManagedObject mo, AsDeploymentEvent deploymentEvent) {
         boolean result = Indexer.IndexUpdate(mo, config, deploymentEvent.getSiteId().getId(), deploymentEvent.getSiteName());
-        log.debug("OTSN Indexing Update: " + result);
+        log.debug("Viglet Turing Indexing Update: " + result);
     }
 
     public void onManagedObjectDelete(ManagedObject mo, AsDeploymentEvent deploymentEvent) {
         String GUID = deploymentEvent.getManagedObjectVCMRef().getId();
         boolean result = Indexer.IndexDelete(GUID, config, deploymentEvent.getSiteId().getId(), deploymentEvent.getSiteName());
-        log.debug("OTSN Indexing Delete: " + result);
+        log.debug("Viglet Turing Indexing Delete: " + result);
     }
 
 }

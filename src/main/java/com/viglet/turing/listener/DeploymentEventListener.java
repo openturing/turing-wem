@@ -44,17 +44,17 @@ public class DeploymentEventListener implements IAsEventListener {
 	            // Call out to the appropriate method depending on event type
 	            if (type.equals(AsDeploymentEvent.MANAGED_OBJECT_CREATE)) {
 	                if (log.isDebugEnabled()) {
-	                    log.debug("OTSN DeploymentEvent() - Create object");
+	                    log.debug("Viglet Turing DeploymentEvent() - Create object");
 	                }
 	                handler.onManagedObjectCreate(mo, deploymentEvent);
 	            } else if (type.equals(AsDeploymentEvent.MANAGED_OBJECT_UPDATE)) {
 	                if (log.isDebugEnabled()) {
-	                    log.debug("OTSN DeploymentEvent() - Update object");
+	                    log.debug("Viglet Turing DeploymentEvent() - Update object");
 	                }
 	                handler.onManagedObjectUpdate(mo, deploymentEvent);
 	            } else if (type.equals(AsDeploymentEvent.MANAGED_OBJECT_DELETE)) {
 	                if (log.isDebugEnabled()) {
-	                    log.debug("OTSN DeploymentEvent() - Delete object");
+	                    log.debug("Viglet Turing DeploymentEvent() - Delete object");
 	                }
 	                handler.onManagedObjectDelete(mo, deploymentEvent);
 	            }
