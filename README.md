@@ -6,15 +6,20 @@ Open Text Web Experience Management (WEM) Listener to publish content to Viglet 
 ### 1. WEM Jar files
 Copy the following jar files to /lib directory:
 
-* thirdparty-combined.jar
-* vgn-appsvcs-cma.jar
-* vgn-shared-logging.jar
+* \<WEM\_DIR>/Content/\<VERSION>/lib/sdk/thirdparty-combined.jar
+* \<WEM\_DIR>/Content/\<VERSION>/lib/sdk/vgn-appsvcs-cma.jar
+* \<WEM\_DIR>/Content/\<VERSION>/lib/vgn-shared-logging.jar
 
 ### 2. Compile
 
 Use Gradle to compile the listener jar file, without generate jar file.
 
+Install the JDK 8 to Gradle
+
+Create the variable JDK6_HOME with JDK6 Path.
+
 ```shell
+export JDK6_HOME=/opt/WEM/Content/VERSION/java
 $ ./gradlew build
 ```
 
