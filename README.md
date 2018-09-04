@@ -257,10 +257,10 @@ Create a Resource called VigletTuring, type Properties and add the following lin
 cda.default.server=localhost
 cda.default.port=80
 cda.default.contextname=sites
-turing.server.host=localhost
-turing.server.port=2700
-turing.server.protocol=http
+turing.url=http://localhost:2700/api/otsn/broker
 turing.locale=en
+turing.index=1
+turing.config=wem
 turing.mappingsxml=/opt/viglet/turing-wem/conf/CTD-Turing-Mappings.xml
 ```
 

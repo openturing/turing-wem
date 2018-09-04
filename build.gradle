@@ -1,10 +1,31 @@
 apply plugin: 'java'
-apply plugin: 'maven'
 
-group = 'com.github.openviglet'
+sourceCompatibility = 1.6
+
+def javaExecutablesPath = new File(java6Home, 'bin')
+def javaExecutables = [:].withDefault { execName ->
+    def executable = new File(javaExecutablesPath, execName)
+    assert executable.exists() : "There is no ${execName} executable in ${javaExecutablesPath}"
+    executable
+}
+tasks.withType(AbstractCompile) {
+    options.with {
+        fork = true
+        forkOptions.javaHome = file(java6Home)
+    }
+}
+tasks.withType(Javadoc) {
+    executable = javaExecutables.javadoc
+}
+tasks.withType(Test) {
+    executable = javaExecutables.java
+}
+tasks.withType(JavaExec) {
+    executable = javaExecutables.java
+}
 
 repositories {
-	mavenCentral()
+        mavenCentral()
 }
 
 task compileOne (type: JavaCompile) {
@@ -12,13 +33,13 @@ task compileOne (type: JavaCompile) {
     classpath = files('build/classes/main')
     destinationDir = file('build/classes/main')
     sourceCompatibility = '1.6'
- 	targetCompatibility = '1.6'
+    targetCompatibility = '1.6'
 }
 
 dependencies {
     compile files(fileTree(dir: 'lib', includes: ['*.jar']))
     compile group: 'log4j', name: 'log4j', version: '1.2.7'
-    
+
 }
 
 jar {
