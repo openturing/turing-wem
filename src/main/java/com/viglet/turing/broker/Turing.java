@@ -5,6 +5,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.StringTokenizer;
+import java.util.TimeZone;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -102,13 +104,13 @@ public class Turing {
 		attributesDefs.put("title", new ArrayList<String>());
 		attributesDefs.put("url", new ArrayList<String>());
 
-		// for now considering the current date as published and original data
-		// SimpleDateFormat sdf = new SimpleDateFormat("MMM d yyyy");
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
-		// String currentDate = sdf.format(new Date());
-		String modDate = ci.getLastModTime() != null ? sdf.format(ci.getLastModTime())
-				: sdf.format(ci.getCreationTime());
-		String publishDate = ci.getLastPublishDate() != null ? sdf.format(ci.getLastPublishDate()) : modDate;
+		TimeZone tz = TimeZone.getTimeZone("UTC");
+		DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");
+		df.setTimeZone(tz);
+	
+		String modDate = ci.getLastModTime() != null ? df.format(ci.getLastModTime())
+				: df.format(ci.getCreationTime());
+		String publishDate = ci.getLastPublishDate() != null ? df.format(ci.getLastPublishDate()) : modDate;
 		xml.append(
 				"<original_date>" + modDate + "</original_date><last_published>" + publishDate + "</last_published>");
 
