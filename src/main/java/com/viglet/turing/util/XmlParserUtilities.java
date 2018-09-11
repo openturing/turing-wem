@@ -6,7 +6,9 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.DocumentBuilder;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.io.File;
 import java.io.FileInputStream;
@@ -158,7 +160,8 @@ public class XmlParserUtilities {
 			Element srcAttrNode = (Element) srcNodeList.item(i);
 			if (srcAttrNode.hasAttributes()
 					&& (srcAttrNode.hasAttribute(XML_NAME_ATT) || srcAttrNode.hasAttribute(CLASS_NAME_ATT))) {
-				String srcAttXmlName = null, srcAttClassName = null, srcAttValueType = null, srcAttRelation = null;
+				String srcAttXmlName = null, srcAttClassName = null, srcAttValueType = null;
+				List<String> srcAttRelation = null;
 				boolean srcMandatory = false;
 				boolean srcUniqueValues = false;
 				if (srcAttrNode.hasAttribute(XML_NAME_ATT)) {
@@ -173,8 +176,8 @@ public class XmlParserUtilities {
 					srcAttValueType = srcAttrNode.getAttribute(VALUE_TYPE_ATT);
 				}
 
-				if (srcAttrNode.hasAttribute(RELATION_ATT)) {
-					srcAttRelation = srcAttrNode.getAttribute(RELATION_ATT);
+				if (srcAttrNode.hasAttribute(RELATION_ATT)) {				
+					srcAttRelation = Arrays.asList(srcAttrNode.getAttribute(RELATION_ATT).split("\\."));
 				}
 				if (srcAttrNode.hasAttribute(MANDATORY_ATT)) {
 					if (log.isDebugEnabled()) {

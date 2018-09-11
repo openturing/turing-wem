@@ -17,13 +17,13 @@ import com.vignette.as.client.javabean.ContentInstance;
 import com.vignette.as.client.javabean.ManagedObject;
 import com.vignette.logging.context.ContextLogger;
 
-public class ETLOTSNTranslator {
+public class ETLTuringTranslator {
 
 	IHandlerConfiguration config;
 
-	private static final ContextLogger log = ContextLogger.getLogger(ETLOTSNTranslator.class);
+	private static final ContextLogger log = ContextLogger.getLogger(ETLTuringTranslator.class);
 
-	public ETLOTSNTranslator(IHandlerConfiguration config) {
+	public ETLTuringTranslator(IHandlerConfiguration config) {
 		this.config = config;
 	}
 
@@ -79,7 +79,7 @@ public class ETLOTSNTranslator {
 		ManagedObject mo = ManagedObject.findByContentManagementId(new ManagedObjectVCMRef(guid));
 		if (mo instanceof ContentInstance) {
 			if (log.isDebugEnabled()) {
-				log.error("ETLOTSNTranslator MO: ContentInstance");
+				log.error("ETLTuringTranslator MO: ContentInstance");
 			}
 			ContentInstance ci = (ContentInstance) mo;
 
@@ -102,7 +102,7 @@ public class ETLOTSNTranslator {
 
 		} else if (mo instanceof Channel) {
 			if (log.isDebugEnabled()) {
-				log.error("ETLOTSNTranslator MO: Channel");
+				log.error("ETLTuringTranslator MO: Channel");
 			}
 			Channel ch = (Channel) mo;
 			Channel[] breadcrumb = ch.getBreadcrumbPath(true);
@@ -125,6 +125,43 @@ public class ETLOTSNTranslator {
 
 	public String normalizeText(String text) {
 		return text.replaceAll("-", "–").replaceAll(" ", "-").replaceAll("\\?", "%3F");
+	}
+
+	public String getSiteDomain(ManagedObject mo)
+			throws ApplicationException, RemoteException, AuthorizationException, ValidationException {
+		ChannelRef[] fcref = null;
+		Channel firstChannel;
+		SiteRef[] sr = null;
+		String siteNameAssociated = "default";
+		if (mo instanceof ContentInstance) {
+			ContentInstance ci = (ContentInstance) mo;
+			fcref = ci.getChannelAssociations();
+
+			if (fcref.length > 0) {
+				firstChannel = fcref[0].getChannel();
+				sr = firstChannel.getSiteRefs();
+			}
+		} else if (mo instanceof Channel) {
+			Channel ch = (Channel) mo;
+			sr = ch.getSiteRefs();
+		}
+
+		if ((sr != null) && (sr.length > 0)) {
+			siteNameAssociated = sr[0].getSite().getName();
+
+			if (log.isDebugEnabled()) {
+				log.debug("ETLTuringTranslator getSiteUrl:" + siteNameAssociated);
+			}
+
+			String cdaServer = config.getCDAServer(siteNameAssociated) + ":";
+			String cdaPort = config.getCDAPort(siteNameAssociated);
+
+			return "http://" + cdaServer + cdaPort;
+		} else {
+			log.info("ETLTuringTranslator Content without channel:" + mo.getName().toString());
+			return null;
+		}
+
 	}
 
 	public String getSiteUrl(ManagedObject mo)
@@ -150,16 +187,14 @@ public class ETLOTSNTranslator {
 			siteNameAssociated = sr[0].getSite().getName();
 
 			if (log.isDebugEnabled()) {
-				log.debug("ETLOTSNTranslator getSiteUrl:" + siteNameAssociated);
+				log.debug("ETLTuringTranslator getSiteUrl:" + siteNameAssociated);
 			}
 
 			String cdaContextName = "/" + config.getCDAContextName(siteNameAssociated) + "/";
-			String cdaServer = config.getCDAServer(siteNameAssociated) + ":";
-			String cdaPort = config.getCDAPort(siteNameAssociated);
 
-			return "http://" + cdaServer + cdaPort + cdaContextName + normalizeText(siteNameAssociated);
+			return getSiteDomain(mo) + cdaContextName + normalizeText(siteNameAssociated);
 		} else {
-			log.info("ETLOTSNTranslator Content without channel:" + mo.getName().toString());
+			log.info("ETLTuringTranslator Content without channel:" + mo.getName().toString());
 			return null;
 		}
 

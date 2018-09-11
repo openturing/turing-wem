@@ -1,15 +1,17 @@
 package com.viglet.turing.beans;
 
+import java.util.List;
+
 public class TuringTag {
 	private String tagName;
-	private String srcAttributeRelation;
+	private List<String> srcAttributeRelation;
 	private String srcAttributeType;
 	private String srcAttribute;
 	private String srcClassName;
 	private boolean srcMandatory;
 	private boolean srcUniqueValues;
 
-	public TuringTag(String tagName, String srcAttribute, String srcAttributeType, String srcAttributeRelation,
+	public TuringTag(String tagName, String srcAttribute, String srcAttributeType, List<String> srcAttributeRelation,
 			String srcClassName, boolean srcMandatory, boolean srcUniqueValues) {
 		setTagName(tagName);
 		setSrcAttribute(srcAttribute);
@@ -27,7 +29,7 @@ public class TuringTag {
 		return srcAttributeType;
 	}
 
-	public String getSrcAttributeRelation() {
+	public List<String> getSrcAttributeRelation() {
 		return srcAttributeRelation;
 	}
 
@@ -47,7 +49,7 @@ public class TuringTag {
 		this.srcAttributeType = srcAttributeType;
 	}
 
-	public void setSrcAttributeRelation(String srcAttributeRelation) {
+	public void setSrcAttributeRelation(List<String> srcAttributeRelation) {
 		this.srcAttributeRelation = srcAttributeRelation;
 	}
 

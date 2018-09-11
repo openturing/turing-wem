@@ -131,10 +131,10 @@ public class ContentIndexDriver {
 	// Command line switch for indexing by VCMIDs
 	// [OPTIONAL]
 	// Valid values: VCMIDs of Contents
-	// [List of VCMIDs comma separeted]
+	// [List of VCMIDs using comma]
 	public static final char OPT_INDEX_LIST_VCMIDS = 'i';
 	
-	// Command line switch for expurg indexed Contents by IDs
+	// Command line switch for purge Contents by IDs
 	// [OPTIONAL]
 	public static final char OPT_EXPURG_BY_IDS = 'e';
 
@@ -227,7 +227,7 @@ public class ContentIndexDriver {
 		}
 		try {
 		//	ConfigLog.initializeLogging("contentindex.log", mLoggingLevel);
-			ConfigLog.initializeLogging("contentindexOTSN.log", "DEBUG");
+			ConfigLog.initializeLogging("contentindex-turing.log", "DEBUG");
 		} catch (VgnException e) {
 			System.err.println("Warning: logging not initialized");
 		}
@@ -348,12 +348,12 @@ public class ContentIndexDriver {
 	 * @return the configured ContentIndexer
 	 */
 	private ContentIndexer getIndexer() {
-		IHandlerConfiguration otsnConfig = new GenericResourceHandlerConfiguration();
+		IHandlerConfiguration turingConfig = new GenericResourceHandlerConfiguration();
 		ContentIndexer indexer = new ContentIndexer();
 		indexer.setPageSize(mPageSize);
 		indexer.setSearchEngineConnection(mSearchEngineConnection);
 		indexer.setForceReIndex(mForceReIndex);
-		indexer.setOTSNConfig(otsnConfig);
+		indexer.setTuringConfig(turingConfig);
 		return indexer;
 	}
 
@@ -616,10 +616,10 @@ public class ContentIndexDriver {
 			error(ContentIndexerMsg.getMsgObject(ContentIndexerMsg.USAGE));
 		}
 		error(ContentIndexerMsg.getMsgObject(ContentIndexerMsg.OPTIONS));
-		logger.error(" -i  Indexing by VCMIDs.\n     Valid values: VCMIDs of Contents.\n     List of VCMIDs comma separeted.");
-		System.out.println(" -i  Indexing by VCMIDs.\n     Valid values: VCMIDs of Contents.\n     List of VCMIDs comma separeted.");
-		logger.error(" -e  Expurg indexed Contents by IDs");
-		System.out.println(" -e  Expurg indexed Contents by IDs");
+		logger.error(" -i  Indexing by VCMIDs.\n     Valid values: VCMIDs of Contents.\n     List of VCMIDs using comma.");
+		System.out.println(" -i  Indexing by VCMIDs.\n     Valid values: VCMIDs of Contents.\n     List of VCMIDs using comma.");
+		logger.error(" -e  Purge Contents by IDs");
+		System.out.println(" -e  Purge indexed Contents by IDs");
 		mShowHelp = true;
 	}
 

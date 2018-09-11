@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
@@ -32,6 +33,7 @@ import com.viglet.turing.index.IValidToIndex;
 import com.viglet.turing.mappers.CTDMappings;
 import com.viglet.turing.mappers.MappingDefinitions;
 import com.viglet.turing.util.HtmlManipulator;
+import com.viglet.turing.util.TuringUtils;
 import com.viglet.turing.util.XmlParserUtilities;
 import com.vignette.as.client.common.AttributeData;
 import com.vignette.as.client.common.ref.ChannelRef;
@@ -49,7 +51,6 @@ import com.vignette.ext.templating.util.ContentUtil;
 import com.vignette.ext.templating.util.RequestContext;
 import com.vignette.logging.context.ContextLogger;
 
-
 public class Turing {
 
 	private static MappingDefinitions mappingDefinitions = null;
@@ -57,7 +58,8 @@ public class Turing {
 
 	private static boolean isTuringTag(String tagName) {
 		return (tagName.equals("turingSentimentTone") || tagName.equals("turingGL") || tagName.equals("turingON")
-				|| tagName.equals("turingPN") || tagName.equals("turingSentimentSubj") || tagName.equals("turingSimpleConcept"));
+				|| tagName.equals("turingPN") || tagName.equals("turingSentimentSubj")
+				|| tagName.equals("turingSimpleConcept"));
 	}
 
 	private static boolean isSinlgeValueTMETag(String tagName) {
@@ -116,7 +118,8 @@ public class Turing {
 
 					if (log.isDebugEnabled()) {
 						log.debug("Key: " + key + " Tag: " + tag.getTagName() + " relation: "
-								+ tag.getSrcAttributeRelation() + " content Type: " + tag.getSrcAttributeType());
+								+ TuringUtils.listToString(tag.getSrcAttributeRelation()) + " content Type: "
+								+ tag.getSrcAttributeType());
 					}
 					attributesDefs = attributeXML(ci, attributesDefs, tag, key, config);
 				}
@@ -216,7 +219,8 @@ public class Turing {
 
 					if (log.isDebugEnabled()) {
 						log.debug("Key: " + key + " Tag: " + tag.getTagName() + " relation: "
-								+ tag.getSrcAttributeRelation() + " content Type: " + tag.getSrcAttributeType());
+								+ TuringUtils.listToString(tag.getSrcAttributeRelation()) + " content Type: "
+								+ tag.getSrcAttributeType());
 					}
 					attributesDefs = attributeXML(ci, attributesDefs, tag, key, config);
 				}
@@ -249,13 +253,57 @@ public class Turing {
 
 	}
 
+	public static AttributedObject[] nestedRelators(List<String> relationTag, List<AttributedObject[]> currentRelation,
+			int currentPosition) {
+		List<AttributedObject> relators = new ArrayList<AttributedObject>();
+		
+		int nextPosition = currentPosition + 1;
+
+		if (nextPosition < relationTag.size()) {
+			List<AttributedObject[]> nestedRelationChild = new ArrayList<AttributedObject[]>();
+			for (AttributedObject[] attributesFromRelation : currentRelation) {
+
+				for (AttributedObject attributeFromRelation : Arrays.asList(attributesFromRelation)) {
+					try {
+						AttributedObject[] childRelation = attributeFromRelation
+								.getRelations(relationTag.get(nextPosition));
+
+						nestedRelationChild.add(childRelation);
+
+					} catch (ApplicationException e) {
+						log.error(String.format("Error getting relations: %s of relation: %s",
+								relationTag.get(currentPosition), relationTag.get(currentPosition - 1)), e);
+					}
+				}
+			}
+			return nestedRelators(relationTag, nestedRelationChild, nextPosition);
+
+		} else {
+			for (AttributedObject[] attributesFromRelation : currentRelation) {
+				relators.addAll(Arrays.asList(attributesFromRelation));
+			}
+
+			AttributedObject[] relatorsArr = new AttributedObject[relators.size()];
+			relatorsArr = relators.toArray(relatorsArr);
+			return relatorsArr;
+		}
+
+	}
+
 	public static HashMap<String, List<String>> attributeXML(ContentInstance ci,
 			HashMap<String, List<String>> attributesDefs, TuringTag tag, String key, IHandlerConfiguration config)
 			throws Exception {
-
 		// Relator
-		if (tag.getSrcAttributeRelation() != null) {
-			AttributedObject[] relation = ci.getRelations(tag.getSrcAttributeRelation().toString());
+		if (tag.getSrcAttributeRelation() != null && tag.getSrcAttributeRelation().size() > 0) {
+			AttributedObject[] relation = ci.getRelations(tag.getSrcAttributeRelation().get(0));
+
+			if (tag.getSrcAttributeRelation().size() > 1) {
+				log.debug("Attribute has nested relator");
+				List<AttributedObject[]> nestedRelation = new ArrayList<AttributedObject[]>();
+				nestedRelation.add(relation);
+				relation = nestedRelators(tag.getSrcAttributeRelation(), nestedRelation, 0);
+			}
+
 			if (relation != null) {
 				List<String> listAttributeValues = new ArrayList<String>();
 				for (int i = 0; i < relation.length; i++) {
@@ -300,9 +348,10 @@ public class Turing {
 			throws Exception {
 
 		// Relator
-		if (tag.getSrcAttributeRelation() != null) {
+		if (tag.getSrcAttributeRelation() != null && tag.getSrcAttributeRelation().size() > 0) {
 			List<ExternalResourceObject> relation = (List<ExternalResourceObject>) ci
-					.get(tag.getSrcAttributeRelation().toString());
+					.get(tag.getSrcAttributeRelation().get(0));
+
 			if (relation != null) {
 				List<String> listAttributeValues = new ArrayList<String>();
 				for (int i = 0; i < relation.size(); i++) {
@@ -341,13 +390,20 @@ public class Turing {
 	}
 
 	public static HashMap<String, List<String>> attributeByWidget(ContentInstance ci,
-			HashMap<String, List<String>> attributesDefs,TuringTag tag, String key, AttributeData attributeData,
+			HashMap<String, List<String>> attributesDefs, TuringTag tag, String key, AttributeData attributeData,
 			IHandlerConfiguration config) throws Exception {
 
 		String widgetName = null;
 
-		if (tag.getSrcAttributeRelation() != null) {
-			AttributedObject[] relation = ci.getRelations(tag.getSrcAttributeRelation().toString());
+		if (tag.getSrcAttributeRelation() != null && tag.getSrcAttributeRelation().size() > 0) {
+			AttributedObject[] relation = ci.getRelations(tag.getSrcAttributeRelation().get(0));
+
+			if (tag.getSrcAttributeRelation().size() > 1) {
+				List<AttributedObject[]> nestedRelation = new ArrayList<AttributedObject[]>();
+				nestedRelation.add(relation);
+				relation = nestedRelators(tag.getSrcAttributeRelation(), nestedRelation, 0);
+			}
+
 			if (relation.length > 0) {
 				widgetName = relation[0].getAttribute(key).getAttributeDefinition().getWidgetName();
 			}
@@ -355,14 +411,13 @@ public class Turing {
 		} else {
 			widgetName = ci.getAttribute(key).getAttributeDefinition().getWidgetName();
 		}
-		if (log.isDebugEnabled()) {
-			if (widgetName != null && widgetName.equals("WCMContentSelectWidget")) {
+
+		if (widgetName != null && widgetName.equals("WCMContentSelectWidget")
+				&& attributeData.getValue().toString().length() == 40 && tag.getSrcClassName() == null) {
+			if (log.isDebugEnabled()) {
 				log.debug("WCMContentSelectWidget value: " + attributeData.getValue().toString());
 				log.debug("WCMContentSelectWidget length: " + attributeData.getValue().toString().length());
 			}
-		}
-		if (widgetName != null && widgetName.equals("WCMContentSelectWidget")
-				&& attributeData.getValue().toString().length() == 40) {
 			attributesDefs = attributeContentSelectUpdate(ci, attributesDefs, tag, key, attributeData, config);
 
 		} else {
@@ -463,10 +518,14 @@ public class Turing {
 
 						if (log.isDebugEnabled()) {
 							log.debug("Key Related: " + keyRelated + " Tag Related: " + tagRelated.getTagName()
-									+ " relation: " + tagRelated.getSrcAttributeRelation() + " content Type: "
-									+ tagRelated.getSrcAttributeType());
+									+ " relation: " + TuringUtils.listToString(tagRelated.getSrcAttributeRelation())
+									+ " content Type: " + tagRelated.getSrcAttributeType());
 						}
 
+						attributesDefs = attributeXML(ciRelated, attributesDefs, tagRelated, keyRelated, config);
+
+					} else {
+						// Teste123
 						attributesDefs = attributeXML(ciRelated, attributesDefs, tagRelated, keyRelated, config);
 
 					}
@@ -572,17 +631,19 @@ public class Turing {
 					/*
 					 * String configLocale = config.getLocale();
 					 * 
-					 * if (log.isDebugEnabled()) { log.debug("moLocale:" +
-					 * moLocale + " ---- configLocale: " + configLocale); }
+					 * if (log.isDebugEnabled()) { log.debug("moLocale:" + moLocale +
+					 * " ---- configLocale: " + configLocale); }
 					 * 
 					 * if (moLocale!=null && configLocale!=null &&
 					 * moLocale.startsWith(configLocale)) {
 					 * 
 					 */
 
-					log.info("Viglet Turing indexer Processing Content Type: " + mo.getObjectType().getData().getName());
+					log.info(
+							"Viglet Turing indexer Processing Content Type: " + mo.getObjectType().getData().getName());
 					if (log.isDebugEnabled()) {
-						log.debug("Viglet Turing indexer Processing Content Type: " + mo.getObjectType().getData().getName());
+						log.debug("Viglet Turing indexer Processing Content Type: "
+								+ mo.getObjectType().getData().getName());
 					}
 
 					// class to indicate if the content will be indexed or not
@@ -614,7 +675,8 @@ public class Turing {
 					if (log.isDebugEnabled()) {
 						log.debug("Mapping definition is not found in the mappingXML for the CTD: "
 								+ mo.getObjectType().getData().getName());
-						log.debug("Viglet Turing indexer Ingnoring Content Type: " + mo.getObjectType().getData().getName());
+						log.debug("Viglet Turing indexer Ingnoring Content Type: "
+								+ mo.getObjectType().getData().getName());
 					}
 				}
 
@@ -631,8 +693,8 @@ public class Turing {
 
 		boolean success = false;
 		try {
-			GetMethod get = new GetMethod(config.getTuringURL()
-					+ "/?action=delete&index=" + config.getIndex() + "&config=" + config.getConfig() + "&id=" + guid);
+			GetMethod get = new GetMethod(config.getTuringURL() + "/?action=delete&index=" + config.getIndex()
+					+ "&config=" + config.getConfig() + "&id=" + guid);
 			HttpClient httpclient = new HttpClient();
 			int result = httpclient.executeMethod(get);
 			if (log.isDebugEnabled()) {
@@ -655,8 +717,8 @@ public class Turing {
 	public static boolean indexDeleteByType(String typeName, IHandlerConfiguration config) {
 		boolean success = false;
 		try {
-			GetMethod get = new GetMethod(config.getTuringURL() + "/solr/"
-					+ config.getIndex() + "update/?stream.body=<delete><query>type:" + typeName + "</query></delete>");
+			GetMethod get = new GetMethod(config.getTuringURL() + "/solr/" + config.getIndex()
+					+ "update/?stream.body=<delete><query>type:" + typeName + "</query></delete>");
 			HttpClient httpclient = new HttpClient();
 			int result = httpclient.executeMethod(get);
 			if (log.isDebugEnabled()) {
@@ -757,8 +819,7 @@ public class Turing {
 		try {
 
 			// Primary query
-			String request = turingConfig.getTuringURL() + "/"
-					+ turingConfig.getIndex() + query;
+			String request = turingConfig.getTuringURL() + "/" + turingConfig.getIndex() + query;
 
 			// Depending on the form , we need either &format=xml or /format/xml
 			if (query.indexOf('?') > 0) {
@@ -823,28 +884,29 @@ public class Turing {
 			if (log.isDebugEnabled()) {
 				log.debug("Creating the index with the indexname:" + indexName);
 			}
-			PostMethod post = new PostMethod(
-					config.getTuringURL() + "/sse/index/" + indexName);
+			PostMethod post = new PostMethod(config.getTuringURL() + "/sse/index/" + indexName);
 			post.setParameter("template", templateName);
 			post.setRequestHeader("Accept", "*/*");
 			HttpClient httpclient = new HttpClient();
 			int result = httpclient.executeMethod(post);
 			if (log.isDebugEnabled()) {
 				log.debug("Viglet Turing create indexer response HTTP result is: " + result);
-				log.debug("Viglet Turing create indexer response HTTP response body is: " + post.getResponseBodyAsString());
+				log.debug("Viglet Turing create indexer response HTTP response body is: "
+						+ post.getResponseBodyAsString());
 			}
 			post.releaseConnection();
 			if (result == 201) {
 				if (log.isDebugEnabled()) {
 					log.debug("Created the index, now registering the index with the solr indexname:" + indexName);
 				}
-				GetMethod get = new GetMethod(config.getTuringURL()
-						+ "/solr/admin/cores?action=CREATE&name=" + indexName + "&instanceDir=" + indexName);
+				GetMethod get = new GetMethod(config.getTuringURL() + "/solr/admin/cores?action=CREATE&name="
+						+ indexName + "&instanceDir=" + indexName);
 				get.setRequestHeader("Accept", "*/*");
 				result = httpclient.executeMethod(get);
 				if (log.isDebugEnabled()) {
 					log.debug("Viglet Turing register indexer response HTTP result is: " + result);
-					log.debug("Viglet Turing register indexer response HTTP response body is: " + get.getResponseBodyAsString());
+					log.debug("Viglet Turing register indexer response HTTP response body is: "
+							+ get.getResponseBodyAsString());
 				}
 				get.releaseConnection();
 				success = true;
@@ -859,13 +921,13 @@ public class Turing {
 		boolean success = false;
 		try {
 			HttpClient httpclient = new HttpClient();
-			DeleteMethod del = new DeleteMethod(
-					config.getTuringURL() + "/sse/index/" + indexName);
+			DeleteMethod del = new DeleteMethod(config.getTuringURL() + "/sse/index/" + indexName);
 			del.setRequestHeader("Accept", "*/*");
 			int result = httpclient.executeMethod(del);
 			if (log.isDebugEnabled()) {
 				log.debug("Viglet Turing Delete indexer response HTTP result is: " + result);
-				log.debug("Viglet Turing Delete indexer response HTTP response body is: " + del.getResponseBodyAsString());
+				log.debug("Viglet Turing Delete indexer response HTTP response body is: "
+						+ del.getResponseBodyAsString());
 			}
 			del.releaseConnection();
 			success = true;
@@ -878,14 +940,14 @@ public class Turing {
 	public static void printTuringIndexes(IHandlerConfiguration config) {
 		try {
 			HttpClient httpclient = new HttpClient();
-			GetMethod get = new GetMethod(
-					config.getTuringURL() + "/sse/index");
+			GetMethod get = new GetMethod(config.getTuringURL() + "/sse/index");
 			get.setRequestHeader("Accept", "*/*");
 			int result = httpclient.executeMethod(get);
 			if (log.isDebugEnabled()) {
 				log.debug("executing query:" + get.getURI());
 				log.debug("Viglet Turing list indexer response HTTP result is: " + result);
-				log.debug("Viglet Turing list indexer response HTTP response body is: " + get.getResponseBodyAsString());
+				log.debug(
+						"Viglet Turing list indexer response HTTP response body is: " + get.getResponseBodyAsString());
 			}
 			get.releaseConnection();
 		} catch (Exception e) {
@@ -969,19 +1031,21 @@ public class Turing {
 	}
 
 	public static void postIndex(String xml, IHandlerConfiguration config) throws HttpException, IOException {
-		PostMethod post = new PostMethod( config.getTuringURL() + "/?index="
-				+ config.getIndex() + "&config=" + config.getConfig());
+		PostMethod post = new PostMethod(
+				config.getTuringURL() + "/?index=" + config.getIndex() + "&config=" + config.getConfig());
 		post.setParameter("data", xml);
 		post.setParameter("index", config.getIndex());
 		post.setParameter("config", config.getConfig());
 		post.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=utf-8");
 		HttpClient httpclient = new HttpClient();
 		int result = httpclient.executeMethod(post);
+	
 		if (log.isDebugEnabled()) {
 			log.debug("Viglet Turing Index Request URI:" + post.getURI());
 			log.debug("Using the index:" + config.getIndex() + ", config:" + config.getConfig());
 			log.debug("XML:" + xml);
-			log.debug("Viglet Turing indexer response HTTP result is: " + result + ", for request uri:" + post.getURI());
+			log.debug(
+					"Viglet Turing indexer response HTTP result is: " + result + ", for request uri:" + post.getURI());
 			log.debug("Viglet Turing indexer response HTTP result is: " + post.getResponseBodyAsString());
 		}
 		post.releaseConnection();
@@ -990,8 +1054,8 @@ public class Turing {
 	private static boolean isIndexed(ContentInstance mo, IHandlerConfiguration config) {
 		try {
 			HttpClient httpclient = new HttpClient();
-			GetMethod get = new GetMethod(config.getTuringURL() + "/solr/"
-					+ config.getIndex() + "/select/?q=id%3A" + mo.getContentManagementId().getId());
+			GetMethod get = new GetMethod(config.getTuringURL() + "/solr/" + config.getIndex() + "/select/?q=id%3A"
+					+ mo.getContentManagementId().getId());
 			get.setRequestHeader("Accept", "*/*");
 			int result = httpclient.executeMethod(get);
 			if (log.isDebugEnabled()) {
@@ -1014,8 +1078,8 @@ public class Turing {
 	private static boolean isIndexed(ExternalResourceObject mo, IHandlerConfiguration config) {
 		try {
 			HttpClient httpclient = new HttpClient();
-			GetMethod get = new GetMethod(config.getTuringURL() + "/solr/"
-					+ config.getIndex() + "/select/?q=id%3A" + mo.getId());
+			GetMethod get = new GetMethod(
+					config.getTuringURL() + "/solr/" + config.getIndex() + "/select/?q=id%3A" + mo.getId());
 			get.setRequestHeader("Accept", "*/*");
 			int result = httpclient.executeMethod(get);
 			if (log.isDebugEnabled()) {

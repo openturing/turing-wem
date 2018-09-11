@@ -97,14 +97,14 @@ public class ContentIndexer {
 	private static final String TAB = "    ";
 	private boolean forceReIndex = false;
 
-	IHandlerConfiguration otsnConfig;
+	IHandlerConfiguration turingConfig;
 
 	public boolean isForceReIndex() {
 		return this.forceReIndex;
 	}
 
-	public void setOTSNConfig(IHandlerConfiguration otsnConfig) {
-		this.otsnConfig = otsnConfig;
+	public void setTuringConfig(IHandlerConfiguration turingConfig) {
+		this.turingConfig = turingConfig;
 	}
 
 	public void setForceReIndex(boolean forceReIndex) {
@@ -118,7 +118,7 @@ public class ContentIndexer {
 			this.surveyMode = true;
 		}
 		if (null == (ot = ObjectType.findByName((String) objectTypeName))) {
-			if (!Turing.isExternalResource(objectTypeName, otsnConfig)) {
+			if (!Turing.isExternalResource(objectTypeName, turingConfig)) {
 				MsgObject mo = ContentIndexerMsg.getMsgObject("4", (Object) objectTypeName);
 				this.consoleOut(mo);
 				logger.error((Object) mo);
@@ -138,7 +138,7 @@ public class ContentIndexer {
 	public void indexByObjectType(String objectTypeName, String[] vcmids) throws Exception {
 		ObjectType ot;
 		if (null == (ot = ObjectType.findByName((String) objectTypeName))) {
-			if (!Turing.isExternalResource(objectTypeName, otsnConfig)) {
+			if (!Turing.isExternalResource(objectTypeName, turingConfig)) {
 				MsgObject mo = ContentIndexerMsg.getMsgObject("4", (Object) objectTypeName);
 				this.consoleOut(mo);
 				logger.error((Object) mo);
@@ -290,7 +290,7 @@ public class ContentIndexer {
 	}
 
 	private void indexByExternalResource(List<ExternalResourceObject> list, String typeName) throws Exception {
-		String className = Turing.getClassValidToIndex(typeName, otsnConfig);
+		String className = Turing.getClassValidToIndex(typeName, turingConfig);
 		IValidToIndex instance = null;
 		if (className != null) {
 			Class<?> clazz = Class.forName(className);
@@ -501,7 +501,7 @@ public class ContentIndexer {
 		int totalPages;
 		int totalEntries;
 		List<ExternalResourceObject> results = null;
-		String className = Turing.getCustomClassName(objectTypeName, otsnConfig);
+		String className = Turing.getCustomClassName(objectTypeName, turingConfig);
 		if (className == null) {
 			return;
 		}
@@ -516,12 +516,12 @@ public class ContentIndexer {
 		try {
 			if (vcmids == null) {
 				indexResetByType(objectTypeName);
-				results = instance.listExternalResource(otsnConfig);
+				results = instance.listExternalResource(turingConfig);
 			} else {
 				this.indexDeleteByIds(objectTypeName, vcmids);
 				results = new ArrayList<ExternalResourceObject>();
 				for (String guid : vcmids) {
-					ExternalResourceObject item = instance.getExternalResource(guid, otsnConfig);
+					ExternalResourceObject item = instance.getExternalResource(guid, turingConfig);
 					if (item != null) {
 						results.add(item);
 					}
@@ -565,7 +565,7 @@ public class ContentIndexer {
 		rp.setTopRelationOnly(false);
 		IPagingList results = null;
 		AsObjectType aot = AsObjectType.getInstance((ObjectTypeRef) new ObjectTypeRef((ManagedObject) ot));
-		String className = Turing.getClassValidToIndex(ot.getData().getName(), otsnConfig);
+		String className = Turing.getClassValidToIndex(ot.getData().getName(), turingConfig);
 		IValidToIndex instance = null;
 		if (className != null) {
 			Class<?> clazz = Class.forName(className);
@@ -585,7 +585,7 @@ public class ContentIndexer {
 			}
 			StaticFileDBQuery query = new StaticFileDBQuery();
 			if (instance != null) {
-				instance.whereToValid(clause, otsnConfig);
+				instance.whereToValid(clause, turingConfig);
 			}
 			query.setWhereClause((WhereClause) clause);
 			results = QueryManager.execute((Query) query, (AsObjectRequestParameters) rp);
@@ -597,7 +597,7 @@ public class ContentIndexer {
 			}
 			ContentInstanceDBQuery query = new ContentInstanceDBQuery(new ContentTypeRef(ot.getId()));
 			if (instance != null) {
-				instance.whereToValid(clause, otsnConfig);
+				instance.whereToValid(clause, turingConfig);
 			}
 			query.setWhereClause((WhereClause) clause);
 			results = QueryManager.execute((Query) query, (AsObjectRequestParameters) rp);
@@ -720,7 +720,7 @@ public class ContentIndexer {
 						ContentInstance ci = (ContentInstance) mo;
 						RecordBundle recordBundle = (RecordBundle) bundle;
 						///
-						indexed = Indexer.IndexCreate(mo, otsnConfig, null, null);
+						indexed = Indexer.IndexCreate(mo, turingConfig, null, null);
 						////
 
 						// this.getRegistrar().registerContentInstance(ci,
@@ -786,7 +786,7 @@ public class ContentIndexer {
 				this.logDebug("Attempting to register object: " + guid);
 				if (this.verifySearchEngineConnection()) {
 					MsgObject msg2;
-					indexed = Indexer.IndexCreate(mo, typeName, otsnConfig);
+					indexed = Indexer.IndexCreate(mo, typeName, turingConfig);
 					msg2 = ContentIndexerMsg.getMsgObject("10", (Object) guid);
 					this.logDebug(msg2.localize());
 					continue;
@@ -1193,13 +1193,13 @@ public class ContentIndexer {
 	}
 
 	protected void indexResetByType(String typeName) throws MalformedURLException {
-		Indexer.IndexDeleteByType(typeName, otsnConfig);
+		Indexer.IndexDeleteByType(typeName, turingConfig);
 	}
 
 	protected void indexDeleteById(String typeName, String id) throws MalformedURLException {
-		this.consoleOut("DELETE ID " + id + " in OTSN index");
-		Indexer.IndexDelete(id, otsnConfig, null, null);
-		this.consoleOut("ID " + id + " DELETED in OTSN index");
+		this.consoleOut("DELETE ID " + id + " in Viglet Turing index");
+		Indexer.IndexDelete(id, turingConfig, null, null);
+		this.consoleOut("ID " + id + " DELETED in Viglet Turing index");
 	}
 
 	public void indexDeleteByIds(String mObjectTypeName, String[] vcmids) throws MalformedURLException {
