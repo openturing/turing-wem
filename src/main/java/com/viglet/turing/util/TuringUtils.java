@@ -14,4 +14,15 @@ public class TuringUtils {
 		}
 		return sb.toString();
 	}
+	
+	public static boolean isTuringTag(String tagName) {
+		return (tagName.equals("turingSentimentTone") || tagName.equals("turingGL") || tagName.equals("turingON")
+				|| tagName.equals("turingPN") || tagName.equals("turingSentimentSubj")
+				|| tagName.equals("turingSimpleConcept"));
+	}
+
+	public static boolean isSinlgeValueTMETag(String tagName) {
+		return (tagName.equals("turingSentimentTone") || tagName.equals("turingSentimentSubj"));
+	}
+
 }

@@ -8,11 +8,9 @@ import java.io.InputStreamReader;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.StringTokenizer;
 import java.util.TimeZone;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -26,22 +24,18 @@ import org.apache.commons.httpclient.methods.PostMethod;
 import org.w3c.dom.Document;
 
 import com.viglet.turing.beans.TuringTag;
+import com.viglet.turing.broker.attribute.TurWEMAttrXML;
 import com.viglet.turing.config.GenericResourceHandlerConfiguration;
 import com.viglet.turing.config.IHandlerConfiguration;
 import com.viglet.turing.exceptions.MappingNotFoundException;
-import com.viglet.turing.ext.ExtAttributeInterface;
 import com.viglet.turing.index.ExternalResourceObject;
 import com.viglet.turing.index.IValidToIndex;
 import com.viglet.turing.mappers.CTDMappings;
 import com.viglet.turing.mappers.MappingDefinitions;
-import com.viglet.turing.util.HtmlManipulator;
 import com.viglet.turing.util.TuringUtils;
 import com.viglet.turing.util.XmlParserUtilities;
-import com.vignette.as.client.common.AttributeData;
 import com.vignette.as.client.common.ref.ChannelRef;
-import com.vignette.as.client.common.ref.ManagedObjectVCMRef;
 import com.vignette.as.client.exception.ApplicationException;
-import com.vignette.as.client.javabean.AttributedObject;
 import com.vignette.as.client.javabean.Channel;
 import com.vignette.as.client.javabean.ContentInstance;
 import com.vignette.as.client.javabean.IPagingList;
@@ -57,16 +51,6 @@ public class Turing {
 
 	private static MappingDefinitions mappingDefinitions = null;
 	private static final ContextLogger log = ContextLogger.getLogger(Turing.class);
-
-	private static boolean isTuringTag(String tagName) {
-		return (tagName.equals("turingSentimentTone") || tagName.equals("turingGL") || tagName.equals("turingON")
-				|| tagName.equals("turingPN") || tagName.equals("turingSentimentSubj")
-				|| tagName.equals("turingSimpleConcept"));
-	}
-
-	private static boolean isSinlgeValueTMETag(String tagName) {
-		return (tagName.equals("turingSentimentTone") || tagName.equals("turingSentimentSubj"));
-	}
 
 	public static String getXML(ContentInstance ci, IHandlerConfiguration config) throws Exception {
 
@@ -107,9 +91,8 @@ public class Turing {
 		TimeZone tz = TimeZone.getTimeZone("UTC");
 		DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");
 		df.setTimeZone(tz);
-	
-		String modDate = ci.getLastModTime() != null ? df.format(ci.getLastModTime())
-				: df.format(ci.getCreationTime());
+
+		String modDate = ci.getLastModTime() != null ? df.format(ci.getLastModTime()) : df.format(ci.getCreationTime());
 		String publishDate = ci.getLastPublishDate() != null ? df.format(ci.getLastPublishDate()) : modDate;
 		xml.append(
 				"<original_date>" + modDate + "</original_date><last_published>" + publishDate + "</last_published>");
@@ -123,7 +106,7 @@ public class Turing {
 								+ TuringUtils.listToString(tag.getSrcAttributeRelation()) + " content Type: "
 								+ tag.getSrcAttributeType());
 					}
-					attributesDefs = attributeXML(ci, attributesDefs, tag, key, config);
+					attributesDefs = TurWEMAttrXML.attributeXML(ci, attributesDefs, tag, key, config, mappingDefinitions);
 				}
 			}
 		}
@@ -224,7 +207,7 @@ public class Turing {
 								+ TuringUtils.listToString(tag.getSrcAttributeRelation()) + " content Type: "
 								+ tag.getSrcAttributeType());
 					}
-					attributesDefs = attributeXML(ci, attributesDefs, tag, key, config);
+					attributesDefs = TurWEMAttrXML.attributeXML(ci, attributesDefs, tag, key, config);
 				}
 			}
 		}
@@ -253,354 +236,6 @@ public class Turing {
 
 		return xml.toString();
 
-	}
-
-	public static AttributedObject[] nestedRelators(List<String> relationTag, List<AttributedObject[]> currentRelation,
-			int currentPosition) {
-		List<AttributedObject> relators = new ArrayList<AttributedObject>();
-		
-		int nextPosition = currentPosition + 1;
-
-		if (nextPosition < relationTag.size()) {
-			List<AttributedObject[]> nestedRelationChild = new ArrayList<AttributedObject[]>();
-			for (AttributedObject[] attributesFromRelation : currentRelation) {
-
-				for (AttributedObject attributeFromRelation : Arrays.asList(attributesFromRelation)) {
-					try {
-						AttributedObject[] childRelation = attributeFromRelation
-								.getRelations(relationTag.get(nextPosition));
-
-						nestedRelationChild.add(childRelation);
-
-					} catch (ApplicationException e) {
-						log.error(String.format("Error getting relations: %s of relation: %s",
-								relationTag.get(currentPosition), relationTag.get(currentPosition - 1)), e);
-					}
-				}
-			}
-			return nestedRelators(relationTag, nestedRelationChild, nextPosition);
-
-		} else {
-			for (AttributedObject[] attributesFromRelation : currentRelation) {
-				relators.addAll(Arrays.asList(attributesFromRelation));
-			}
-
-			AttributedObject[] relatorsArr = new AttributedObject[relators.size()];
-			relatorsArr = relators.toArray(relatorsArr);
-			return relatorsArr;
-		}
-
-	}
-
-	public static HashMap<String, List<String>> attributeXML(ContentInstance ci,
-			HashMap<String, List<String>> attributesDefs, TuringTag tag, String key, IHandlerConfiguration config)
-			throws Exception {
-		// Relator
-		if (tag.getSrcAttributeRelation() != null && tag.getSrcAttributeRelation().size() > 0) {
-			AttributedObject[] relation = ci.getRelations(tag.getSrcAttributeRelation().get(0));
-
-			if (tag.getSrcAttributeRelation().size() > 1) {
-				log.debug("Attribute has nested relator");
-				List<AttributedObject[]> nestedRelation = new ArrayList<AttributedObject[]>();
-				nestedRelation.add(relation);
-				relation = nestedRelators(tag.getSrcAttributeRelation(), nestedRelation, 0);
-			}
-
-			if (relation != null) {
-				List<String> listAttributeValues = new ArrayList<String>();
-				for (int i = 0; i < relation.length; i++) {
-					if (relation[i].getAttributeValue(key) != null) {
-						String attributeValue = relation[i].getAttributeValue(key).toString();
-						AttributeData attributeData = relation[i].getAttribute(key);
-						if (log.isDebugEnabled()) {
-							log.debug("Key : " + key + " Value: " + attributeValue);
-						}
-						if (attributeValue != null && !attributeValue.trim().equals("")) {
-							attributesDefs = attributeXMLUpdate(ci, attributesDefs, tag, key, attributeData, config);
-						}
-					}
-
-				}
-				if (tag.isSrcUniqueValues()) {
-					if (attributesDefs.get(tag.getTagName()) != null) {
-						for (String item : attributesDefs.get(tag.getTagName())) {
-							if (!listAttributeValues.contains(item)) {
-								listAttributeValues.add(item);
-							}
-						}
-						attributesDefs.put(tag.getTagName(), listAttributeValues);
-					}
-				}
-			}
-		} else { // Normal attribute without relation
-
-			if (ci.getAttributeValue(key) != null && !ci.getAttributeValue(key).toString().trim().equals("")) {
-				AttributeData attributeData = ci.getAttribute(key);
-				attributesDefs = attributeXMLUpdate(ci, attributesDefs, tag, key, attributeData, config);
-			} else if (tag.getSrcClassName() != null) {
-				attributesDefs = attributeByClass(ci, attributesDefs, tag, key, null, config);
-			}
-		}
-		return attributesDefs;
-	}
-
-	@SuppressWarnings("unchecked")
-	public static HashMap<String, List<String>> attributeXML(ExternalResourceObject ci,
-			HashMap<String, List<String>> attributesDefs, TuringTag tag, String key, IHandlerConfiguration config)
-			throws Exception {
-
-		// Relator
-		if (tag.getSrcAttributeRelation() != null && tag.getSrcAttributeRelation().size() > 0) {
-			List<ExternalResourceObject> relation = (List<ExternalResourceObject>) ci
-					.get(tag.getSrcAttributeRelation().get(0));
-
-			if (relation != null) {
-				List<String> listAttributeValues = new ArrayList<String>();
-				for (int i = 0; i < relation.size(); i++) {
-					if (relation.get(i).get(key) != null) {
-						String attributeValue = String.valueOf(relation.get(i).get(key));
-						if (log.isDebugEnabled()) {
-							log.debug("Key : " + key + " Value: " + attributeValue);
-						}
-						if (attributeValue != null && !attributeValue.trim().equals("")) {
-							attributesDefs = attributeXMLUpdate(ci, attributesDefs, tag, key, attributeValue, config);
-						}
-					}
-
-				}
-				if (tag.isSrcUniqueValues()) {
-					if (attributesDefs.get(tag.getTagName()) != null) {
-						for (String item : attributesDefs.get(tag.getTagName())) {
-							if (!listAttributeValues.contains(item)) {
-								listAttributeValues.add(item);
-							}
-						}
-						attributesDefs.put(tag.getTagName(), listAttributeValues);
-					}
-				}
-			}
-		} else { // Normal attribute without relation
-
-			if (ci.get(key) != null && !ci.get(key).toString().trim().equals("")) {
-				String attributeValue = ci.get(key).toString();
-				attributesDefs = attributeXMLUpdate(ci, attributesDefs, tag, key, attributeValue, config);
-			} else if (tag.getSrcClassName() != null) {
-				attributesDefs = attributeByClass(ci, attributesDefs, tag, key, null, config);
-			}
-		}
-		return attributesDefs;
-	}
-
-	public static HashMap<String, List<String>> attributeByWidget(ContentInstance ci,
-			HashMap<String, List<String>> attributesDefs, TuringTag tag, String key, AttributeData attributeData,
-			IHandlerConfiguration config) throws Exception {
-
-		String widgetName = null;
-
-		if (tag.getSrcAttributeRelation() != null && tag.getSrcAttributeRelation().size() > 0) {
-			AttributedObject[] relation = ci.getRelations(tag.getSrcAttributeRelation().get(0));
-
-			if (tag.getSrcAttributeRelation().size() > 1) {
-				List<AttributedObject[]> nestedRelation = new ArrayList<AttributedObject[]>();
-				nestedRelation.add(relation);
-				relation = nestedRelators(tag.getSrcAttributeRelation(), nestedRelation, 0);
-			}
-
-			if (relation.length > 0) {
-				widgetName = relation[0].getAttribute(key).getAttributeDefinition().getWidgetName();
-			}
-
-		} else {
-			widgetName = ci.getAttribute(key).getAttributeDefinition().getWidgetName();
-		}
-
-		if (widgetName != null && widgetName.equals("WCMContentSelectWidget")
-				&& attributeData.getValue().toString().length() == 40 && tag.getSrcClassName() == null) {
-			if (log.isDebugEnabled()) {
-				log.debug("WCMContentSelectWidget value: " + attributeData.getValue().toString());
-				log.debug("WCMContentSelectWidget length: " + attributeData.getValue().toString().length());
-			}
-			attributesDefs = attributeContentSelectUpdate(ci, attributesDefs, tag, key, attributeData, config);
-
-		} else {
-			attributesDefs = attributeByClass(ci, attributesDefs, tag, key, attributeData, config);
-		}
-		return attributesDefs;
-	}
-
-	public static HashMap<String, List<String>> attributeByClass(ContentInstance ci,
-			HashMap<String, List<String>> attributesDefs, TuringTag tag, String key, AttributeData attributeData,
-			IHandlerConfiguration config) throws Exception {
-		if (attributesDefs.get(tag.getTagName()) == null) {
-			attributesDefs.put(tag.getTagName(), new ArrayList<String>());
-		}
-		if (tag.getSrcClassName() != null) {
-			String className = tag.getSrcClassName();
-			if (log.isDebugEnabled()) {
-				log.debug("ClassName : " + className);
-			}
-
-			if (className != null) {
-				Object extAttribute = Class.forName(className).newInstance();
-				attributesDefs.get(tag.getTagName())
-						.add(((ExtAttributeInterface) extAttribute).consume(tag, ci, attributeData, config));
-			}
-		} else {
-			if (tag.getSrcAttributeType() != null && tag.getSrcAttributeType().equals("html")) {
-				attributesDefs.get(tag.getTagName()).add(Html2Text(attributeData.getValue().toString()));
-			} else {
-
-				if (attributeData != null && attributeData.getValue() != null) {
-					attributesDefs.get(tag.getTagName()).add(attributeData.getValue().toString());
-				}
-			}
-		}
-		return attributesDefs;
-	}
-
-	public static HashMap<String, List<String>> attributeByClass(ExternalResourceObject ci,
-			HashMap<String, List<String>> attributesDefs, TuringTag tag, String key, String attributeData,
-			IHandlerConfiguration config) throws Exception {
-		if (attributesDefs.get(tag.getTagName()) == null) {
-			attributesDefs.put(tag.getTagName(), new ArrayList<String>());
-		}
-		if (tag.getSrcClassName() != null) {
-			String className = tag.getSrcClassName();
-			if (log.isDebugEnabled()) {
-				log.debug("ClassName : " + className);
-			}
-
-			if (className != null) {
-				Object extAttribute = Class.forName(className).newInstance();
-				attributesDefs.get(tag.getTagName())
-						.add(((ExtAttributeInterface) extAttribute).consume(tag, ci, attributeData, config));
-			}
-		} else {
-			if (tag.getSrcAttributeType() != null && tag.getSrcAttributeType().equals("html")) {
-				attributesDefs.get(tag.getTagName()).add(Html2Text(attributeData));
-			} else {
-
-				if (attributeData != null) {
-					attributesDefs.get(tag.getTagName()).add(attributeData);
-				}
-			}
-		}
-		return attributesDefs;
-	}
-
-	public static HashMap<String, List<String>> attributeContentSelectUpdate(ContentInstance ci,
-			HashMap<String, List<String>> attributesDefs, TuringTag tag, String key, AttributeData attributeData,
-			IHandlerConfiguration config) throws Exception {
-
-		ContentInstance ciRelated = (ContentInstance) ManagedObject
-				.findByContentManagementId(new ManagedObjectVCMRef(attributeData.getValue().toString()));
-		if (ciRelated != null) {
-			if (log.isDebugEnabled()) {
-				log.debug("CTD Related: " + ciRelated.getObjectType().getData().getName());
-			}
-			// we force the type on the Viglet Turing side
-			HashMap<String, CTDMappings> relatedMappings = mappingDefinitions.getMappingDefinitions();
-
-			CTDMappings ctdRelatedMappings = relatedMappings.get(ciRelated.getObjectType().getData().getName());
-
-			if (ctdRelatedMappings == null) {
-
-				if (log.isDebugEnabled()) {
-					log.debug("Mapping definition is not found in the mappingXML for the CTD: "
-							+ ciRelated.getObjectType().getData().getName());
-				}
-				throw new MappingNotFoundException("Mapping definition is not found in the mappingXML for the CTD: "
-						+ ciRelated.getObjectType().getData().getName());
-			}
-
-			for (String keyRelated : ctdRelatedMappings.getIndexAttrs()) {
-				for (TuringTag tagRelated : ctdRelatedMappings.getIndexAttrTag(keyRelated)) {
-					if (keyRelated != null && tagRelated != null && tagRelated.getTagName() != null
-							&& tagRelated.getTagName().equals("url")) {
-
-						if (log.isDebugEnabled()) {
-							log.debug("Key Related: " + keyRelated + " Tag Related: " + tagRelated.getTagName()
-									+ " relation: " + TuringUtils.listToString(tagRelated.getSrcAttributeRelation())
-									+ " content Type: " + tagRelated.getSrcAttributeType());
-						}
-
-						attributesDefs = attributeXML(ciRelated, attributesDefs, tagRelated, keyRelated, config);
-
-					} else {
-						// Teste123
-						attributesDefs = attributeXML(ciRelated, attributesDefs, tagRelated, keyRelated, config);
-
-					}
-				}
-			}
-		}
-		return attributesDefs;
-	}
-
-	public static HashMap<String, List<String>> attributeXMLUpdate(ContentInstance ci,
-			HashMap<String, List<String>> attributesDefs, TuringTag tag, String key, AttributeData attributeData,
-			IHandlerConfiguration config) throws Exception {
-
-		if (log.isDebugEnabled()) {
-			if (attributeData != null) {
-				log.debug(tag.getTagName() + " = " + attributeData.getValue().toString());
-			}
-		}
-		// Semantic Attributes
-		if (attributeData != null && attributeData.getValue().toString() != null
-				&& !attributeData.getValue().toString().trim().equals("")) {
-			if (isTuringTag(tag.getTagName())) {
-				List<String> listAttributeValues = new ArrayList<String>();
-				StringTokenizer tokenizer = new StringTokenizer(attributeData.getValue().toString(), ",");
-				while (tokenizer.hasMoreTokens()) {
-					if (attributesDefs.get(tag.getTagName()) == null) {
-						attributesDefs.put(tag.getTagName(), new ArrayList<String>());
-					}
-					String token = tokenizer.nextToken();
-					if (!listAttributeValues.contains(token)) {
-						listAttributeValues.add(token);
-					}
-					if (isSinlgeValueTMETag(tag.getTagName())) {
-						// consider only the first value
-						break;
-					}
-				}
-				attributesDefs.put(tag.getTagName(), listAttributeValues);
-			} else {
-				attributesDefs = attributeByWidget(ci, attributesDefs, tag, key, attributeData, config);
-			}
-		}
-
-		return attributesDefs;
-	}
-
-	public static HashMap<String, List<String>> attributeXMLUpdate(ExternalResourceObject ci,
-			HashMap<String, List<String>> attributesDefs, TuringTag tag, String key, String attributeData,
-			IHandlerConfiguration config) throws Exception {
-
-		if (log.isDebugEnabled()) {
-			if (attributeData != null) {
-				log.debug(tag.getTagName() + " = " + attributeData);
-			}
-		}
-		// Semantic Attributes
-		if (attributeData != null && !attributeData.trim().equals("")) {
-			if (isTuringTag(tag.getTagName())) {
-				StringTokenizer tokenizer = new StringTokenizer(attributeData, ",");
-				while (tokenizer.hasMoreTokens()) {
-					String token = tokenizer.nextToken();
-					attributesDefs.get(tag.getTagName()).add(token);
-					if (isSinlgeValueTMETag(tag.getTagName())) {
-						// consider only the first value
-						break;
-					}
-				}
-			} else {
-				attributesDefs = attributeByClass(ci, attributesDefs, tag, key, attributeData, config);
-			}
-		}
-
-		return attributesDefs;
 	}
 
 	// This method post the content to the Viglet Turing broker
@@ -737,13 +372,6 @@ public class Turing {
 		}
 
 		return success;
-	}
-
-	// This method strips the HTML tags out of some content
-	private static String Html2Text(String text) {
-
-		return HtmlManipulator
-				.replaceHtmlEntities(HtmlManipulator.removeScriptContent(text).replaceAll("\\<.*?>", " "));
 	}
 
 	// This method returns the link to the primary Channel for Semantic
@@ -1041,7 +669,7 @@ public class Turing {
 		post.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=utf-8");
 		HttpClient httpclient = new HttpClient();
 		int result = httpclient.executeMethod(post);
-	
+
 		if (log.isDebugEnabled()) {
 			log.debug("Viglet Turing Index Request URI:" + post.getURI());
 			log.debug("Using the index:" + config.getIndex() + ", config:" + config.getConfig());
