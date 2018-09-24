@@ -22,8 +22,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
-import com.viglet.turing.broker.Indexer;
-import com.viglet.turing.broker.Turing;
+import com.viglet.turing.broker.TurWEM;
+import com.viglet.turing.broker.indexer.TurWEMIndex;
+import com.viglet.turing.broker.indexer.TurWEMIndexer;
 import com.viglet.turing.config.IHandlerConfiguration;
 import com.viglet.turing.index.ExternalResourceObject;
 import com.viglet.turing.index.IExternalResource;
@@ -118,7 +119,7 @@ public class ContentIndexer {
 			this.surveyMode = true;
 		}
 		if (null == (ot = ObjectType.findByName((String) objectTypeName))) {
-			if (!Turing.isExternalResource(objectTypeName, turingConfig)) {
+			if (!TurWEM.isExternalResource(objectTypeName, turingConfig)) {
 				MsgObject mo = ContentIndexerMsg.getMsgObject("4", (Object) objectTypeName);
 				this.consoleOut(mo);
 				logger.error((Object) mo);
@@ -138,7 +139,7 @@ public class ContentIndexer {
 	public void indexByObjectType(String objectTypeName, String[] vcmids) throws Exception {
 		ObjectType ot;
 		if (null == (ot = ObjectType.findByName((String) objectTypeName))) {
-			if (!Turing.isExternalResource(objectTypeName, turingConfig)) {
+			if (!TurWEM.isExternalResource(objectTypeName, turingConfig)) {
 				MsgObject mo = ContentIndexerMsg.getMsgObject("4", (Object) objectTypeName);
 				this.consoleOut(mo);
 				logger.error((Object) mo);
@@ -290,7 +291,7 @@ public class ContentIndexer {
 	}
 
 	private void indexByExternalResource(List<ExternalResourceObject> list, String typeName) throws Exception {
-		String className = Turing.getClassValidToIndex(typeName, turingConfig);
+		String className = TurWEMIndex.getClassValidToIndex(typeName, turingConfig);
 		IValidToIndex instance = null;
 		if (className != null) {
 			Class<?> clazz = Class.forName(className);
@@ -501,7 +502,7 @@ public class ContentIndexer {
 		int totalPages;
 		int totalEntries;
 		List<ExternalResourceObject> results = null;
-		String className = Turing.getCustomClassName(objectTypeName, turingConfig);
+		String className = TurWEM.getCustomClassName(objectTypeName, turingConfig);
 		if (className == null) {
 			return;
 		}
@@ -565,7 +566,7 @@ public class ContentIndexer {
 		rp.setTopRelationOnly(false);
 		IPagingList results = null;
 		AsObjectType aot = AsObjectType.getInstance((ObjectTypeRef) new ObjectTypeRef((ManagedObject) ot));
-		String className = Turing.getClassValidToIndex(ot.getData().getName(), turingConfig);
+		String className = TurWEMIndex.getClassValidToIndex(ot.getData().getName(), turingConfig);
 		IValidToIndex instance = null;
 		if (className != null) {
 			Class<?> clazz = Class.forName(className);
@@ -720,7 +721,7 @@ public class ContentIndexer {
 						ContentInstance ci = (ContentInstance) mo;
 						RecordBundle recordBundle = (RecordBundle) bundle;
 						///
-						indexed = Indexer.IndexCreate(mo, turingConfig, null, null);
+						indexed = TurWEMIndexer.IndexCreate(mo, turingConfig, null, null);
 						////
 
 						// this.getRegistrar().registerContentInstance(ci,
@@ -786,7 +787,7 @@ public class ContentIndexer {
 				this.logDebug("Attempting to register object: " + guid);
 				if (this.verifySearchEngineConnection()) {
 					MsgObject msg2;
-					indexed = Indexer.IndexCreate(mo, typeName, turingConfig);
+					indexed = TurWEMIndexer.IndexCreate(mo, typeName, turingConfig);
 					msg2 = ContentIndexerMsg.getMsgObject("10", (Object) guid);
 					this.logDebug(msg2.localize());
 					continue;
@@ -1193,12 +1194,12 @@ public class ContentIndexer {
 	}
 
 	protected void indexResetByType(String typeName) throws MalformedURLException {
-		Indexer.IndexDeleteByType(typeName, turingConfig);
+		TurWEMIndexer.IndexDeleteByType(typeName, turingConfig);
 	}
 
 	protected void indexDeleteById(String typeName, String id) throws MalformedURLException {
 		this.consoleOut("DELETE ID " + id + " in Viglet Turing index");
-		Indexer.IndexDelete(id, turingConfig, null, null);
+		TurWEMIndexer.IndexDelete(id, turingConfig, null, null);
 		this.consoleOut("ID " + id + " DELETED in Viglet Turing index");
 	}
 

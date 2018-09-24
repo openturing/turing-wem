@@ -2,7 +2,6 @@ package com.viglet.turing.broker;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.text.DateFormat;
@@ -17,7 +16,6 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.methods.DeleteMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
@@ -29,7 +27,6 @@ import com.viglet.turing.config.GenericResourceHandlerConfiguration;
 import com.viglet.turing.config.IHandlerConfiguration;
 import com.viglet.turing.exceptions.MappingNotFoundException;
 import com.viglet.turing.index.ExternalResourceObject;
-import com.viglet.turing.index.IValidToIndex;
 import com.viglet.turing.mappers.CTDMappings;
 import com.viglet.turing.mappers.MappingDefinitions;
 import com.viglet.turing.util.TuringUtils;
@@ -39,7 +36,6 @@ import com.vignette.as.client.exception.ApplicationException;
 import com.vignette.as.client.javabean.Channel;
 import com.vignette.as.client.javabean.ContentInstance;
 import com.vignette.as.client.javabean.IPagingList;
-import com.vignette.as.client.javabean.ManagedObject;
 import com.vignette.as.client.javabean.Site;
 import com.vignette.ext.templating.link.LinkBuilder;
 import com.vignette.ext.templating.link.LinkSpec;
@@ -47,10 +43,10 @@ import com.vignette.ext.templating.util.ContentUtil;
 import com.vignette.ext.templating.util.RequestContext;
 import com.vignette.logging.context.ContextLogger;
 
-public class Turing {
+public class TurWEM {
 
 	private static MappingDefinitions mappingDefinitions = null;
-	private static final ContextLogger log = ContextLogger.getLogger(Turing.class);
+	private static final ContextLogger log = ContextLogger.getLogger(TurWEM.class);
 
 	public static String getXML(ContentInstance ci, IHandlerConfiguration config) throws Exception {
 
@@ -238,141 +234,7 @@ public class Turing {
 
 	}
 
-	// This method post the content to the Viglet Turing broker
-	public static boolean indexCreate(ManagedObject mo, IHandlerConfiguration config) {
 
-		boolean success = false;
-		if (mappingDefinitions == null || !mappingDefinitions.getMappingsXML().equals(config.getMappingsXML())) {
-			mappingDefinitions = XmlParserUtilities.loadMappings(config.getMappingsXML());
-			if (mappingDefinitions == null) {
-
-				if (log.isDebugEnabled()) {
-					log.error(
-							"Mapping definitions are not loaded properly from mappingsXML: " + config.getMappingsXML());
-				}
-
-				return false;
-			}
-		}
-		// Let's sure we process only content instances...
-		if ((mo != null) && (mo instanceof ContentInstance)) {
-			try {
-				// Let's make sure we process only content instances...
-				if (mappingDefinitions.getMappingDefinitions().get(mo.getObjectType().getData().getName()) != null) {
-					// Let's make sure we only process content instances with a
-					// Locale attribute matching the configured locale
-					// String moLocale = (String)
-					// mo.getAttributeValue("OT_WEM_VA_LOCALE");
-					// String moLocale =
-					// mo.getLocale().getJavaLocale().toString();
-					/*
-					 * String configLocale = config.getLocale();
-					 * 
-					 * if (log.isDebugEnabled()) { log.debug("moLocale:" + moLocale +
-					 * " ---- configLocale: " + configLocale); }
-					 * 
-					 * if (moLocale!=null && configLocale!=null &&
-					 * moLocale.startsWith(configLocale)) {
-					 * 
-					 */
-
-					log.info(
-							"Viglet Turing indexer Processing Content Type: " + mo.getObjectType().getData().getName());
-					if (log.isDebugEnabled()) {
-						log.debug("Viglet Turing indexer Processing Content Type: "
-								+ mo.getObjectType().getData().getName());
-					}
-
-					// class to indicate if the content will be indexed or not
-					String className = getClassValidToIndex(mo.getObjectType().getData().getName(), config);
-					IValidToIndex instance = null;
-					if (className != null) {
-						Class<?> clazz = Class.forName(className);
-						if (clazz == null) {
-							if (log.isDebugEnabled()) {
-								log.debug("Valid to Index className is not found in the jar file: " + className);
-							}
-						} else {
-							instance = (IValidToIndex) clazz.newInstance();
-						}
-					}
-					if (instance != null && !instance.isValid((ContentInstance) mo, config)) {
-						if (isIndexed((ContentInstance) mo, config)) {
-							indexDelete(mo.getContentManagementId().getId(), config);
-						}
-						return false;
-					}
-					postIndex(getXML((ContentInstance) mo, config), config);
-					success = true;
-					/*
-					 * } else { if (log.isDebugEnabled()) { log.debug(
-					 * "Viglet Turing indexer ignoring a CI with the wrong locale"); } }
-					 */
-				} else {
-					if (log.isDebugEnabled()) {
-						log.debug("Mapping definition is not found in the mappingXML for the CTD: "
-								+ mo.getObjectType().getData().getName());
-						log.debug("Viglet Turing indexer Ingnoring Content Type: "
-								+ mo.getObjectType().getData().getName());
-					}
-				}
-
-			} catch (Exception e) {
-				log.error("Can't CREATE to Viglet Turing indexer: " + e.getMessage());
-				e.printStackTrace();
-			}
-		}
-		return success;
-	}
-
-	// This method deletes the content to the Viglet Turing broker
-	public static boolean indexDelete(String guid, IHandlerConfiguration config) {
-
-		boolean success = false;
-		try {
-			GetMethod get = new GetMethod(config.getTuringURL() + "/?action=delete&index=" + config.getIndex()
-					+ "&config=" + config.getConfig() + "&id=" + guid);
-			HttpClient httpclient = new HttpClient();
-			int result = httpclient.executeMethod(get);
-			if (log.isDebugEnabled()) {
-				log.debug("Viglet Turing Delete Request URI:" + get.getURI());
-				log.debug("Viglet Turing indexer response HTTP result is: " + result);
-				log.debug("Viglet Turing indexer response HTTP result is: " + get.getResponseBodyAsString());
-			}
-			get.releaseConnection();
-			success = true;
-
-		} catch (Exception e) {
-
-			log.error("Can't DELETE in Viglet Turing index: " + e.getMessage());
-		}
-
-		return success;
-
-	}
-
-	public static boolean indexDeleteByType(String typeName, IHandlerConfiguration config) {
-		boolean success = false;
-		try {
-			GetMethod get = new GetMethod(config.getTuringURL() + "/solr/" + config.getIndex()
-					+ "update/?stream.body=<delete><query>type:" + typeName + "</query></delete>");
-			HttpClient httpclient = new HttpClient();
-			int result = httpclient.executeMethod(get);
-			if (log.isDebugEnabled()) {
-				log.debug("Viglet Turing Delete Request URI:" + get.getURI());
-				log.debug("Viglet Turing indexer response HTTP result is: " + result);
-				log.debug("Viglet Turing indexer response HTTP result is: " + get.getResponseBodyAsString());
-			}
-			get.releaseConnection();
-			success = true;
-
-		} catch (Exception e) {
-
-			log.error("Can't DELETE in Viglet Turing index: " + e.getMessage());
-		}
-
-		return success;
-	}
 
 	// This method returns the link to the primary Channel for Semantic
 	// Navigation
@@ -613,120 +475,5 @@ public class Turing {
 		return ctdMappings.getCustomClassName();
 	}
 
-	public static String getClassValidToIndex(String objectTypeName, IHandlerConfiguration config) {
-		HashMap<String, CTDMappings> mappings = getMappingDefinitions(config).getMappingDefinitions();
-		CTDMappings ctdMappings = mappings.get(objectTypeName);
-		if (ctdMappings.getClassValidToIndex() == null) {
-			if (log.isDebugEnabled()) {
-				log.debug("Valid to Index className is not found in the mappingXML for the CTD: " + objectTypeName);
-			}
-			return null;
-		}
-		return ctdMappings.getClassValidToIndex();
-	}
-
-	public static boolean indexCreate(ExternalResourceObject mo, String typeName, IHandlerConfiguration config) {
-		boolean success = false;
-		try {
-			log.info("Viglet Turing indexer Processing Content Type: " + typeName);
-			if (log.isDebugEnabled()) {
-				log.debug("Viglet Turing indexer Processing Content Type: " + typeName);
-			}
-			// class to indicate if the content will be indexed or not
-			String className = getClassValidToIndex(typeName, config);
-			IValidToIndex instance = null;
-			if (className != null) {
-				Class<?> clazz = Class.forName(className);
-				if (clazz == null) {
-					if (log.isDebugEnabled()) {
-						log.debug("Valid to Index className is not found in the jar file: " + className);
-					}
-				} else {
-					instance = (IValidToIndex) clazz.newInstance();
-				}
-			}
-			if (instance != null && !instance.isValid(mo, config)) {
-				if (isIndexed(mo, config)) {
-					indexDelete(mo.getId(), config);
-				}
-				return false;
-			}
-			postIndex(getXML(mo, config), config);
-			success = true;
-		} catch (Exception e) {
-			log.error("Can't CREATE to Viglet Turing indexer: " + e.getMessage());
-			e.printStackTrace();
-		}
-		return success;
-	}
-
-	public static void postIndex(String xml, IHandlerConfiguration config) throws HttpException, IOException {
-		PostMethod post = new PostMethod(
-				config.getTuringURL() + "/?index=" + config.getIndex() + "&config=" + config.getConfig());
-		post.setParameter("data", xml);
-		post.setParameter("index", config.getIndex());
-		post.setParameter("config", config.getConfig());
-		post.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=utf-8");
-		HttpClient httpclient = new HttpClient();
-		int result = httpclient.executeMethod(post);
-
-		if (log.isDebugEnabled()) {
-			log.debug("Viglet Turing Index Request URI:" + post.getURI());
-			log.debug("Using the index:" + config.getIndex() + ", config:" + config.getConfig());
-			log.debug("XML:" + xml);
-			log.debug(
-					"Viglet Turing indexer response HTTP result is: " + result + ", for request uri:" + post.getURI());
-			log.debug("Viglet Turing indexer response HTTP result is: " + post.getResponseBodyAsString());
-		}
-		post.releaseConnection();
-	}
-
-	private static boolean isIndexed(ContentInstance mo, IHandlerConfiguration config) {
-		try {
-			HttpClient httpclient = new HttpClient();
-			GetMethod get = new GetMethod(config.getTuringURL() + "/solr/" + config.getIndex() + "/select/?q=id%3A"
-					+ mo.getContentManagementId().getId());
-			get.setRequestHeader("Accept", "*/*");
-			int result = httpclient.executeMethod(get);
-			if (log.isDebugEnabled()) {
-				log.debug("executing query:" + get.getURI());
-				log.debug("Viglet Turing indexer response HTTP result is: " + result);
-				log.debug("Viglet Turing indexer response HTTP response body is: " + get.getResponseBodyAsString());
-			}
-			if (result == 200) {
-				if (!"numFound=\"0\"".equals(get.getResponseBodyAsString())) {
-					return true;
-				}
-			}
-			get.releaseConnection();
-		} catch (Exception e) {
-			System.out.println("Error is " + e.getMessage());
-		}
-		return false;
-	}
-
-	private static boolean isIndexed(ExternalResourceObject mo, IHandlerConfiguration config) {
-		try {
-			HttpClient httpclient = new HttpClient();
-			GetMethod get = new GetMethod(
-					config.getTuringURL() + "/solr/" + config.getIndex() + "/select/?q=id%3A" + mo.getId());
-			get.setRequestHeader("Accept", "*/*");
-			int result = httpclient.executeMethod(get);
-			if (log.isDebugEnabled()) {
-				log.debug("executing query:" + get.getURI());
-				log.debug("Viglet Turing indexer response HTTP result is: " + result);
-				log.debug("Viglet Turing indexer response HTTP response body is: " + get.getResponseBodyAsString());
-			}
-			if (result == 200) {
-				if (!"numFound=\"0\"".equals(get.getResponseBodyAsString())) {
-					return true;
-				}
-			}
-			get.releaseConnection();
-		} catch (Exception e) {
-			System.out.println("Error is " + e.getMessage());
-		}
-		return false;
-	}
 
 }

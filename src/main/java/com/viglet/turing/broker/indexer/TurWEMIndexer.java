@@ -1,19 +1,19 @@
-package com.viglet.turing.broker;
+package com.viglet.turing.broker.indexer;
 
 import com.viglet.turing.config.IHandlerConfiguration;
 import com.viglet.turing.index.ExternalResourceObject;
 import com.vignette.as.client.javabean.ManagedObject;
 import com.vignette.logging.context.ContextLogger;
 
-public class Indexer {
+public class TurWEMIndexer {
 
-	private static final ContextLogger log = ContextLogger.getLogger(Indexer.class);
+	private static final ContextLogger log = ContextLogger.getLogger(TurWEMIndexer.class);
 
 	public static boolean IndexCreate(ManagedObject mo, IHandlerConfiguration config, String siteID, String site) {
 		if (log.isDebugEnabled()) {
 			log.debug("Creating Object in Viglet Turing index");
 		}
-		Turing.indexCreate(mo, config);
+		TurWEMIndex.indexCreate(mo, config);
 		return true;
 	}
 
@@ -21,7 +21,7 @@ public class Indexer {
 		if (log.isDebugEnabled()) {
 			log.debug("Updating Object in Viglet Turing index");
 		}
-		Turing.indexCreate(mo, config);
+		TurWEMIndex.indexCreate(mo, config);
 		return true;
 	}
 
@@ -29,7 +29,7 @@ public class Indexer {
 		if (log.isDebugEnabled()) {
 			log.debug("Deleting Object in Viglet Turing index");
 		}
-		Turing.indexDelete(GUID, config);
+		TurWEMDeindex.indexDelete(GUID, config);
 		return true;
 	}
 
@@ -37,7 +37,7 @@ public class Indexer {
 		if (log.isDebugEnabled()) {
 			log.debug("Deleting Object in Viglet Turing index");
 		}
-		Turing.indexDeleteByType(typeName, config);
+		TurWEMDeindex.indexDeleteByType(typeName, config);
 		return true;
 	}
 
@@ -45,7 +45,7 @@ public class Indexer {
 		if (log.isDebugEnabled()) {
 			log.debug("Creating Object in Viglet Turing index");
 		}
-		Turing.indexCreate(mo, typeName, config);
+		TurWEMIndex.indexCreate(mo, typeName, config);
 		return true;
 	}
 

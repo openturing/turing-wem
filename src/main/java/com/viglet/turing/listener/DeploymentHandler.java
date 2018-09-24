@@ -1,6 +1,6 @@
 package com.viglet.turing.listener;
 
-import com.viglet.turing.broker.Indexer;
+import com.viglet.turing.broker.indexer.TurWEMIndexer;
 import com.viglet.turing.config.IHandlerConfiguration;
 import com.vignette.as.client.javabean.ManagedObject;
 import com.vignette.as.server.event.AsDeploymentEvent;
@@ -21,18 +21,18 @@ public class DeploymentHandler {
     }
 
     public void onManagedObjectCreate(ManagedObject mo, AsDeploymentEvent deploymentEvent) {
-        boolean result = Indexer.IndexCreate(mo, config, deploymentEvent.getSiteId().getId(), deploymentEvent.getSiteName());
+        boolean result = TurWEMIndexer.IndexCreate(mo, config, deploymentEvent.getSiteId().getId(), deploymentEvent.getSiteName());
         log.debug("Viglet Turing Indexing Create: " + result);
      }
 
     public void onManagedObjectUpdate(ManagedObject mo, AsDeploymentEvent deploymentEvent) {
-        boolean result = Indexer.IndexUpdate(mo, config, deploymentEvent.getSiteId().getId(), deploymentEvent.getSiteName());
+        boolean result = TurWEMIndexer.IndexUpdate(mo, config, deploymentEvent.getSiteId().getId(), deploymentEvent.getSiteName());
         log.debug("Viglet Turing Indexing Update: " + result);
     }
 
     public void onManagedObjectDelete(ManagedObject mo, AsDeploymentEvent deploymentEvent) {
         String GUID = deploymentEvent.getManagedObjectVCMRef().getId();
-        boolean result = Indexer.IndexDelete(GUID, config, deploymentEvent.getSiteId().getId(), deploymentEvent.getSiteName());
+        boolean result = TurWEMIndexer.IndexDelete(GUID, config, deploymentEvent.getSiteId().getId(), deploymentEvent.getSiteName());
         log.debug("Viglet Turing Indexing Delete: " + result);
     }
 
