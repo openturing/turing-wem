@@ -1,6 +1,9 @@
 package com.viglet.turing.broker.indexer;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 
 import org.apache.commons.httpclient.HttpClient;
@@ -159,12 +162,31 @@ public class TurWEMIndex {
 	}
 
 	public static void postIndex(String xml, IHandlerConfiguration config) throws HttpException, IOException {
+		
+		Charset utf8Charset = Charset.forName("UTF-8");
+		Charset customCharset = Charset.forName("UTF-8");
+		ByteBuffer inputBuffer = ByteBuffer.wrap(xml.getBytes());
+
+		// decode UTF-8
+		CharBuffer data = utf8Charset.decode(inputBuffer);
+
+		// encode
+		ByteBuffer outputBuffer = customCharset.encode(data);
+
+		byte[] outputData = new String(outputBuffer.array()).getBytes("UTF-8");
+		String xmlUTF8 = new String(outputData);
+		
+		System.out.println(xml);
+		
+		
 		PostMethod post = new PostMethod(
 				config.getTuringURL() + "/?index=" + config.getIndex() + "&config=" + config.getConfig());
+		
 		post.setParameter("data", xml);
 		post.setParameter("index", config.getIndex());
 		post.setParameter("config", config.getConfig());
 		post.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=utf-8");
+		post.setRequestHeader("Accept-Encoding", "UTF-8");
 		HttpClient httpclient = new HttpClient();
 		int result = httpclient.executeMethod(post);
 
