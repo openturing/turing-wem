@@ -91,7 +91,7 @@ public class TurWEM {
 		String modDate = ci.getLastModTime() != null ? df.format(ci.getLastModTime()) : df.format(ci.getCreationTime());
 		String publishDate = ci.getLastPublishDate() != null ? df.format(ci.getLastPublishDate()) : modDate;
 		xml.append(
-				"<original_date>" + modDate + "</original_date><last_published>" + publishDate + "</last_published>");
+				"<modification_date>" + modDate + "</modification_date><publication_date>" + publishDate + "</publication_date>");
 
 		for (String key : ctdMappings.getIndexAttrs()) {
 			for (TuringTag tag : ctdMappings.getIndexAttrTag(key)) {
@@ -192,7 +192,7 @@ public class TurWEM {
 				: sdf.format(ci.getCreationTime());
 		String publishDate = ci.getLastPublishDate() != null ? sdf.format(ci.getLastPublishDate()) : modDate;
 		xml.append(
-				"<original_date>" + modDate + "</original_date><last_published>" + publishDate + "</last_published>");
+				"<modification_date>" + modDate + "</modification_date><publication_date>" + publishDate + "</publication_date>");
 
 		for (String key : ctdMappings.getIndexAttrs()) {
 			for (TuringTag tag : ctdMappings.getIndexAttrTag(key)) {
