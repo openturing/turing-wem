@@ -1,9 +1,6 @@
 package com.viglet.turing.broker.indexer;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.charset.Charset;
 import java.util.HashMap;
 
 import org.apache.commons.httpclient.HttpClient;
@@ -43,27 +40,11 @@ public class TurWEMIndex {
 				return false;
 			}
 		}
-		// Let's sure we process only content instances...
+
 		if ((mo != null) && (mo instanceof ContentInstance)) {
 			try {
-				// Let's make sure we process only content instances...
+		
 				if (mappingDefinitions.getMappingDefinitions().get(mo.getObjectType().getData().getName()) != null) {
-					// Let's make sure we only process content instances with a
-					// Locale attribute matching the configured locale
-					// String moLocale = (String)
-					// mo.getAttributeValue("OT_WEM_VA_LOCALE");
-					// String moLocale =
-					// mo.getLocale().getJavaLocale().toString();
-					/*
-					 * String configLocale = config.getLocale();
-					 * 
-					 * if (log.isDebugEnabled()) { log.debug("moLocale:" + moLocale +
-					 * " ---- configLocale: " + configLocale); }
-					 * 
-					 * if (moLocale!=null && configLocale!=null &&
-					 * moLocale.startsWith(configLocale)) {
-					 * 
-					 */
 
 					log.info(
 							"Viglet Turing indexer Processing Content Type: " + mo.getObjectType().getData().getName());
@@ -72,7 +53,6 @@ public class TurWEMIndex {
 								+ mo.getObjectType().getData().getName());
 					}
 
-					// class to indicate if the content will be indexed or not
 					String className = getClassValidToIndex(mo.getObjectType().getData().getName(), config);
 					IValidToIndex instance = null;
 					if (className != null) {
@@ -93,10 +73,7 @@ public class TurWEMIndex {
 					}
 					postIndex(TurWEM.getXML((ContentInstance) mo, config), config);
 					success = true;
-					/*
-					 * } else { if (log.isDebugEnabled()) { log.debug(
-					 * "Viglet Turing indexer ignoring a CI with the wrong locale"); } }
-					 */
+				
 				} else {
 					if (log.isDebugEnabled()) {
 						log.debug("Mapping definition is not found in the mappingXML for the CTD: "
@@ -133,7 +110,7 @@ public class TurWEMIndex {
 			if (log.isDebugEnabled()) {
 				log.debug("Viglet Turing indexer Processing Content Type: " + typeName);
 			}
-			// class to indicate if the content will be indexed or not
+
 			String className = getClassValidToIndex(typeName, config);
 			IValidToIndex instance = null;
 			if (className != null) {
@@ -162,23 +139,7 @@ public class TurWEMIndex {
 	}
 
 	public static void postIndex(String xml, IHandlerConfiguration config) throws HttpException, IOException {
-		
-		Charset utf8Charset = Charset.forName("UTF-8");
-		Charset customCharset = Charset.forName("UTF-8");
-		ByteBuffer inputBuffer = ByteBuffer.wrap(xml.getBytes());
-
-		// decode UTF-8
-		CharBuffer data = utf8Charset.decode(inputBuffer);
-
-		// encode
-		ByteBuffer outputBuffer = customCharset.encode(data);
-
-		byte[] outputData = new String(outputBuffer.array()).getBytes("UTF-8");
-		String xmlUTF8 = new String(outputData);
-		
-		System.out.println(xml);
-		
-		
+				
 		PostMethod post = new PostMethod(
 				config.getTuringURL() + "/?index=" + config.getIndex() + "&config=" + config.getConfig());
 		

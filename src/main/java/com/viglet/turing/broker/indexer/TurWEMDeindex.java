@@ -38,8 +38,8 @@ public class TurWEMDeindex {
 	public static boolean indexDeleteByType(String typeName, IHandlerConfiguration config) {
 		boolean success = false;
 		try {
-			GetMethod get = new GetMethod(config.getTuringURL() + "/solr/" + config.getIndex()
-					+ "update/?stream.body=<delete><query>type:" + typeName + "</query></delete>");
+			GetMethod get = new GetMethod(config.getTuringURL() + "/?action=delete&index=" + config.getIndex()
+					+ "&config=" + config.getConfig() + "&type=" + typeName);
 			HttpClient httpclient = new HttpClient();
 			int result = httpclient.executeMethod(get);
 			if (log.isDebugEnabled()) {
