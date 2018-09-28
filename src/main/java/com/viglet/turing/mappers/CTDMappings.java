@@ -115,7 +115,6 @@ public class CTDMappings {
 	public CTDMappings(HashMap<String, ArrayList<TuringTag>> commonDataMappings,
 			HashMap<String, ArrayList<TuringTag>> ctdSpecificMappings) {
 		this.commonDataMappings = commonDataMappings;
-		//this.ctdSpecificMappings = processCtdSpecificMappings(ctdSpecificMappings, commonDataMappings);
 		this.ctdSpecificMappings = ctdSpecificMappings;
 	}
 
@@ -143,37 +142,4 @@ public class CTDMappings {
 		this.classValidToIndex = classValidToIndex;
 	}
 
-	public HashMap<String, ArrayList<TuringTag>> processCtdSpecificMappings(
-			HashMap<String, ArrayList<TuringTag>> ctdSpecificMappings,
-			HashMap<String, ArrayList<TuringTag>> commonDataMappings) {
-		HashMap<String, TuringTag> commonDataMappingsByTagName = new HashMap<String, TuringTag>();
-		for (Entry<String, ArrayList<TuringTag>> entry : commonDataMappings.entrySet()) {
-			for (TuringTag tag : entry.getValue()) {
-				commonDataMappingsByTagName.put(tag.getTagName(), tag);
-			}
-		}
-		// Include Class from Common to CTD Specification if is not Mandatory
-		HashMap<String, ArrayList<TuringTag>> ctdSpecificMappingsModified = new HashMap<String, ArrayList<TuringTag>>();
-		for (Entry<String, ArrayList<TuringTag>> entryCtd : ctdSpecificMappings.entrySet()) {
-			ctdSpecificMappingsModified.put(entryCtd.getKey(), entryCtd.getValue());
-
-			Map<String, TuringTag> turinModifiedTagsMap = new HashMap<String, TuringTag>();
-			for (TuringTag turinModifiedTag : ctdSpecificMappingsModified.get(entryCtd.getKey())) {
-				turinModifiedTagsMap.put(turinModifiedTag.getTagName(), turinModifiedTag);
-			}
-
-			for (TuringTag tagCtd : entryCtd.getValue()) {
-				if (commonDataMappingsByTagName.containsKey(tagCtd.getTagName())) {
-					TuringTag tagCommonData = commonDataMappingsByTagName.get(tagCtd.getTagName());
-					if (!tagCommonData.getSrcMandatory() && tagCommonData.getSrcClassName() != null
-							&& tagCtd.getSrcClassName() == null) {
-						turinModifiedTagsMap.get(tagCtd.getTagName()).setSrcClassName(tagCommonData.getSrcClassName());
-					}
-				}
-			}
-			ArrayList<TuringTag> turingModifiedTags = new ArrayList<TuringTag>(turinModifiedTagsMap.values());
-			ctdSpecificMappingsModified.put(entryCtd.getKey(), turingModifiedTags);
-		}
-		return ctdSpecificMappingsModified;
-	}
 }
