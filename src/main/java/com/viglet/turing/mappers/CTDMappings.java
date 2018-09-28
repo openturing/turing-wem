@@ -3,6 +3,7 @@ package com.viglet.turing.mappers;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -82,6 +83,7 @@ public class CTDMappings {
 		for (Entry<String, ArrayList<TuringTag>> entryCtd : ctdSpecificMappings.entrySet()) {
 			String keyCtd = entryCtd.getKey();
 			for (TuringTag tagCtd : entryCtd.getValue()) {
+
 				tagCtds.put(tagCtd.getTagName(), keyCtd);
 				returnSet.add(keyCtd);
 			}
@@ -113,14 +115,7 @@ public class CTDMappings {
 	public CTDMappings(HashMap<String, ArrayList<TuringTag>> commonDataMappings,
 			HashMap<String, ArrayList<TuringTag>> ctdSpecificMappings) {
 		this.commonDataMappings = commonDataMappings;
-		this.ctdSpecificMappings = ctdSpecificMappings;
-	}
-
-	public void setCommonDataMappings(HashMap<String, ArrayList<TuringTag>> commonDataMappings) {
-		this.commonDataMappings = commonDataMappings;
-	}
-
-	public void setCtdSpecificMappings(HashMap<String, ArrayList<TuringTag>> ctdSpecificMappings) {
+		//this.ctdSpecificMappings = processCtdSpecificMappings(ctdSpecificMappings, commonDataMappings);
 		this.ctdSpecificMappings = ctdSpecificMappings;
 	}
 
@@ -146,5 +141,39 @@ public class CTDMappings {
 
 	public void setClassValidToIndex(String classValidToIndex) {
 		this.classValidToIndex = classValidToIndex;
+	}
+
+	public HashMap<String, ArrayList<TuringTag>> processCtdSpecificMappings(
+			HashMap<String, ArrayList<TuringTag>> ctdSpecificMappings,
+			HashMap<String, ArrayList<TuringTag>> commonDataMappings) {
+		HashMap<String, TuringTag> commonDataMappingsByTagName = new HashMap<String, TuringTag>();
+		for (Entry<String, ArrayList<TuringTag>> entry : commonDataMappings.entrySet()) {
+			for (TuringTag tag : entry.getValue()) {
+				commonDataMappingsByTagName.put(tag.getTagName(), tag);
+			}
+		}
+		// Include Class from Common to CTD Specification if is not Mandatory
+		HashMap<String, ArrayList<TuringTag>> ctdSpecificMappingsModified = new HashMap<String, ArrayList<TuringTag>>();
+		for (Entry<String, ArrayList<TuringTag>> entryCtd : ctdSpecificMappings.entrySet()) {
+			ctdSpecificMappingsModified.put(entryCtd.getKey(), entryCtd.getValue());
+
+			Map<String, TuringTag> turinModifiedTagsMap = new HashMap<String, TuringTag>();
+			for (TuringTag turinModifiedTag : ctdSpecificMappingsModified.get(entryCtd.getKey())) {
+				turinModifiedTagsMap.put(turinModifiedTag.getTagName(), turinModifiedTag);
+			}
+
+			for (TuringTag tagCtd : entryCtd.getValue()) {
+				if (commonDataMappingsByTagName.containsKey(tagCtd.getTagName())) {
+					TuringTag tagCommonData = commonDataMappingsByTagName.get(tagCtd.getTagName());
+					if (!tagCommonData.getSrcMandatory() && tagCommonData.getSrcClassName() != null
+							&& tagCtd.getSrcClassName() == null) {
+						turinModifiedTagsMap.get(tagCtd.getTagName()).setSrcClassName(tagCommonData.getSrcClassName());
+					}
+				}
+			}
+			ArrayList<TuringTag> turingModifiedTags = new ArrayList<TuringTag>(turinModifiedTagsMap.values());
+			ctdSpecificMappingsModified.put(entryCtd.getKey(), turingModifiedTags);
+		}
+		return ctdSpecificMappingsModified;
 	}
 }

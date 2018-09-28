@@ -188,9 +188,9 @@ public class XmlParserUtilities {
 
 					if (log.isDebugEnabled()) {
 						if (srcMandatory) {
-							log.debug("MANDATORY: verdadeiro");
+							log.debug("MANDATORY: true");
 						} else {
-							log.debug("MANDATORY: falso");
+							log.debug("MANDATORY: false");
 						}
 					}
 				}
@@ -203,9 +203,9 @@ public class XmlParserUtilities {
 
 					if (log.isDebugEnabled()) {
 						if (srcUniqueValues) {
-							log.debug("UNIQUE VALUES: verdadeiro");
+							log.debug("UNIQUE VALUES: true");
 						} else {
-							log.debug("UNIQUE VALUES: falso");
+							log.debug("UNIQUE VALUES: false");
 						}
 					}
 				}

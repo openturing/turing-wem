@@ -20,8 +20,8 @@ public class TurWEMAttrXML {
 	private static final ContextLogger log = ContextLogger.getLogger(TurWEMAttrXML.class);
 
 	public static HashMap<String, List<String>> attributeXML(ContentInstance ci,
-			HashMap<String, List<String>> attributesDefs, TuringTag tag, String key, IHandlerConfiguration config,  MappingDefinitions mappingDefinitions)
-			throws Exception {
+			HashMap<String, List<String>> attributesDefs, TuringTag tag, String key, IHandlerConfiguration config,
+			MappingDefinitions mappingDefinitions) throws Exception {
 		// Relator
 		if (tag.getSrcAttributeRelation() != null && tag.getSrcAttributeRelation().size() > 0) {
 			AttributedObject[] relation = ci.getRelations(tag.getSrcAttributeRelation().get(0));
@@ -43,7 +43,8 @@ public class TurWEMAttrXML {
 							log.debug("Key : " + key + " Value: " + attributeValue);
 						}
 						if (attributeValue != null && !attributeValue.trim().equals("")) {
-							attributesDefs = attributeXMLUpdate(ci, attributesDefs, tag, key, attributeData, config, mappingDefinitions);
+							attributesDefs = attributeXMLUpdate(ci, attributesDefs, tag, key, attributeData, config,
+									mappingDefinitions);
 						}
 					}
 
@@ -63,13 +64,16 @@ public class TurWEMAttrXML {
 
 			if (ci.getAttributeValue(key) != null && !ci.getAttributeValue(key).toString().trim().equals("")) {
 				AttributeData attributeData = ci.getAttribute(key);
-				attributesDefs = attributeXMLUpdate(ci, attributesDefs, tag, key, attributeData, config, mappingDefinitions);
-			} else if (tag.getSrcClassName() != null) {
+				attributesDefs = attributeXMLUpdate(ci, attributesDefs, tag, key, attributeData, config,
+						mappingDefinitions);
+			} else if (tag.getSrcClassName() != null
+					&& (tag.getSrcAttribute().startsWith("CLASSNAME_") || ci.getAttributeValue(key) != null)) {			
 				attributesDefs = TurWEMAttrClass.attributeByClass(ci, attributesDefs, tag, key, null, config);
 			}
 		}
 		return attributesDefs;
 	}
+
 	@SuppressWarnings("unchecked")
 	public static HashMap<String, List<String>> attributeXML(ExternalResourceObject ci,
 			HashMap<String, List<String>> attributesDefs, TuringTag tag, String key, IHandlerConfiguration config)
@@ -116,10 +120,10 @@ public class TurWEMAttrXML {
 		}
 		return attributesDefs;
 	}
-	
+
 	public static HashMap<String, List<String>> attributeXMLUpdate(ContentInstance ci,
 			HashMap<String, List<String>> attributesDefs, TuringTag tag, String key, AttributeData attributeData,
-			IHandlerConfiguration config,  MappingDefinitions mappingDefinitions) throws Exception {
+			IHandlerConfiguration config, MappingDefinitions mappingDefinitions) throws Exception {
 
 		if (log.isDebugEnabled()) {
 			if (attributeData != null) {
@@ -147,13 +151,14 @@ public class TurWEMAttrXML {
 				}
 				attributesDefs.put(tag.getTagName(), listAttributeValues);
 			} else {
-				attributesDefs = TurWEMAttrWidget.attributeByWidget(ci, attributesDefs, tag, key, attributeData, config, mappingDefinitions);
+				attributesDefs = TurWEMAttrWidget.attributeByWidget(ci, attributesDefs, tag, key, attributeData, config,
+						mappingDefinitions);
 			}
 		}
 
 		return attributesDefs;
 	}
-	
+
 	public static HashMap<String, List<String>> attributeXMLUpdate(ExternalResourceObject ci,
 			HashMap<String, List<String>> attributesDefs, TuringTag tag, String key, String attributeData,
 			IHandlerConfiguration config) throws Exception {

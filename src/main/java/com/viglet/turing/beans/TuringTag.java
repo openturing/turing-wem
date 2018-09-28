@@ -22,6 +22,14 @@ public class TuringTag {
 		setSrcUniqueValues(srcUniqueValues);
 	}
 
+	@Override
+	public String toString() {
+		return String.format(
+				"tagName: %s, srcAttr: %s, srcAttrRelation: %s, srcAttrType: %s, className: %s, mandatory: %s",
+				this.getTagName(), this.getSrcAttribute(), this.getSrcAttributeRelation(), this.getSrcAttributeType(),
+				this.getSrcClassName(), this.getSrcMandatory());
+	}
+
 	public TuringTag() {
 	}
 

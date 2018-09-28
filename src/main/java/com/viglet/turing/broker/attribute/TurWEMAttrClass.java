@@ -15,7 +15,7 @@ import com.vignette.logging.context.ContextLogger;
 
 public class TurWEMAttrClass {
 	private static final ContextLogger log = ContextLogger.getLogger(TurWEMAttrXML.class);
-	
+
 	public static HashMap<String, List<String>> attributeByClass(ContentInstance ci,
 			HashMap<String, List<String>> attributesDefs, TuringTag tag, String key, AttributeData attributeData,
 			IHandlerConfiguration config) throws Exception {
@@ -28,24 +28,21 @@ public class TurWEMAttrClass {
 				log.debug("ClassName : " + className);
 			}
 
-			if (className != null) {
-				Object extAttribute = Class.forName(className).newInstance();
-				attributesDefs.get(tag.getTagName())
-						.add(((ExtAttributeInterface) extAttribute).consume(tag, ci, attributeData, config));
-			}
+			Object extAttribute = Class.forName(className).newInstance();
+			attributesDefs.get(tag.getTagName())
+					.add(((ExtAttributeInterface) extAttribute).consume(tag, ci, attributeData, config));
 		} else {
 			if (tag.getSrcAttributeType() != null && tag.getSrcAttributeType().equals("html")) {
-				attributesDefs.get(tag.getTagName()).add(HtmlManipulator.Html2Text(attributeData.getValue().toString()));
-			} else {
-
-				if (attributeData != null && attributeData.getValue() != null) {
-					attributesDefs.get(tag.getTagName()).add(attributeData.getValue().toString());
-				}
+				attributesDefs.get(tag.getTagName())
+						.add(HtmlManipulator.Html2Text(attributeData.getValue().toString()));
+			} else if (attributeData != null && attributeData.getValue() != null) {
+				attributesDefs.get(tag.getTagName()).add(attributeData.getValue().toString());
 			}
+
 		}
 		return attributesDefs;
 	}
-	
+
 	public static HashMap<String, List<String>> attributeByClass(ExternalResourceObject ci,
 			HashMap<String, List<String>> attributesDefs, TuringTag tag, String key, String attributeData,
 			IHandlerConfiguration config) throws Exception {
@@ -57,21 +54,17 @@ public class TurWEMAttrClass {
 			if (log.isDebugEnabled()) {
 				log.debug("ClassName : " + className);
 			}
+			Object extAttribute = Class.forName(className).newInstance();
+			attributesDefs.get(tag.getTagName())
+					.add(((ExtAttributeInterface) extAttribute).consume(tag, ci, attributeData, config));
 
-			if (className != null) {
-				Object extAttribute = Class.forName(className).newInstance();
-				attributesDefs.get(tag.getTagName())
-						.add(((ExtAttributeInterface) extAttribute).consume(tag, ci, attributeData, config));
-			}
 		} else {
 			if (tag.getSrcAttributeType() != null && tag.getSrcAttributeType().equals("html")) {
 				attributesDefs.get(tag.getTagName()).add(HtmlManipulator.Html2Text(attributeData));
-			} else {
-
-				if (attributeData != null) {
-					attributesDefs.get(tag.getTagName()).add(attributeData);
-				}
+			} else if (attributeData != null) {
+				attributesDefs.get(tag.getTagName()).add(attributeData);
 			}
+
 		}
 		return attributesDefs;
 	}
