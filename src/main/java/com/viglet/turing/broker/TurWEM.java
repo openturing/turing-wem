@@ -84,15 +84,6 @@ public class TurWEM {
 		attributesDefs.put("title", new ArrayList<String>());
 		attributesDefs.put("url", new ArrayList<String>());
 
-		TimeZone tz = TimeZone.getTimeZone("UTC");
-		DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");
-		df.setTimeZone(tz);
-
-		String modDate = ci.getLastModTime() != null ? df.format(ci.getLastModTime()) : df.format(ci.getCreationTime());
-		String publishDate = ci.getLastPublishDate() != null ? df.format(ci.getLastPublishDate()) : modDate;
-		xml.append(
-				"<modification_date>" + modDate + "</modification_date><publication_date>" + publishDate + "</publication_date>");
-
 		for (String key : ctdMappings.getIndexAttrs()) {
 			for (TuringTag tag : ctdMappings.getIndexAttrTag(key)) {
 				if (key != null && tag != null && tag.getTagName() != null) {
@@ -183,16 +174,6 @@ public class TurWEM {
 		attributesDefs.put("text", new ArrayList<String>());
 		attributesDefs.put("title", new ArrayList<String>());
 		attributesDefs.put("url", new ArrayList<String>());
-
-		// for now considering the current date as published and original data
-		// SimpleDateFormat sdf = new SimpleDateFormat("MMM d yyyy");
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
-		// String currentDate = sdf.format(new Date());
-		String modDate = ci.getLastModTime() != null ? sdf.format(ci.getLastModTime())
-				: sdf.format(ci.getCreationTime());
-		String publishDate = ci.getLastPublishDate() != null ? sdf.format(ci.getLastPublishDate()) : modDate;
-		xml.append(
-				"<modification_date>" + modDate + "</modification_date><publication_date>" + publishDate + "</publication_date>");
 
 		for (String key : ctdMappings.getIndexAttrs()) {
 			for (TuringTag tag : ctdMappings.getIndexAttrTag(key)) {
@@ -320,7 +301,7 @@ public class TurWEM {
 				request = request + "/format/xml";
 			}
 			if (log.isDebugEnabled()) {
-				log.debug("OSTN request is " + request);
+				log.debug("Viglet Turing request is " + request);
 			}
 			// Performs a simple GET request to the Viglet Turing server
 			GetMethod get = new GetMethod(request);
@@ -332,7 +313,7 @@ public class TurWEM {
 
 			int result = httpclient.executeMethod(get);
 			if (log.isDebugEnabled()) {
-				log.debug("OSTN request HTTP return code is " + result);
+				log.debug("Viglet Turing request HTTP return code is " + result);
 			}
 			InputStream bodyStream = get.getResponseBodyAsStream();
 			BufferedReader br = new BufferedReader(new InputStreamReader(bodyStream, "UTF-8"));
@@ -345,7 +326,7 @@ public class TurWEM {
 			// String xml = get.getResponseBodyAsString();
 			String xml = sb.toString();
 			if (log.isDebugEnabled()) {
-				log.debug("OSTN request HTTP response string is " + xml);
+				log.debug("Viglet Turing request HTTP response string is " + xml);
 			}
 			get.releaseConnection();
 
