@@ -40,7 +40,7 @@ public class ETLTuringTranslator {
 			href = regexMatcher.group(1);
 		}
 		if (log.isDebugEnabled()) {
-			log.error("ETLOTSNTranslator Href: " + href);
+			log.error("ETLTuringTranslator Href: " + href);
 		}
 		if (href != null) {
 			Pattern guidFinder = Pattern.compile(
@@ -149,14 +149,7 @@ public class ETLTuringTranslator {
 		if ((sr != null) && (sr.length > 0)) {
 			siteNameAssociated = sr[0].getSite().getName();
 
-			if (log.isDebugEnabled()) {
-				log.debug("ETLTuringTranslator getSiteUrl:" + siteNameAssociated);
-			}
-
-			String cdaServer = config.getCDAServer(siteNameAssociated) + ":";
-			String cdaPort = config.getCDAPort(siteNameAssociated);
-
-			return "http://" + cdaServer + cdaPort;
+			return getSiteDomainBySiteName(siteNameAssociated);
 		} else {
 			log.info("ETLTuringTranslator Content without channel:" + mo.getName().toString());
 			return null;
@@ -164,6 +157,19 @@ public class ETLTuringTranslator {
 
 	}
 
+	public String getSiteDomainBySiteName(String siteName)
+			throws ApplicationException, RemoteException, AuthorizationException, ValidationException {
+			if (log.isDebugEnabled()) {
+				log.debug("ETLTuringTranslator getSiteUrl:" + siteName);
+			}
+
+			String cdaServer = config.getCDAServer(siteName) + ":";
+			String cdaPort = config.getCDAPort(siteName);
+
+			return "http://" + cdaServer + cdaPort;
+
+
+	}
 	public String getSiteUrl(ManagedObject mo)
 			throws ApplicationException, RemoteException, AuthorizationException, ValidationException {
 		ChannelRef[] fcref = null;
