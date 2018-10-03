@@ -10,6 +10,7 @@ import com.vignette.logging.context.ContextLogger;
 
 public class HTML2Text implements ExtAttributeInterface {
 	private static final ContextLogger log = ContextLogger.getLogger(HTML2Text.class);
+	private static final String EMPTY_STRING = "";
 	
 	@Override
 	public String consume(TuringTag tag, ContentInstance ci, AttributeData attributeData, IHandlerConfiguration config)
@@ -18,7 +19,12 @@ public class HTML2Text implements ExtAttributeInterface {
 			log.debug("Executing HTML2Text");
 		}
 		
-		return HtmlManipulator.Html2Text(attributeData.getValue().toString());
+		if (attributeData != null && attributeData.getValue() != null) {
+			return HtmlManipulator.Html2Text(attributeData.getValue().toString());
+		}
+		else {
+			return EMPTY_STRING;
+		}
 	}
 
 	@Override
@@ -28,6 +34,6 @@ public class HTML2Text implements ExtAttributeInterface {
 		if (log.isDebugEnabled()) {
 			log.debug("Executing HTML2Text");
 		}
-		return null;
+		return EMPTY_STRING;
 	}
 }

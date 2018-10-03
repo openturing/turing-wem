@@ -159,48 +159,57 @@ public class ETLTuringTranslator {
 
 	public String getSiteDomainBySiteName(String siteName)
 			throws ApplicationException, RemoteException, AuthorizationException, ValidationException {
-			if (log.isDebugEnabled()) {
-				log.debug("ETLTuringTranslator getSiteUrl:" + siteName);
-			}
+		if (log.isDebugEnabled()) {
+			log.debug("ETLTuringTranslator getSiteUrl:" + siteName);
+		}
 
-			String cdaServer = config.getCDAServer(siteName) + ":";
-			String cdaPort = config.getCDAPort(siteName);
+		String cdaServer = config.getCDAServer(siteName) + ":";
+		String cdaPort = config.getCDAPort(siteName);
 
-			return "http://" + cdaServer + cdaPort;
-
+		return "http://" + cdaServer + cdaPort;
 
 	}
+
 	public String getSiteUrl(ManagedObject mo)
 			throws ApplicationException, RemoteException, AuthorizationException, ValidationException {
 		ChannelRef[] fcref = null;
 		Channel firstChannel;
 		SiteRef[] sr = null;
 		String siteNameAssociated = "default";
-		if (mo instanceof ContentInstance) {
-			ContentInstance ci = (ContentInstance) mo;
-			fcref = ci.getChannelAssociations();
+		if (mo != null) {
+			if (mo instanceof ContentInstance) {
+				ContentInstance ci = (ContentInstance) mo;
+				fcref = ci.getChannelAssociations();
 
-			if (fcref.length > 0) {
-				firstChannel = fcref[0].getChannel();
-				sr = firstChannel.getSiteRefs();
-			}
-		} else if (mo instanceof Channel) {
-			Channel ch = (Channel) mo;
-			sr = ch.getSiteRefs();
-		}
-
-		if ((sr != null) && (sr.length > 0)) {
-			siteNameAssociated = sr[0].getSite().getName();
-
-			if (log.isDebugEnabled()) {
-				log.debug("ETLTuringTranslator getSiteUrl:" + siteNameAssociated);
+				if (fcref.length > 0) {
+					firstChannel = fcref[0].getChannel();
+					sr = firstChannel.getSiteRefs();
+				}
+			} else if (mo instanceof Channel) {
+				Channel ch = (Channel) mo;
+				sr = ch.getSiteRefs();
 			}
 
-			String cdaContextName = "/" + config.getCDAContextName(siteNameAssociated) + "/";
+			if ((sr != null) && (sr.length > 0)) {
+				siteNameAssociated = sr[0].getSite().getName();
 
-			return getSiteDomain(mo) + cdaContextName + normalizeText(siteNameAssociated);
+				if (log.isDebugEnabled()) {
+					log.debug("ETLTuringTranslator getSiteUrl:" + siteNameAssociated);
+				}
+
+				String cdaContextName = "/" + config.getCDAContextName(siteNameAssociated) + "/";
+
+				return getSiteDomain(mo) + cdaContextName + normalizeText(siteNameAssociated);
+			} else {
+				if (log.isDebugEnabled()) {
+					log.debug("ETLTuringTranslator Content without channel:" + mo.getName().toString());
+				}
+				return null;
+			}
 		} else {
-			log.info("ETLTuringTranslator Content without channel:" + mo.getName().toString());
+			if (log.isDebugEnabled()) {
+				log.debug("ETLTuringTranslator Content is null");
+			}
 			return null;
 		}
 
