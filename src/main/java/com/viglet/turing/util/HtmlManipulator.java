@@ -133,7 +133,7 @@ public final class HtmlManipulator {
 			t.append(c);
 		}
 
-		return t.toString();
+		return t.toString().trim();
 	}
 
 	/**
