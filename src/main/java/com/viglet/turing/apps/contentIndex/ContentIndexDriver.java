@@ -272,20 +272,20 @@ public class ContentIndexDriver {
 		if (helpShown()) {
 			return; // Help displayed; No more processing
 		}
-
+		// TODO: Verifiy Viglet Turing Connection
 		// STEP 2: Verify (and make) connections to VCM and the search engine
-		if (!verifyConnections()) {
-			return; // If either VCM or the search engine cannot be contacted,
-					// bail...
-		}
-		try {
-			// STEP 3: add the system regions to search engine
-			PluggableInterfaceFactory.getSearchAdmin().initialize();
-		} catch (ASException e) {
-			e.printStackTrace();
-			MsgObject mo = OpenTextMsg.getMsgObject(OpenTextMsg.ERROR_ADDING_SYS_REGIONS, e.getLocalizedMessage());
-			error(mo, e);
-		}
+//		if (!verifyConnections()) {
+//			return; // If either VCM or the search engine cannot be contacted,
+//					// bail...
+//		}
+//		try {
+//			// STEP 3: add the system regions to search engine
+//			PluggableInterfaceFactory.getSearchAdmin().initialize();
+//		} catch (ASException e) {
+//			e.printStackTrace();
+//			MsgObject mo = OpenTextMsg.getMsgObject(OpenTextMsg.ERROR_ADDING_SYS_REGIONS, e.getLocalizedMessage());
+//			error(mo, e);
+//		}
 		// Delegate the user request information to the ContentIndexer
 		doIndexAction();
 	}

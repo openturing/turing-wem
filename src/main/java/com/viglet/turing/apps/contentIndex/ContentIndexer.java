@@ -448,9 +448,10 @@ public class ContentIndexer {
 		int totalPages;
 		Iterator it;
 		int totalEntries;
-		if (!this.surveyMode) {
-			this.registerObjectType(ot);
-		}
+		// TODO: Create register Version for Viglet Turing
+		// if (!this.surveyMode) {
+		// this.registerObjectType(ot);
+		// }
 		try {
 			indexResetByType(ot.getData().getName());
 			IPagingList results = this.retrieveInstances(ot, locale);
@@ -715,39 +716,42 @@ public class ContentIndexer {
 			try {
 				guid = mo.getContentManagementId().getId();
 				this.logDebug("Attempting to register object: " + guid);
-				if (this.verifySearchEngineConnection()) {
-					MsgObject msg2;
-					if (mo instanceof ContentInstance) {
-						ContentInstance ci = (ContentInstance) mo;
-						RecordBundle recordBundle = (RecordBundle) bundle;
-						///
-						indexed = TurWEMIndexer.IndexCreate(mo, turingConfig, null, null);
-						////
+				// TODO: Verify Viglet Turing Connection
+				// if (this.verifySearchEngineConnection()) {
+				MsgObject msg2;
+				if (mo instanceof ContentInstance) {
+					ContentInstance ci = (ContentInstance) mo;
+					RecordBundle recordBundle = (RecordBundle) bundle;
+					///
+					indexed = TurWEMIndexer.IndexCreate(mo, turingConfig, null, null);
+					////
 
-						// this.getRegistrar().registerContentInstance(ci,
-						// (RecordItemBundle)recordBundle);
-						msg2 = ContentIndexerMsg.getMsgObject("10", (Object) guid);
-						this.logDebug(msg2.localize());
-						// indexed = true;
-						continue;
-					}
-					if (!(mo instanceof StaticFile))
-						continue;
-					StaticFile sf = (StaticFile) mo;
-					StaticFileBundle sfBundle = (StaticFileBundle) bundle;
-					this.getRegistrar().registerFile(sf, null, sfBundle, null);
+					// this.getRegistrar().registerContentInstance(ci,
+					// (RecordItemBundle)recordBundle);
 					msg2 = ContentIndexerMsg.getMsgObject("10", (Object) guid);
 					this.logDebug(msg2.localize());
-					indexed = true;
+					// indexed = true;
 					continue;
 				}
-				if (counter < 2)
+				if (!(mo instanceof StaticFile))
 					continue;
+				StaticFile sf = (StaticFile) mo;
+				StaticFileBundle sfBundle = (StaticFileBundle) bundle;
+				this.getRegistrar().registerFile(sf, null, sfBundle, null);
+				msg2 = ContentIndexerMsg.getMsgObject("10", (Object) guid);
+				this.logDebug(msg2.localize());
+				indexed = true;
+				continue;
+				// }
+				/*
+				 if (counter < 2)
+				 continue;
 				MsgObject msg3 = ContentIndexerMsg.getMsgObject("3");
 				logger.error((Object) msg3);
 				this.consoleOut(msg3);
-				this.consoleOut(ContentIndexerMsg.getMsgObject("27"));
+				this.consoleOut(ContentIndexerMsg.getMsgObject("27"));				
 				throw new ContentIndexException(msg3);
+				*/
 			} catch (ValidationException e) {
 				msg = ContentIndexerMsg.getMsgObject("9", (Object) guid);
 				this.consoleOut(msg);

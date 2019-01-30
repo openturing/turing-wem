@@ -127,7 +127,7 @@ public class ETLTuringTranslator {
 		return text.replaceAll("-", "–").replaceAll(" ", "-").replaceAll("\\?", "%3F");
 	}
 
-	public String getSiteDomain(ManagedObject mo)
+	public String getSiteName(ManagedObject mo)
 			throws ApplicationException, RemoteException, AuthorizationException, ValidationException {
 		ChannelRef[] fcref = null;
 		Channel firstChannel;
@@ -149,11 +149,18 @@ public class ETLTuringTranslator {
 		if ((sr != null) && (sr.length > 0)) {
 			siteNameAssociated = sr[0].getSite().getName();
 
-			return getSiteDomainBySiteName(siteNameAssociated);
+			return siteNameAssociated;
 		} else {
 			log.info("ETLTuringTranslator Content without channel:" + mo.getName().toString());
 			return null;
 		}
+
+	}
+	
+	public String getSiteDomain(ManagedObject mo)
+			throws ApplicationException, RemoteException, AuthorizationException, ValidationException {
+		String siteName = this.getSiteName(mo);		
+		return getSiteDomainBySiteName(siteName);		
 
 	}
 

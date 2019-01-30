@@ -14,10 +14,12 @@ public class DPSUrl implements ExtAttributeInterface {
 	@Override
 	public String consume(TuringTag tag, ContentInstance ci, AttributeData attributeData, IHandlerConfiguration config)
 			throws Exception {
+		ETLTuringTranslator etlTranslator = new ETLTuringTranslator(config);
+		
 		if (log.isDebugEnabled()) {
 			log.debug("Executing DPSUrl");
 		}
-		ETLTuringTranslator etlTranslator = new ETLTuringTranslator(config);
+		
 		String attribContent = null;
 		if (attributeData != null) {
 			attribContent = attributeData.getValue().toString();
