@@ -44,6 +44,7 @@ public class GenericResourceHandlerConfiguration implements IHandlerConfiguratio
 		parsePropertiesFromResource();
 	}
 
+	@Override
 	public String getTuringURL() {
 		return turingURL;
 	}
@@ -52,30 +53,37 @@ public class GenericResourceHandlerConfiguration implements IHandlerConfiguratio
 		this.turingURL = turingURL;
 	}
 
+	@Override
 	public String getConfig() {
 		return config;
 	}
 
+	@Override
 	public String getIndex() {
 		return index;
 	}
 
+	@Override
 	public String getChannel() {
 		return channel;
 	}
 
+	@Override
 	public String getLocale() {
 		return locale;
 	}
 
+	@Override
 	public String getMappingsXML() {
 		return mappingsXML;
 	}
 
+	@Override
 	public String getCDAContextName() {
 		return cdaContextName;
 	}
 
+	@Override
 	public String getCDAContextName(String site) {
 		return getDynamicProperties("cda." + site + ".contextname");
 	}
@@ -84,10 +92,12 @@ public class GenericResourceHandlerConfiguration implements IHandlerConfiguratio
 		this.cdaContextName = cdaContextName;
 	}
 
+	@Override
 	public String getCDAServer() {
 		return cdaServer;
 	}
 
+	@Override
 	public String getCDAServer(String site) {
 		return getDynamicProperties("cda." + site + ".server");
 	}
@@ -96,10 +106,12 @@ public class GenericResourceHandlerConfiguration implements IHandlerConfiguratio
 		this.cdaServer = cdaServer;
 	}
 
+	@Override
 	public String getCDAPort() {
 		return cdaPort;
 	}
 
+	@Override
 	public String getCDAPort(String site) {
 		return getDynamicProperties("cda." + site + ".port");
 	}
@@ -108,6 +120,7 @@ public class GenericResourceHandlerConfiguration implements IHandlerConfiguratio
 		this.cdaPort = cdaPort;
 	}
 
+	@Override
 	public String getSiteFormat() {
 		return siteFormat;
 	}
@@ -181,7 +194,7 @@ public class GenericResourceHandlerConfiguration implements IHandlerConfiguratio
 
 	private void parseProperties(Properties properties) {
 
-		turingURL = properties.getProperty("turing.url");	
+		turingURL = properties.getProperty("turing.url");
 		config = properties.getProperty("turing.config");
 		index = properties.getProperty("turing.index");
 		locale = properties.getProperty("turing.locale");
@@ -200,5 +213,23 @@ public class GenericResourceHandlerConfiguration implements IHandlerConfiguratio
 
 	public void setLive(boolean isLive) {
 		this.isLive = isLive;
+	}
+
+	@Override
+	public boolean hasSiteName(String site) {
+		String hasSiteNameString = getDynamicProperties("cda." + site + ".hasSiteName");
+		return (hasSiteNameString == null) ? true : Boolean.parseBoolean(hasSiteNameString);
+	}
+
+	@Override
+	public boolean hasContext(String site) {
+		String hasContextString = getDynamicProperties("cda." + site + ".hasContext");
+		return (hasContextString == null) ? true : Boolean.parseBoolean(hasContextString);
+	}
+
+	@Override
+	public boolean hasFormat(String site) {
+		String hasFormatString = getDynamicProperties("cda." + site + ".hasFormat");
+		return (hasFormatString == null) ? true : Boolean.parseBoolean(hasFormatString);
 	}
 }

@@ -156,11 +156,11 @@ public class ETLTuringTranslator {
 		}
 
 	}
-	
+
 	public String getSiteDomain(ManagedObject mo)
 			throws ApplicationException, RemoteException, AuthorizationException, ValidationException {
-		String siteName = this.getSiteName(mo);		
-		return getSiteDomainBySiteName(siteName);		
+		String siteName = this.getSiteName(mo);
+		return getSiteDomainBySiteName(siteName);
 
 	}
 
@@ -204,9 +204,20 @@ public class ETLTuringTranslator {
 					log.debug("ETLTuringTranslator getSiteUrl:" + siteNameAssociated);
 				}
 
-				String cdaContextName = "/" + config.getCDAContextName(siteNameAssociated) + "/";
-
-				return getSiteDomain(mo) + cdaContextName + normalizeText(siteNameAssociated);
+				if ((config.getCDAContextName(siteNameAssociated) == null || !config.hasContext(siteNameAssociated))
+						&& !config.hasSiteName(siteNameAssociated)) {
+					return getSiteDomain(mo);
+				} else {
+					String cdaContextName = "/";
+					if (config.getCDAContextName(siteNameAssociated) != null && config.hasContext(siteNameAssociated)) {
+						cdaContextName = "/" + config.getCDAContextName(siteNameAssociated) + "/";
+					}
+					if (config.hasSiteName(siteNameAssociated)) {
+						return getSiteDomain(mo) + cdaContextName + normalizeText(siteNameAssociated);
+					} else {
+						return getSiteDomain(mo) + cdaContextName;
+					}
+				}
 			} else {
 				if (log.isDebugEnabled()) {
 					log.debug("ETLTuringTranslator Content without channel:" + mo.getName().toString());

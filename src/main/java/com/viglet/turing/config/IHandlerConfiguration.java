@@ -15,6 +15,9 @@ public interface IHandlerConfiguration {
     String getCDAPort(String site);
     String getCDAContextName(String site);
     String getSiteFormat();
+    boolean hasSiteName(String site);
+    boolean hasContext(String site);
+    boolean hasFormat(String site);
 	boolean isLive();
    
 }
