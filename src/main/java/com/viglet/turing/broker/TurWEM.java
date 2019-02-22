@@ -4,13 +4,10 @@ import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.TimeZone;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -29,8 +26,8 @@ import com.viglet.turing.exceptions.MappingNotFoundException;
 import com.viglet.turing.index.ExternalResourceObject;
 import com.viglet.turing.mappers.CTDMappings;
 import com.viglet.turing.mappers.MappingDefinitions;
+import com.viglet.turing.mappers.MappingDefinitionsProcess;
 import com.viglet.turing.util.TuringUtils;
-import com.viglet.turing.util.XmlParserUtilities;
 import com.vignette.as.client.common.ref.ChannelRef;
 import com.vignette.as.client.exception.ApplicationException;
 import com.vignette.as.client.javabean.Channel;
@@ -89,11 +86,14 @@ public class TurWEM {
 				if (key != null && tag != null && tag.getTagName() != null) {
 
 					if (log.isDebugEnabled()) {
-						log.debug("Key: " + key + " Tag: " + tag.getTagName() + " relation: "
-								+ TuringUtils.listToString(tag.getSrcAttributeRelation()) + " content Type: "
-								+ tag.getSrcAttributeType());
+						String debugRelation = tag.getSrcAttributeRelation() != null
+								? TuringUtils.listToString(tag.getSrcAttributeRelation())
+								: null;
+						log.debug("Key: " + key + " Tag: " + tag.getTagName() + " relation: " + debugRelation
+								+ " content Type: " + tag.getSrcAttributeType());
 					}
-					attributesDefs = TurWEMAttrXML.attributeXML(ci, attributesDefs, tag, key, config, mappingDefinitions);
+					attributesDefs = TurWEMAttrXML.attributeXML(ci, attributesDefs, tag, key, config,
+							mappingDefinitions);
 				}
 			}
 		}
@@ -214,8 +214,6 @@ public class TurWEM {
 		return xml.toString();
 
 	}
-
-
 
 	// This method returns the link to the primary Channel for Semantic
 	// Navigation
@@ -430,7 +428,7 @@ public class TurWEM {
 
 	public static MappingDefinitions getMappingDefinitions(IHandlerConfiguration config) {
 		if (mappingDefinitions == null || !mappingDefinitions.getMappingsXML().equals(config.getMappingsXML())) {
-			mappingDefinitions = XmlParserUtilities.loadMappings(config.getMappingsXML());
+			mappingDefinitions = MappingDefinitionsProcess.loadMappings(config.getMappingsXML());
 		}
 		if (mappingDefinitions == null) {
 			if (log.isDebugEnabled()) {
@@ -455,6 +453,5 @@ public class TurWEM {
 		}
 		return ctdMappings.getCustomClassName();
 	}
-
 
 }

@@ -1,0 +1,14 @@
+com.viglet.turing.apps.contentIndex
+com.viglet.turing.beans
+com.viglet.turing.broker
+com.viglet.turing.broker.attribute
+com.viglet.turing.broker.indexer
+com.viglet.turing.broker.relator
+com.viglet.turing.broker.update
+com.viglet.turing.config
+com.viglet.turing.exceptions
+com.viglet.turing.ext
+com.viglet.turing.index
+com.viglet.turing.listener
+com.viglet.turing.mappers
+com.viglet.turing.util

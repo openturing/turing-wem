@@ -13,8 +13,8 @@ import com.viglet.turing.index.ExternalResourceObject;
 import com.viglet.turing.index.IValidToIndex;
 import com.viglet.turing.mappers.CTDMappings;
 import com.viglet.turing.mappers.MappingDefinitions;
+import com.viglet.turing.mappers.MappingDefinitionsProcess;
 import com.viglet.turing.util.TuringUtils;
-import com.viglet.turing.util.XmlParserUtilities;
 import com.vignette.as.client.javabean.ContentInstance;
 import com.vignette.as.client.javabean.ManagedObject;
 import com.vignette.logging.context.ContextLogger;
@@ -29,7 +29,7 @@ public class TurWEMIndex {
 		MappingDefinitions mappingDefinitions = TurWEM.getMappingDefinitions(config);
 		boolean success = false;
 		if (mappingDefinitions == null || !mappingDefinitions.getMappingsXML().equals(config.getMappingsXML())) {
-			mappingDefinitions = XmlParserUtilities.loadMappings(config.getMappingsXML());
+			mappingDefinitions = MappingDefinitionsProcess.loadMappings(config.getMappingsXML());
 			if (mappingDefinitions == null) {
 
 				if (log.isDebugEnabled()) {
