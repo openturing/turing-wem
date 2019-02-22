@@ -18,22 +18,35 @@ package com.viglet.turing.ext;
 
 import com.viglet.turing.beans.TuringTag;
 import com.viglet.turing.config.IHandlerConfiguration;
-import com.viglet.turing.util.ETLTuringTranslator;
 import com.vignette.as.client.common.AttributeData;
+import com.vignette.as.client.common.ref.ChannelRef;
+import com.vignette.as.client.javabean.Channel;
 import com.vignette.as.client.javabean.ContentInstance;
 import com.vignette.logging.context.ContextLogger;
 
-public class TurSiteName implements ExtAttributeInterface {
-	private static final ContextLogger log = ContextLogger.getLogger(TurSiteName.class);
+public class TurChannelPath implements ExtAttributeInterface {
+	private static final ContextLogger log = ContextLogger.getLogger(TurChannelPath.class);
 
 	@Override
 	public String consume(TuringTag tag, ContentInstance ci, AttributeData attributeData, IHandlerConfiguration config)
 			throws Exception {
 		if (log.isDebugEnabled())
-			log.debug("Executing TurSiteName");
+			log.debug("Executing TurChannelPath");
 
-		ETLTuringTranslator etlTranslator = new ETLTuringTranslator(config);
+		
+		StringBuffer channelPath = new StringBuffer();
+		ChannelRef[] cref = ci.getChannelAssociations();
+		for (int i = 0; i < cref.length; i++) {
 
-		return etlTranslator.getSiteName(ci);
+			Channel currentChannel = cref[i].getChannel();
+			String[] breadcrumb = currentChannel.getBreadcrumbNamePath(true);
+			for (int j = 0; j < breadcrumb.length; j++) {
+				channelPath.append("/" + breadcrumb[j]);
+			}
+
+		}
+
+		return channelPath.toString();
 	}
+
 }

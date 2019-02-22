@@ -36,8 +36,6 @@ import com.viglet.turing.mappers.CTDMappings;
 import com.viglet.turing.mappers.MappingDefinitions;
 import com.viglet.turing.mappers.MappingDefinitionsProcess;
 import com.viglet.turing.util.TuringUtils;
-import com.vignette.as.client.common.ref.ChannelRef;
-import com.vignette.as.client.javabean.Channel;
 import com.vignette.as.client.javabean.ContentInstance;
 import com.vignette.as.client.javabean.ManagedObject;
 import com.vignette.logging.context.ContextLogger;
@@ -69,18 +67,7 @@ public class TurWEMIndex {
 					+ ci.getObjectType().getData().getName());
 		}
 
-		TuringTag typeTag = ctdMappings.findIndexTagInMappings("type");
-		if (typeTag == null || ci.getAttributeValue(typeTag.getSrcAttribute()) == null
-				|| ci.getAttributeValue(typeTag.getSrcAttribute()).toString().trim().equals("")) {
-			xml.append("<type>" + ci.getObjectType().getData().getName() + "</type>");
-		}
-
 		HashMap<String, List<String>> attributesDefs = new HashMap<String, List<String>>();
-
-		attributesDefs.put("headline", new ArrayList<String>());
-		attributesDefs.put("text", new ArrayList<String>());
-		attributesDefs.put("title", new ArrayList<String>());
-		attributesDefs.put("url", new ArrayList<String>());
 
 		for (String key : ctdMappings.getIndexAttrs()) {
 			for (TuringTag tag : ctdMappings.getIndexAttrTag(key)) {
@@ -110,24 +97,11 @@ public class TurWEMIndex {
 			}
 		}
 
-		// Let's append the sections (channel path)
-		ChannelRef[] cref = ci.getChannelAssociations();
-		for (int i = 0; i < cref.length; i++) {
-			xml.append("<section><![CDATA[");
-			Channel currentChannel = cref[i].getChannel();
-			String[] breadcrumb = currentChannel.getBreadcrumbNamePath(true);
-			for (int j = 0; j < breadcrumb.length; j++) {
-				xml.append("/" + breadcrumb[j]);
-			}
-			xml.append("]]></section>");
-
-		}
-
 		String classifications[] = ci.getTaxonomyClassifications();
 		if (classifications != null && classifications.length > 0) {
 			for (int i = 0; i < classifications.length; i++) {
 				String wemClassification = classifications[i].substring(classifications[i].lastIndexOf("/") + 1);
-				xml.append("<turCategories>").append(wemClassification).append("</turCategories>");
+				xml.append("<categories>").append(wemClassification).append("</categories>");
 			}
 		}
 
@@ -183,10 +157,7 @@ public class TurWEMIndex {
 							instance = (IValidToIndex) clazz.newInstance();
 						}
 					}
-					if (instance != null && !instance.isValid((ContentInstance) mo, config)) {
-						if (TuringUtils.isIndexed((ContentInstance) mo, config)) {
-							TurWEMDeindex.indexDelete(mo.getContentManagementId().getId(), config);
-						}
+					if (instance != null && !instance.isValid((ContentInstance) mo, config)) {					
 						return false;
 					}
 					postIndex(generateXMLToIndex((ContentInstance) mo, config), config);

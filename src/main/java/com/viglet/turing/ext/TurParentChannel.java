@@ -26,10 +26,12 @@ import com.vignette.as.client.javabean.ContentInstance;
 import com.vignette.logging.context.ContextLogger;
 
 
-public class ParentChannel implements ExtAttributeInterface {
-	private static final ContextLogger log = ContextLogger.getLogger(ParentChannel.class);
+public class TurParentChannel implements ExtAttributeInterface {
+	private static final ContextLogger log = ContextLogger.getLogger(TurParentChannel.class);
 
 	public String consume(TuringTag tag, ContentInstance ci, AttributeData attributeData, IHandlerConfiguration config) throws Exception {
+		if (log.isDebugEnabled())
+			log.debug("Executing TurParentChannel");
 
 		String cdaContextName = "/" + config.getCDAContextName() + "/";
 		String cdaServer = config.getCDAServer() + ":";

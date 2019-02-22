@@ -19,13 +19,11 @@ package com.viglet.turing.broker.attribute;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.StringTokenizer;
 
 import com.viglet.turing.beans.TuringTag;
 import com.viglet.turing.broker.relator.TurWEMRelator;
 import com.viglet.turing.config.IHandlerConfiguration;
 import com.viglet.turing.mappers.MappingDefinitions;
-import com.viglet.turing.util.TuringUtils;
 import com.vignette.as.client.common.AttributeData;
 import com.vignette.as.client.javabean.AttributedObject;
 import com.vignette.as.client.javabean.ContentInstance;
@@ -82,7 +80,7 @@ public class TurWEMAttrXML {
 				attributesDefs = attributeXMLUpdate(ci, attributesDefs, tag, key, attributeData, config,
 						mappingDefinitions);
 			} else if (tag.getSrcClassName() != null
-					&& (tag.getSrcAttribute().startsWith("CLASSNAME_") || ci.getAttributeValue(key) != null)) {			
+					&& (tag.getSrcAttribute().startsWith("CLASSNAME_") || ci.getAttributeValue(key) != null)) {
 				attributesDefs = TurWEMAttrClass.attributeByClass(ci, attributesDefs, tag, key, null, config);
 			}
 		}
@@ -98,30 +96,11 @@ public class TurWEMAttrXML {
 				log.debug(tag.getTagName() + " = " + attributeData.getValue().toString());
 			}
 		}
-		// Semantic Attributes
+
 		if (attributeData != null && attributeData.getValue().toString() != null
-				&& !attributeData.getValue().toString().trim().equals("")) {
-			if (TuringUtils.isTuringTag(tag.getTagName())) {
-				List<String> listAttributeValues = new ArrayList<String>();
-				StringTokenizer tokenizer = new StringTokenizer(attributeData.getValue().toString(), ",");
-				while (tokenizer.hasMoreTokens()) {
-					if (attributesDefs.get(tag.getTagName()) == null) {
-						attributesDefs.put(tag.getTagName(), new ArrayList<String>());
-					}
-					String token = tokenizer.nextToken();
-					if (!listAttributeValues.contains(token)) {
-						listAttributeValues.add(token);
-					}
-					if (TuringUtils.isSinlgeValueTMETag(tag.getTagName())) {
-						// consider only the first value
-						break;
-					}
-				}
-				attributesDefs.put(tag.getTagName(), listAttributeValues);
-			} else {
-				attributesDefs = TurWEMAttrWidget.attributeByWidget(ci, attributesDefs, tag, key, attributeData, config,
-						mappingDefinitions);
-			}
+				&& attributeData.getValue().toString().trim().length() > 0) {
+			attributesDefs = TurWEMAttrWidget.attributeByWidget(ci, attributesDefs, tag, key, attributeData, config,
+					mappingDefinitions);
 		}
 
 		return attributesDefs;

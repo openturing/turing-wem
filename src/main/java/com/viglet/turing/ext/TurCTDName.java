@@ -1,5 +1,3 @@
-package com.viglet.turing.util;
-
 /*
  * Copyright (C) 2016-2019 Alexandre Oliveira <alexandre.oliveira@viglet.com> 
  * 
@@ -16,36 +14,25 @@ package com.viglet.turing.util;
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import java.util.List;
+package com.viglet.turing.ext;
 
 import com.viglet.turing.beans.TuringTag;
+import com.viglet.turing.config.IHandlerConfiguration;
+import com.vignette.as.client.common.AttributeData;
+import com.vignette.as.client.javabean.ContentInstance;
 import com.vignette.logging.context.ContextLogger;
 
-public class TuringUtils {
-	private static final ContextLogger log = ContextLogger.getLogger(TuringUtils.class);
+public class TurCTDName implements ExtAttributeInterface {
+	private static final ContextLogger log = ContextLogger.getLogger(TurCTDName.class);
 
-	/**
-	 * Returns the index Tag name
-	 * 
-	 * @param turingTag
-	 * @return String
-	 */
-	public static String getIndexTagName(TuringTag turingTag) {
-		return ((turingTag.getSrcAttribute() == null) && (turingTag.getSrcClassName() != null))
-				? String.format("CLASSNAME_%s", turingTag.getTagName())
-				: turingTag.getTagName();
+	@Override
+	public String consume(TuringTag tag, ContentInstance ci, AttributeData attributeData, IHandlerConfiguration config)
+			throws Exception {
+		if (log.isDebugEnabled())
+			log.debug("Executing TurCTDName");
+
+		return ci != null ? ci.getObjectType().getData().getName() : null;
 
 	}
 
-	public static String listToString(List<String> stringList) {
-		StringBuilder sb = new StringBuilder();
-		int i = 0;
-		for (String s : stringList) {
-			if (i++ != stringList.size() - 1) {
-				sb.append(s);
-				sb.append(", ");
-			}
-		}
-		return sb.toString();
-	}
 }
