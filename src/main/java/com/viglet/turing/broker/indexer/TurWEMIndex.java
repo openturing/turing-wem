@@ -17,19 +17,27 @@
 package com.viglet.turing.broker.indexer;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map.Entry;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.methods.PostMethod;
 
-import com.viglet.turing.broker.TurWEM;
+import com.viglet.turing.beans.TurCTDMappingMap;
+import com.viglet.turing.beans.TuringTag;
+import com.viglet.turing.broker.attribute.TurWEMAttrXML;
 import com.viglet.turing.config.IHandlerConfiguration;
+import com.viglet.turing.exceptions.MappingNotFoundException;
 import com.viglet.turing.index.IValidToIndex;
 import com.viglet.turing.mappers.CTDMappings;
 import com.viglet.turing.mappers.MappingDefinitions;
 import com.viglet.turing.mappers.MappingDefinitionsProcess;
 import com.viglet.turing.util.TuringUtils;
+import com.vignette.as.client.common.ref.ChannelRef;
+import com.vignette.as.client.javabean.Channel;
 import com.vignette.as.client.javabean.ContentInstance;
 import com.vignette.as.client.javabean.ManagedObject;
 import com.vignette.logging.context.ContextLogger;
@@ -38,10 +46,105 @@ public class TurWEMIndex {
 
 	private static final ContextLogger log = ContextLogger.getLogger(TurWEMIndex.class);
 
+	public static String generateXMLToIndex(ContentInstance ci, IHandlerConfiguration config) throws Exception {
+		MappingDefinitions mappingDefinitions = MappingDefinitionsProcess.getMappingDefinitions(config);
+		if (log.isDebugEnabled()) {
+			log.debug("Generating Viglet Turing XML for a content instance");
+		}
+		StringBuffer xml = new StringBuffer("<?xml version=\"1.0\" encoding=\"UTF-8\" ?><document>");
+		xml.append("<id>" + ci.getContentManagementId().getId() + "</id>");
+
+		// we force the type on the Viglet Turing side
+		TurCTDMappingMap mappings = mappingDefinitions.getMappingDefinitions();
+
+		CTDMappings ctdMappings = mappings.get(ci.getObjectType().getData().getName());
+
+		if (ctdMappings == null) {
+
+			if (log.isDebugEnabled()) {
+				log.debug("Mapping definition is not found in the mappingXML for the CTD: "
+						+ ci.getObjectType().getData().getName());
+			}
+			throw new MappingNotFoundException("Mapping definition is not found in the mappingXML for the CTD: "
+					+ ci.getObjectType().getData().getName());
+		}
+
+		TuringTag typeTag = ctdMappings.findIndexTagInMappings("type");
+		if (typeTag == null || ci.getAttributeValue(typeTag.getSrcAttribute()) == null
+				|| ci.getAttributeValue(typeTag.getSrcAttribute()).toString().trim().equals("")) {
+			xml.append("<type>" + ci.getObjectType().getData().getName() + "</type>");
+		}
+
+		HashMap<String, List<String>> attributesDefs = new HashMap<String, List<String>>();
+
+		attributesDefs.put("headline", new ArrayList<String>());
+		attributesDefs.put("text", new ArrayList<String>());
+		attributesDefs.put("title", new ArrayList<String>());
+		attributesDefs.put("url", new ArrayList<String>());
+
+		for (String key : ctdMappings.getIndexAttrs()) {
+			for (TuringTag tag : ctdMappings.getIndexAttrTag(key)) {
+				if (key != null && tag != null && tag.getTagName() != null) {
+
+					if (log.isDebugEnabled()) {
+						String debugRelation = tag.getSrcAttributeRelation() != null
+								? TuringUtils.listToString(tag.getSrcAttributeRelation())
+								: null;
+						log.debug("Key: " + key + " Tag: " + tag.getTagName() + " relation: " + debugRelation
+								+ " content Type: " + tag.getSrcAttributeType());
+					}
+					attributesDefs = TurWEMAttrXML.attributeXML(ci, attributesDefs, tag, key, config,
+							mappingDefinitions);
+				}
+			}
+		}
+
+		// Create xml of attributesDefs
+		for (Entry<String, List<String>> entry : attributesDefs.entrySet()) {
+			String key = entry.getKey();
+			List<String> listValue = entry.getValue();
+			for (String value : listValue) {
+				if ((value != null) && (value.toString().trim().length() > 0)) {
+					xml.append("<" + key + "><![CDATA[" + value.toString() + "]]></" + key + ">");
+				}
+			}
+		}
+
+		// Let's append the sections (channel path)
+		ChannelRef[] cref = ci.getChannelAssociations();
+		for (int i = 0; i < cref.length; i++) {
+			xml.append("<section><![CDATA[");
+			Channel currentChannel = cref[i].getChannel();
+			String[] breadcrumb = currentChannel.getBreadcrumbNamePath(true);
+			for (int j = 0; j < breadcrumb.length; j++) {
+				xml.append("/" + breadcrumb[j]);
+			}
+			xml.append("]]></section>");
+
+		}
+
+		String classifications[] = ci.getTaxonomyClassifications();
+		if (classifications != null && classifications.length > 0) {
+			for (int i = 0; i < classifications.length; i++) {
+				String wemClassification = classifications[i].substring(classifications[i].lastIndexOf("/") + 1);
+				xml.append("<turCategories>").append(wemClassification).append("</turCategories>");
+			}
+		}
+
+		xml.append("</document>");
+
+		if (log.isDebugEnabled()) {
+			log.debug("Viglet Turing XML content: " + xml.toString());
+		}
+
+		return xml.toString();
+
+	}
+
 	// This method post the content to the Viglet Turing broker
 	public static boolean indexCreate(ManagedObject mo, IHandlerConfiguration config) {
-		
-		MappingDefinitions mappingDefinitions = TurWEM.getMappingDefinitions(config);
+
+		MappingDefinitions mappingDefinitions = MappingDefinitionsProcess.getMappingDefinitions(config);
 		boolean success = false;
 		if (mappingDefinitions == null || !mappingDefinitions.getMappingsXML().equals(config.getMappingsXML())) {
 			mappingDefinitions = MappingDefinitionsProcess.loadMappings(config.getMappingsXML());
@@ -58,7 +161,7 @@ public class TurWEMIndex {
 
 		if ((mo != null) && (mo instanceof ContentInstance)) {
 			try {
-		
+
 				if (mappingDefinitions.getMappingDefinitions().get(mo.getObjectType().getData().getName()) != null) {
 
 					log.info(
@@ -86,9 +189,9 @@ public class TurWEMIndex {
 						}
 						return false;
 					}
-					postIndex(TurWEM.getXML((ContentInstance) mo, config), config);
+					postIndex(generateXMLToIndex((ContentInstance) mo, config), config);
 					success = true;
-				
+
 				} else {
 					if (log.isDebugEnabled()) {
 						log.debug("Mapping definition is not found in the mappingXML for the CTD: "
@@ -107,7 +210,8 @@ public class TurWEMIndex {
 	}
 
 	public static String getClassValidToIndex(String objectTypeName, IHandlerConfiguration config) {
-		HashMap<String, CTDMappings> mappings = TurWEM.getMappingDefinitions(config).getMappingDefinitions();
+		HashMap<String, CTDMappings> mappings = MappingDefinitionsProcess.getMappingDefinitions(config)
+				.getMappingDefinitions();
 		CTDMappings ctdMappings = mappings.get(objectTypeName);
 		if (ctdMappings.getClassValidToIndex() == null) {
 			if (log.isDebugEnabled()) {
@@ -119,10 +223,10 @@ public class TurWEMIndex {
 	}
 
 	public static void postIndex(String xml, IHandlerConfiguration config) throws HttpException, IOException {
-				
+
 		PostMethod post = new PostMethod(
 				config.getTuringURL() + "/?index=" + config.getIndex() + "&config=" + config.getConfig());
-		
+
 		post.setParameter("data", xml);
 		post.setParameter("index", config.getIndex());
 		post.setParameter("config", config.getConfig());

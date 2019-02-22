@@ -1,6 +1,5 @@
 com.viglet.turing.apps.contentIndex
 com.viglet.turing.beans
-com.viglet.turing.broker
 com.viglet.turing.broker.attribute
 com.viglet.turing.broker.indexer
 com.viglet.turing.broker.relator

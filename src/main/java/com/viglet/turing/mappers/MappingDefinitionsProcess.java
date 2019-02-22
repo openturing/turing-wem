@@ -32,6 +32,7 @@ import com.viglet.turing.beans.TurCTDMappingMap;
 import com.viglet.turing.beans.TurIndexAttrMap;
 import com.viglet.turing.beans.TurMiscConfigMap;
 import com.viglet.turing.beans.TuringTag;
+import com.viglet.turing.config.IHandlerConfiguration;
 import com.viglet.turing.config.TurXMLConstant;
 import com.viglet.turing.util.TuringUtils;
 import com.vignette.logging.context.ContextLogger;
@@ -210,4 +211,17 @@ public class MappingDefinitionsProcess {
 				genericIndexAttrMap.put(turingTag.getSrcAttribute(), turingTags);
 		}
 	}
+	
+	public static MappingDefinitions getMappingDefinitions(IHandlerConfiguration config) {
+		
+		MappingDefinitions	mappingDefinitions = MappingDefinitionsProcess.loadMappings(config.getMappingsXML());
+
+		if (mappingDefinitions == null) {
+			if (log.isDebugEnabled()) {
+				log.error("Mapping definitions are not loaded properly from mappingsXML: " + config.getMappingsXML());
+			}
+		}
+		return mappingDefinitions;
+	}
+
 }
