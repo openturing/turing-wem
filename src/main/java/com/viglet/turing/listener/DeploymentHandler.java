@@ -25,9 +25,6 @@ import com.vignette.logging.context.ContextLogger;
 
 public class DeploymentHandler {
 
-    /**
-     * Category used to log messages for this class.
-     */
 	private static final ContextLogger log = ContextLogger.getLogger(DeploymentHandler.class);
 
     IHandlerConfiguration config;

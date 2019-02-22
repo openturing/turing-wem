@@ -17,13 +17,12 @@
 package com.viglet.turing.broker.attribute;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
+import com.viglet.turing.beans.TurAttrDefContext;
+import com.viglet.turing.beans.TurAttrDefMap;
 import com.viglet.turing.beans.TuringTag;
 import com.viglet.turing.broker.relator.TurWEMRelator;
-import com.viglet.turing.config.IHandlerConfiguration;
-import com.viglet.turing.mappers.MappingDefinitions;
 import com.vignette.as.client.common.AttributeData;
 import com.vignette.as.client.javabean.AttributedObject;
 import com.vignette.as.client.javabean.ContentInstance;
@@ -32,78 +31,83 @@ import com.vignette.logging.context.ContextLogger;
 public class TurWEMAttrXML {
 	private static final ContextLogger log = ContextLogger.getLogger(TurWEMAttrXML.class);
 
-	public static HashMap<String, List<String>> attributeXML(ContentInstance ci,
-			HashMap<String, List<String>> attributesDefs, TuringTag tag, String key, IHandlerConfiguration config,
-			MappingDefinitions mappingDefinitions) throws Exception {
-		// Relator
-		if (tag.getSrcAttributeRelation() != null && tag.getSrcAttributeRelation().size() > 0) {
-			AttributedObject[] relation = ci.getRelations(tag.getSrcAttributeRelation().get(0));
+	public static TurAttrDefMap attributeXML(TurAttrDefContext turAttrDefContext) throws Exception {
+		TuringTag turingTag = turAttrDefContext.getTuringTag();
+		if (turingTag.getSrcAttributeRelation() != null && turingTag.getSrcAttributeRelation().size() > 0)
+			return addAttributeWithRelator(turAttrDefContext);
+		else
+			return addAttributeWithoutRelator(turAttrDefContext);
+	}
 
-			if (tag.getSrcAttributeRelation().size() > 1) {
-				log.debug("Attribute has nested relator");
-				List<AttributedObject[]> nestedRelation = new ArrayList<AttributedObject[]>();
-				nestedRelation.add(relation);
-				relation = TurWEMRelator.nestedRelators(tag.getSrcAttributeRelation(), nestedRelation, 0);
+	public static TurAttrDefMap attributeXMLUpdate(TurAttrDefContext turAttrDefContext, AttributeData attributeData)
+			throws Exception {
+		TuringTag turingTag = turAttrDefContext.getTuringTag();
+		if (log.isDebugEnabled() && attributeData != null)
+			log.debug(String.format("%s = %s", turingTag.getTagName(), attributeData.getValue().toString()));
+
+		if (attributeData != null && attributeData.getValue().toString() != null
+				&& attributeData.getValue().toString().trim().length() > 0)
+			return TurWEMAttrWidget.attributeByWidget(turAttrDefContext, attributeData);
+
+		return new TurAttrDefMap();
+	}
+
+	private static TurAttrDefMap addAttributeWithRelator(TurAttrDefContext turAttrDefContext) throws Exception {
+		TuringTag turingTag = turAttrDefContext.getTuringTag();
+		ContentInstance ci = turAttrDefContext.getContentInstance();
+		String key = turAttrDefContext.getKey();
+		AttributedObject[] relation = ci.getRelations(turingTag.getSrcAttributeRelation().get(0));
+		TurAttrDefMap attributesDefs = new TurAttrDefMap();
+		if (turingTag.getSrcAttributeRelation().size() > 1) {
+			log.debug("Attribute has nested relator");
+			List<AttributedObject[]> nestedRelation = new ArrayList<AttributedObject[]>();
+			nestedRelation.add(relation);
+			relation = TurWEMRelator.nestedRelators(turingTag.getSrcAttributeRelation(), nestedRelation, 0);
+		}
+
+		if (relation != null) {
+			List<String> listAttributeValues = new ArrayList<String>();
+			for (int i = 0; i < relation.length; i++) {
+				if (relation[i].getAttributeValue(key) != null) {
+					String attributeValue = relation[i].getAttributeValue(key).toString();
+					AttributeData attributeData = relation[i].getAttribute(key);
+					if (log.isDebugEnabled()) {
+						log.debug(String.format("Key: %s,  Value: %s", key, attributeValue));
+					}
+					if (attributeValue != null && !attributeValue.trim().equals("")) {
+						attributesDefs.putAll(attributeXMLUpdate(turAttrDefContext, attributeData));
+					}
+				}
+
 			}
-
-			if (relation != null) {
-				List<String> listAttributeValues = new ArrayList<String>();
-				for (int i = 0; i < relation.length; i++) {
-					if (relation[i].getAttributeValue(key) != null) {
-						String attributeValue = relation[i].getAttributeValue(key).toString();
-						AttributeData attributeData = relation[i].getAttribute(key);
-						if (log.isDebugEnabled()) {
-							log.debug("Key : " + key + " Value: " + attributeValue);
-						}
-						if (attributeValue != null && !attributeValue.trim().equals("")) {
-							attributesDefs = attributeXMLUpdate(ci, attributesDefs, tag, key, attributeData, config,
-									mappingDefinitions);
+			if (turingTag.isSrcUniqueValues()) {
+				if (attributesDefs.get(turingTag.getTagName()) != null) {
+					for (String item : attributesDefs.get(turingTag.getTagName())) {
+						if (!listAttributeValues.contains(item)) {
+							listAttributeValues.add(item);
 						}
 					}
-
+					attributesDefs.put(turingTag.getTagName(), listAttributeValues);
 				}
-				if (tag.isSrcUniqueValues()) {
-					if (attributesDefs.get(tag.getTagName()) != null) {
-						for (String item : attributesDefs.get(tag.getTagName())) {
-							if (!listAttributeValues.contains(item)) {
-								listAttributeValues.add(item);
-							}
-						}
-						attributesDefs.put(tag.getTagName(), listAttributeValues);
-					}
-				}
-			}
-		} else { // Normal attribute without relation
-
-			if (ci.getAttributeValue(key) != null && !ci.getAttributeValue(key).toString().trim().equals("")) {
-				AttributeData attributeData = ci.getAttribute(key);
-				attributesDefs = attributeXMLUpdate(ci, attributesDefs, tag, key, attributeData, config,
-						mappingDefinitions);
-			} else if (tag.getSrcClassName() != null
-					&& (tag.getSrcAttribute().startsWith("CLASSNAME_") || ci.getAttributeValue(key) != null)) {
-				attributesDefs = TurWEMAttrClass.attributeByClass(ci, attributesDefs, tag, key, null, config);
 			}
 		}
 		return attributesDefs;
 	}
 
-	public static HashMap<String, List<String>> attributeXMLUpdate(ContentInstance ci,
-			HashMap<String, List<String>> attributesDefs, TuringTag tag, String key, AttributeData attributeData,
-			IHandlerConfiguration config, MappingDefinitions mappingDefinitions) throws Exception {
-
-		if (log.isDebugEnabled()) {
-			if (attributeData != null) {
-				log.debug(tag.getTagName() + " = " + attributeData.getValue().toString());
-			}
+	private static TurAttrDefMap addAttributeWithoutRelator(TurAttrDefContext turAttrDefContext) throws Exception {
+		TuringTag turingTag = turAttrDefContext.getTuringTag();
+		ContentInstance ci = turAttrDefContext.getContentInstance();
+		String key = turAttrDefContext.getKey();
+		if (ci.getAttributeValue(key) != null && ci.getAttributeValue(key).toString().trim().length() > 0) {
+			AttributeData attributeData = ci.getAttribute(key);
+			return attributeXMLUpdate(turAttrDefContext, attributeData);
+		} else if (turingTag.getSrcClassName() != null
+				&& (turingTag.getSrcAttribute().startsWith("CLASSNAME_") || ci.getAttributeValue(key) != null)) {
+			AttributeData attributeData = ci.getAttribute(key);
+			return TurWEMAttrClass.attributeByClass(turAttrDefContext, attributeData);
+		} else {
+			return new TurAttrDefMap();
 		}
-
-		if (attributeData != null && attributeData.getValue().toString() != null
-				&& attributeData.getValue().toString().trim().length() > 0) {
-			attributesDefs = TurWEMAttrWidget.attributeByWidget(ci, attributesDefs, tag, key, attributeData, config,
-					mappingDefinitions);
-		}
-
-		return attributesDefs;
 	}
 
 }

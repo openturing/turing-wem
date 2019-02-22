@@ -29,20 +29,8 @@ import com.vignette.logging.context.ContextLogger;
 
 public class DeploymentEventListener implements IAsEventListener {
 
-    /**
-     * Category used to log messages for this class.
-     */
 	private static final ContextLogger log = ContextLogger.getLogger(DeploymentEventListener.class);
 
-    /**
-     * Processes, or consumes, the deployment events.  Two deployment events are
-     * of particular interest, update and delete of a managed object upon deployment
-     *
-     * @param event the event.
-     * @throws ApplicationException   thrown if application errors occur when an <code>AsEvent</code> is processed.
-     * @throws AuthorizationException thrown if security errors occur when an <code>AsEvent</code> is processed.
-     * @throws ValidationException    thrown if validation errors occur when an <code>AsEvent</code> is processed.
-     */
     public void consume(AsEvent event)
             throws ApplicationException, AuthorizationException,
             ValidationException {

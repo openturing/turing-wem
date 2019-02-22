@@ -17,7 +17,6 @@
 package com.viglet.turing.broker.indexer;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
@@ -26,6 +25,8 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.methods.PostMethod;
 
+import com.viglet.turing.beans.TurAttrDefContext;
+import com.viglet.turing.beans.TurAttrDefMap;
 import com.viglet.turing.beans.TurCTDMappingMap;
 import com.viglet.turing.beans.TuringTag;
 import com.viglet.turing.broker.attribute.TurWEMAttrXML;
@@ -67,21 +68,24 @@ public class TurWEMIndex {
 					+ ci.getObjectType().getData().getName());
 		}
 
-		HashMap<String, List<String>> attributesDefs = new HashMap<String, List<String>>();
+		TurAttrDefMap attributesDefs = new TurAttrDefMap();
 
 		for (String key : ctdMappings.getIndexAttrs()) {
-			for (TuringTag tag : ctdMappings.getIndexAttrTag(key)) {
-				if (key != null && tag != null && tag.getTagName() != null) {
+			for (TuringTag turingTag : ctdMappings.getIndexAttrTag(key)) {
+				if (key != null && turingTag != null && turingTag.getTagName() != null) {
 
 					if (log.isDebugEnabled()) {
-						String debugRelation = tag.getSrcAttributeRelation() != null
-								? TuringUtils.listToString(tag.getSrcAttributeRelation())
+						String debugRelation = turingTag.getSrcAttributeRelation() != null
+								? TuringUtils.listToString(turingTag.getSrcAttributeRelation())
 								: null;
-						log.debug("Key: " + key + " Tag: " + tag.getTagName() + " relation: " + debugRelation
-								+ " content Type: " + tag.getSrcAttributeType());
+						log.debug("Key: " + key + " Tag: " + turingTag.getTagName() + " relation: " + debugRelation
+								+ " content Type: " + turingTag.getSrcAttributeType());
 					}
-					attributesDefs = TurWEMAttrXML.attributeXML(ci, attributesDefs, tag, key, config,
+
+					TurAttrDefContext turAttrDefContext = new TurAttrDefContext(ci, turingTag, key, config,
 							mappingDefinitions);
+
+					attributesDefs = TurWEMAttrXML.attributeXML(turAttrDefContext);
 				}
 			}
 		}
@@ -115,23 +119,12 @@ public class TurWEMIndex {
 
 	}
 
-	// This method post the content to the Viglet Turing broker
 	public static boolean indexCreate(ManagedObject mo, IHandlerConfiguration config) {
 
 		MappingDefinitions mappingDefinitions = MappingDefinitionsProcess.getMappingDefinitions(config);
 		boolean success = false;
-		if (mappingDefinitions == null || !mappingDefinitions.getMappingsXML().equals(config.getMappingsXML())) {
-			mappingDefinitions = MappingDefinitionsProcess.loadMappings(config.getMappingsXML());
-			if (mappingDefinitions == null) {
-
-				if (log.isDebugEnabled()) {
-					log.error(
-							"Mapping definitions are not loaded properly from mappingsXML: " + config.getMappingsXML());
-				}
-
-				return false;
-			}
-		}
+		if (mappingDefinitions == null)
+			return false;
 
 		if ((mo != null) && (mo instanceof ContentInstance)) {
 			try {
@@ -157,7 +150,7 @@ public class TurWEMIndex {
 							instance = (IValidToIndex) clazz.newInstance();
 						}
 					}
-					if (instance != null && !instance.isValid((ContentInstance) mo, config)) {					
+					if (instance != null && !instance.isValid((ContentInstance) mo, config)) {
 						return false;
 					}
 					postIndex(generateXMLToIndex((ContentInstance) mo, config), config);

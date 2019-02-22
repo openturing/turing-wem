@@ -17,7 +17,10 @@
 package com.viglet.turing.exceptions;
 
 public class MappingNotFoundException extends Exception {
-    public MappingNotFoundException(String string) {
+
+	private static final long serialVersionUID = 1L;
+
+	public MappingNotFoundException(String string) {
         super(string);
     }
 }
