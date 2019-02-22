@@ -18,7 +18,6 @@ package com.viglet.turing.ext;
 
 import com.viglet.turing.beans.TuringTag;
 import com.viglet.turing.config.IHandlerConfiguration;
-import com.viglet.turing.index.ExternalResourceObject;
 import com.viglet.turing.util.HtmlManipulator;
 import com.vignette.as.client.common.AttributeData;
 import com.vignette.as.client.javabean.ContentInstance;
@@ -41,15 +40,5 @@ public class HTML2Text implements ExtAttributeInterface {
 		else {
 			return EMPTY_STRING;
 		}
-	}
-
-	@Override
-	public String consume(TuringTag tag, ExternalResourceObject ci,
-			String attributeData, IHandlerConfiguration config)
-			throws Exception {
-		if (log.isDebugEnabled()) {
-			log.debug("Executing HTML2Text");
-		}
-		return EMPTY_STRING;
 	}
 }

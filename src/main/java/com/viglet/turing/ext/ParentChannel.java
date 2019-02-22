@@ -18,7 +18,6 @@ package com.viglet.turing.ext;
 
 import com.viglet.turing.beans.TuringTag;
 import com.viglet.turing.config.IHandlerConfiguration;
-import com.viglet.turing.index.ExternalResourceObject;
 import com.vignette.as.client.common.AttributeData;
 import com.vignette.as.client.common.ref.ChannelRef;
 import com.vignette.as.client.common.ref.SiteRef;
@@ -61,13 +60,5 @@ public class ParentChannel implements ExtAttributeInterface {
 		moFurlName = chFurlName.replaceAll("-", "–").replaceAll(" ", "-");
 		return "http://" + cdaServer + cdaPort + cdaContextName
 				+ siteNameAssociated.replaceAll("-", "–").replaceAll(" ", "-") + moFurlName;
-	}
-
-	@Override
-	public String consume(TuringTag tag, ExternalResourceObject ci,
-			String attributeData, IHandlerConfiguration config)
-			throws Exception {
-		// TODO Auto-generated method stub
-		return null;
 	}
 }

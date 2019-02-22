@@ -34,12 +34,12 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.w3c.dom.Document;
 
+import com.viglet.turing.beans.TurCTDMappingMap;
 import com.viglet.turing.beans.TuringTag;
 import com.viglet.turing.broker.attribute.TurWEMAttrXML;
 import com.viglet.turing.config.GenericResourceHandlerConfiguration;
 import com.viglet.turing.config.IHandlerConfiguration;
 import com.viglet.turing.exceptions.MappingNotFoundException;
-import com.viglet.turing.index.ExternalResourceObject;
 import com.viglet.turing.mappers.CTDMappings;
 import com.viglet.turing.mappers.MappingDefinitions;
 import com.viglet.turing.mappers.MappingDefinitionsProcess;
@@ -70,7 +70,7 @@ public class TurWEM {
 		xml.append("<id>" + ci.getContentManagementId().getId() + "</id>");
 
 		// we force the type on the Viglet Turing side
-		HashMap<String, CTDMappings> mappings = mappingDefinitions.getMappingDefinitions();
+		TurCTDMappingMap mappings = mappingDefinitions.getMappingDefinitions();
 
 		CTDMappings ctdMappings = mappings.get(ci.getObjectType().getData().getName());
 
@@ -156,81 +156,7 @@ public class TurWEM {
 
 	}
 
-	public static String getXML(ExternalResourceObject ci, IHandlerConfiguration config) throws Exception {
-
-		if (log.isDebugEnabled()) {
-			log.debug("Generating Viglet Turing XML for a content instance");
-		}
-		StringBuffer xml = new StringBuffer("<?xml version=\"1.0\" encoding=\"UTF-8\" ?><document>");
-		xml.append("<id>" + ci.getId() + "</id>");
-
-		// we force the type on the Viglet Turing side
-		HashMap<String, CTDMappings> mappings = mappingDefinitions.getMappingDefinitions();
-
-		CTDMappings ctdMappings = mappings.get(ci.getTypeName());
-
-		if (ctdMappings == null) {
-
-			if (log.isDebugEnabled()) {
-				log.debug("Mapping definition is not found in the mappingXML for the CTD: " + ci.getTypeName());
-			}
-			throw new MappingNotFoundException(
-					"Mapping definition is not found in the mappingXML for the CTD: " + ci.getTypeName());
-		}
-
-		TuringTag typeTag = ctdMappings.findIndexTagInMappings("type");
-		if (typeTag == null || ci.get(typeTag.getSrcAttribute()) == null
-				|| ci.get(typeTag.getSrcAttribute()).toString().trim().equals("")) {
-			xml.append("<type>" + ci.getTypeName() + "</type>");
-		}
-
-		HashMap<String, List<String>> attributesDefs = new HashMap<String, List<String>>();
-
-		attributesDefs.put("headline", new ArrayList<String>());
-		attributesDefs.put("text", new ArrayList<String>());
-		attributesDefs.put("title", new ArrayList<String>());
-		attributesDefs.put("url", new ArrayList<String>());
-
-		for (String key : ctdMappings.getIndexAttrs()) {
-			for (TuringTag tag : ctdMappings.getIndexAttrTag(key)) {
-				if (key != null && tag != null && tag.getTagName() != null) {
-
-					if (log.isDebugEnabled()) {
-						log.debug("Key: " + key + " Tag: " + tag.getTagName() + " relation: "
-								+ TuringUtils.listToString(tag.getSrcAttributeRelation()) + " content Type: "
-								+ tag.getSrcAttributeType());
-					}
-					attributesDefs = TurWEMAttrXML.attributeXML(ci, attributesDefs, tag, key, config);
-				}
-			}
-		}
-
-		// Create xml of attributesDefs
-		for (Entry<String, List<String>> entry : attributesDefs.entrySet()) {
-			String key = entry.getKey();
-			List<String> listValue = entry.getValue();
-			for (String value : listValue) {
-				if ((value != null) && (value.toString().trim().length() > 0)) {
-					xml.append("<" + key + "><![CDATA[" + value.toString() + "]]></" + key + ">");
-				}
-			}
-		}
-
-		// Let's append the sections (link)
-		xml.append("<section><![CDATA[");
-		xml.append("/");
-		xml.append("]]></section>");
-
-		xml.append("</document>");
-
-		if (log.isDebugEnabled()) {
-			log.debug("Viglet Turing XML content: " + xml.toString());
-		}
-
-		return xml.toString();
-
-	}
-
+	
 	// This method returns the link to the primary Channel for Semantic
 	// Navigation
 	@SuppressWarnings("unchecked")
@@ -307,13 +233,7 @@ public class TurWEM {
 
 			// Primary query
 			String request = turingConfig.getTuringURL() + "/" + turingConfig.getIndex() + query;
-
-			// Depending on the form , we need either &format=xml or /format/xml
-			if (query.indexOf('?') > 0) {
-				request = request + "&format=xml";
-			} else {
-				request = request + "/format/xml";
-			}
+		
 			if (log.isDebugEnabled()) {
 				log.debug("Viglet Turing request is " + request);
 			}
@@ -361,49 +281,6 @@ public class TurWEM {
 
 	}
 
-	public static boolean createAndRegisterTuringIndex(IHandlerConfiguration config, String indexName,
-			String templateName) {
-		boolean success = false;
-		if (templateName == null || templateName.trim().equals("")) {
-			templateName = "default-en";
-		}
-		try {
-			if (log.isDebugEnabled()) {
-				log.debug("Creating the index with the indexname:" + indexName);
-			}
-			PostMethod post = new PostMethod(config.getTuringURL() + "/sse/index/" + indexName);
-			post.setParameter("template", templateName);
-			post.setRequestHeader("Accept", "*/*");
-			HttpClient httpclient = new HttpClient();
-			int result = httpclient.executeMethod(post);
-			if (log.isDebugEnabled()) {
-				log.debug("Viglet Turing create indexer response HTTP result is: " + result);
-				log.debug("Viglet Turing create indexer response HTTP response body is: "
-						+ post.getResponseBodyAsString());
-			}
-			post.releaseConnection();
-			if (result == 201) {
-				if (log.isDebugEnabled()) {
-					log.debug("Created the index, now registering the index with the solr indexname:" + indexName);
-				}
-				GetMethod get = new GetMethod(config.getTuringURL() + "/solr/admin/cores?action=CREATE&name="
-						+ indexName + "&instanceDir=" + indexName);
-				get.setRequestHeader("Accept", "*/*");
-				result = httpclient.executeMethod(get);
-				if (log.isDebugEnabled()) {
-					log.debug("Viglet Turing register indexer response HTTP result is: " + result);
-					log.debug("Viglet Turing register indexer response HTTP response body is: "
-							+ get.getResponseBodyAsString());
-				}
-				get.releaseConnection();
-				success = true;
-			}
-		} catch (Exception e) {
-			System.out.println("Error is " + e.getMessage());
-		}
-		return success;
-	}
-
 	public static boolean deleteTuringIndex(IHandlerConfiguration config, String indexName) {
 		boolean success = false;
 		try {
@@ -424,24 +301,6 @@ public class TurWEM {
 		return success;
 	}
 
-	public static void printTuringIndexes(IHandlerConfiguration config) {
-		try {
-			HttpClient httpclient = new HttpClient();
-			GetMethod get = new GetMethod(config.getTuringURL() + "/sse/index");
-			get.setRequestHeader("Accept", "*/*");
-			int result = httpclient.executeMethod(get);
-			if (log.isDebugEnabled()) {
-				log.debug("executing query:" + get.getURI());
-				log.debug("Viglet Turing list indexer response HTTP result is: " + result);
-				log.debug(
-						"Viglet Turing list indexer response HTTP response body is: " + get.getResponseBodyAsString());
-			}
-			get.releaseConnection();
-		} catch (Exception e) {
-			System.out.println("Error is " + e.getMessage());
-		}
-	}
-
 	public static MappingDefinitions getMappingDefinitions(IHandlerConfiguration config) {
 		if (mappingDefinitions == null || !mappingDefinitions.getMappingsXML().equals(config.getMappingsXML())) {
 			mappingDefinitions = MappingDefinitionsProcess.loadMappings(config.getMappingsXML());
@@ -452,22 +311,6 @@ public class TurWEM {
 			}
 		}
 		return mappingDefinitions;
-	}
-
-	public static boolean isExternalResource(String objectTypeName, IHandlerConfiguration config) {
-		return getCustomClassName(objectTypeName, config) != null;
-	}
-
-	public static String getCustomClassName(String objectTypeName, IHandlerConfiguration config) {
-		HashMap<String, CTDMappings> mappings = getMappingDefinitions(config).getMappingDefinitions();
-		CTDMappings ctdMappings = mappings.get(objectTypeName);
-		if (ctdMappings.getCustomClassName() == null) {
-			if (log.isDebugEnabled()) {
-				log.debug("Custom className is not found in the mappingXML for the CTD: " + objectTypeName);
-			}
-			return null;
-		}
-		return ctdMappings.getCustomClassName();
 	}
 
 }

@@ -26,7 +26,6 @@ public interface IValidToIndex {
 	static final ContextLogger log = ContextLogger.getLogger(IValidToIndex.class);
 	
 	boolean isValid(ContentInstance ci, IHandlerConfiguration config) throws Exception;
-	boolean isValid(ExternalResourceObject ci, IHandlerConfiguration config) throws Exception;
 	
 	void whereToValid(WhereClause clause, IHandlerConfiguration config) throws Exception;
 

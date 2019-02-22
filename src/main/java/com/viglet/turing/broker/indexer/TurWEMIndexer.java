@@ -17,7 +17,6 @@
 package com.viglet.turing.broker.indexer;
 
 import com.viglet.turing.config.IHandlerConfiguration;
-import com.viglet.turing.index.ExternalResourceObject;
 import com.vignette.as.client.javabean.ManagedObject;
 import com.vignette.logging.context.ContextLogger;
 
@@ -56,13 +55,4 @@ public class TurWEMIndexer {
 		TurWEMDeindex.indexDeleteByType(typeName, config);
 		return true;
 	}
-
-	public static boolean IndexCreate(ExternalResourceObject mo, String typeName, IHandlerConfiguration config) {
-		if (log.isDebugEnabled()) {
-			log.debug("Creating Object in Viglet Turing index");
-		}
-		TurWEMIndex.indexCreate(mo, typeName, config);
-		return true;
-	}
-
 }

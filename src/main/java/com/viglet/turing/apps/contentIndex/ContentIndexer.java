@@ -37,12 +37,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
-import com.viglet.turing.broker.TurWEM;
 import com.viglet.turing.broker.indexer.TurWEMIndex;
 import com.viglet.turing.broker.indexer.TurWEMIndexer;
 import com.viglet.turing.config.IHandlerConfiguration;
-import com.viglet.turing.index.ExternalResourceObject;
-import com.viglet.turing.index.IExternalResource;
 import com.viglet.turing.index.IValidToIndex;
 import com.vignette.as.apps.contentIndex.ContentIndexException;
 import com.vignette.as.apps.contentIndex.ContentIndexMsg;
@@ -97,8 +94,7 @@ import com.vignette.util.StringQueryOp;
 import com.vignette.util.VgnIllegalArgumentException;
 
 public class ContentIndexer {
-	private static ContextLogger logger = LoggingManager.getContextLogger((Class) ContentIndexer.class);
-	private static final int MAX_INDEXING_TRIES = 2;
+	private static ContextLogger logger = LoggingManager.getContextLogger(ContentIndexer.class);
 	public static final String EOF = "EOF";
 	private boolean surveyMode = false;
 	private String surveyFileName;
@@ -110,7 +106,6 @@ public class ContentIndexer {
 	private PrintStream output = System.out;
 	private ISearchIndex registrar = null;
 	private boolean mSearchEngineConnection = false;
-	private static final String TAB = "    ";
 	private boolean forceReIndex = false;
 
 	IHandlerConfiguration turingConfig;
@@ -134,16 +129,11 @@ public class ContentIndexer {
 			this.surveyMode = true;
 		}
 		if (null == (ot = ObjectType.findByName((String) objectTypeName))) {
-			if (!TurWEM.isExternalResource(objectTypeName, turingConfig)) {
-				MsgObject mo = ContentIndexerMsg.getMsgObject("4", (Object) objectTypeName);
-				this.consoleOut(mo);
-				logger.error((Object) mo);
-				return;
-			}
-			this.consoleOut(" ");
-			this.consoleOut(ContentIndexerMsg.getMsgObject("20", (Object) (objectTypeName + "    ")));
-			this.indexByObjectType(objectTypeName);
+			MsgObject mo = ContentIndexerMsg.getMsgObject("4", (Object) objectTypeName);
+			this.consoleOut(mo);
+			logger.error((Object) mo);
 			return;
+
 		}
 		this.consoleOut(" ");
 		this.consoleOut(ContentIndexerMsg.getMsgObject("20",
@@ -154,15 +144,9 @@ public class ContentIndexer {
 	public void indexByObjectType(String objectTypeName, String[] vcmids) throws Exception {
 		ObjectType ot;
 		if (null == (ot = ObjectType.findByName((String) objectTypeName))) {
-			if (!TurWEM.isExternalResource(objectTypeName, turingConfig)) {
-				MsgObject mo = ContentIndexerMsg.getMsgObject("4", (Object) objectTypeName);
-				this.consoleOut(mo);
-				logger.error((Object) mo);
-				return;
-			}
-			this.consoleOut(" ");
-			this.consoleOut(ContentIndexerMsg.getMsgObject("20", (Object) (objectTypeName + "    ")));
-			this.retrieveAndRegisterInstances(objectTypeName, vcmids);
+			MsgObject mo = ContentIndexerMsg.getMsgObject("4", (Object) objectTypeName);
+			this.consoleOut(mo);
+			logger.error((Object) mo);
 			return;
 		}
 		this.consoleOut(" ");
@@ -225,10 +209,6 @@ public class ContentIndexer {
 			throws ApplicationException, ContentIndexException, ConfigException, MalformedURLException {
 		this.surveyMode = isSurveyMode;
 		this.retrieveAndRegisterInstances(ot, null);
-	}
-
-	private void indexByObjectType(String objectTypeName) throws Exception {
-		this.retrieveAndRegisterInstances(objectTypeName, null);
 	}
 
 	public void indexByObjectType(ObjectType ot, String guidFileName, String locale) throws ValidationException,
@@ -304,26 +284,6 @@ public class ContentIndexer {
 		this.consoleOut("Processing the registration of " + validGuids.size() + " assets");
 		this.registerObjects(guids, objectMap, flags);
 	}
-
-	private void indexByExternalResource(List<ExternalResourceObject> list, String typeName) throws Exception {
-		String className = TurWEMIndex.getClassValidToIndex(typeName, turingConfig);
-		IValidToIndex instance = null;
-		if (className != null) {
-			Class<?> clazz = Class.forName(className);
-			if (clazz == null) {
-				if (logger.isDebugEnabled()) {
-					logger.debug("Valid to Index className is not found in the jar file: " + className);
-				}
-				return;
-			} else {
-				instance = (IValidToIndex) clazz.newInstance();
-			}
-		}
-		for (ExternalResourceObject item : list) {
-			registerObject(item, typeName);
-		}
-	}
-
 	public void replaceByGUIDs(List ids, String fieldName, String fieldValue)
 			throws ApplicationException, ValidationException, ConfigException {
 		this.consoleOut("Processing a total of " + ids.size() + " GUID Strings");
@@ -514,69 +474,6 @@ public class ContentIndexer {
 		}
 	}
 
-	private void retrieveAndRegisterInstances(String objectTypeName, String[] vcmids) throws Exception {
-		int totalPages;
-		int totalEntries;
-		List<ExternalResourceObject> results = null;
-		String className = TurWEM.getCustomClassName(objectTypeName, turingConfig);
-		if (className == null) {
-			return;
-		}
-		Class<?> clazz = Class.forName(className);
-		if (clazz == null) {
-			if (logger.isDebugEnabled()) {
-				logger.debug("Custom className is not found in the jar file: " + className);
-			}
-			return;
-		}
-		IExternalResource instance = (IExternalResource) clazz.newInstance();
-		try {
-			if (vcmids == null) {
-				indexResetByType(objectTypeName);
-				results = instance.listExternalResource(turingConfig);
-			} else {
-				this.indexDeleteByIds(objectTypeName, vcmids);
-				results = new ArrayList<ExternalResourceObject>();
-				for (String guid : vcmids) {
-					ExternalResourceObject item = instance.getExternalResource(guid, turingConfig);
-					if (item != null) {
-						results.add(item);
-					}
-				}
-			}
-			totalEntries = results.size();
-			MsgObject mo = ContentIndexerMsg.getMsgObject("21", (Object) (objectTypeName),
-					(Object) Integer.toString(totalEntries));
-			this.consoleOut(mo);
-			if (totalEntries == 0) {
-				logger.info((Object) mo);
-			}
-			int pageSize = this.getPageSize();
-			totalPages = totalEntries > 0 ? (totalEntries + pageSize - 1) / pageSize : totalEntries / pageSize;
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new ContentIndexException(
-					ContentIndexerMsg.getMsgObject("29", (Object) objectTypeName, (Object) e.getLocalizedMessage()));
-		}
-		int currentPage = 1;
-		if (results.size() > 0) {
-			int toIndex = results.size() > this.getPageSize() ? this.getPageSize() : results.size();
-			List<ExternalResourceObject> pageList = results.subList(0, toIndex);
-			while (currentPage <= totalPages) {
-				this.consoleOut(ContentIndexerMsg.getMsgObject("38", (Object) Integer.toString(currentPage++),
-						(Object) Integer.toString(totalPages)));
-				long start = System.currentTimeMillis();
-				this.indexByExternalResource(pageList, objectTypeName);
-				long elapsed = System.currentTimeMillis() - start;
-				this.consoleOut(ContentIndexerMsg.getMsgObject("37", (Object) Integer.toString(pageList.size()),
-						(Object) Long.toString(elapsed)));
-				toIndex += this.getPageSize();
-				toIndex = results.size() > toIndex ? toIndex : results.size();
-				pageList = results.subList(0, toIndex);
-			}
-		}
-	}
-
 	private IPagingList retrieveInstances(ObjectType ot, String locale) throws Exception {
 		RequestParameters rp = new RequestParameters();
 		rp.setTopRelationOnly(false);
@@ -759,14 +656,11 @@ public class ContentIndexer {
 				continue;
 				// }
 				/*
-				 if (counter < 2)
-				 continue;
-				MsgObject msg3 = ContentIndexerMsg.getMsgObject("3");
-				logger.error((Object) msg3);
-				this.consoleOut(msg3);
-				this.consoleOut(ContentIndexerMsg.getMsgObject("27"));				
-				throw new ContentIndexException(msg3);
-				*/
+				 * if (counter < 2) continue; MsgObject msg3 =
+				 * ContentIndexerMsg.getMsgObject("3"); logger.error((Object) msg3);
+				 * this.consoleOut(msg3); this.consoleOut(ContentIndexerMsg.getMsgObject("27"));
+				 * throw new ContentIndexException(msg3);
+				 */
 			} catch (ValidationException e) {
 				msg = ContentIndexerMsg.getMsgObject("9", (Object) guid);
 				this.consoleOut(msg);
@@ -789,45 +683,6 @@ public class ContentIndexer {
 				logger.error((Object) msg, (Throwable) e);
 				throw ApplicationException.getOne((IVgnErrorCode) ASErrorCode.CONFIG_ERROR, (Object) this,
 						(MsgObject) msg);
-			}
-		}
-	}
-
-	private void registerObject(ExternalResourceObject mo, String typeName)
-			throws ApplicationException, ContentIndexException {
-		String guid = "";
-		int counter = 0;
-		boolean indexed = false;
-		while (!indexed) {
-			MsgObject msg;
-			++counter;
-			try {
-				guid = String.valueOf(mo.getId());
-				this.logDebug("Attempting to register object: " + guid);
-				if (this.verifySearchEngineConnection()) {
-					MsgObject msg2;
-					indexed = TurWEMIndexer.IndexCreate(mo, typeName, turingConfig);
-					msg2 = ContentIndexerMsg.getMsgObject("10", (Object) guid);
-					this.logDebug(msg2.localize());
-					continue;
-				}
-				if (counter < 2)
-					continue;
-				MsgObject msg3 = ContentIndexerMsg.getMsgObject("3");
-				logger.error((Object) msg3);
-				this.consoleOut(msg3);
-				this.consoleOut(ContentIndexerMsg.getMsgObject("27"));
-				throw new ContentIndexException(msg3);
-			} catch (ValidationException e) {
-				msg = ContentIndexerMsg.getMsgObject("9", (Object) guid);
-				this.consoleOut(msg);
-				logger.error((Object) msg, (Throwable) e);
-				continue;
-			} catch (AuthorizationException e) {
-				msg = ContentIndexerMsg.getMsgObject("9", (Object) guid);
-				this.consoleOut(msg);
-				logger.error((Object) msg, (Throwable) e);
-				continue;
 			}
 		}
 	}

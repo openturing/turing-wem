@@ -23,7 +23,6 @@ import org.apache.commons.httpclient.methods.GetMethod;
 
 import com.viglet.turing.beans.TuringTag;
 import com.viglet.turing.config.IHandlerConfiguration;
-import com.viglet.turing.index.ExternalResourceObject;
 import com.vignette.as.client.javabean.ContentInstance;
 import com.vignette.logging.context.ContextLogger;
 
@@ -70,30 +69,6 @@ public class TuringUtils {
 			HttpClient httpclient = new HttpClient();
 			GetMethod get = new GetMethod(config.getTuringURL() + "/solr/" + config.getIndex() + "/select/?q=id%3A"
 					+ mo.getContentManagementId().getId());
-			get.setRequestHeader("Accept", "*/*");
-			int result = httpclient.executeMethod(get);
-			if (log.isDebugEnabled()) {
-				log.debug("executing query:" + get.getURI());
-				log.debug("Viglet Turing indexer response HTTP result is: " + result);
-				log.debug("Viglet Turing indexer response HTTP response body is: " + get.getResponseBodyAsString());
-			}
-			if (result == 200) {
-				if (!"numFound=\"0\"".equals(get.getResponseBodyAsString())) {
-					return true;
-				}
-			}
-			get.releaseConnection();
-		} catch (Exception e) {
-			System.out.println("Error is " + e.getMessage());
-		}
-		return false;
-	}
-
-	public static boolean isIndexed(ExternalResourceObject mo, IHandlerConfiguration config) {
-		try {
-			HttpClient httpclient = new HttpClient();
-			GetMethod get = new GetMethod(
-					config.getTuringURL() + "/solr/" + config.getIndex() + "/select/?q=id%3A" + mo.getId());
 			get.setRequestHeader("Accept", "*/*");
 			int result = httpclient.executeMethod(get);
 			if (log.isDebugEnabled()) {

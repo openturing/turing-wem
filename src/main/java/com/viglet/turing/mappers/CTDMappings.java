@@ -36,14 +36,14 @@ public class CTDMappings {
 
 	public ArrayList<TuringTag> getIndexAttrTag(String ctdAttribute) {
 
-		ArrayList<TuringTag> indexAttrTags = null;
+		ArrayList<TuringTag> turingTags = null;
 		if (log.isDebugEnabled())
 			log.debug("CTDMappings attribute: " + ctdAttribute);
 
 		if (indexAttrMap != null) {
-			indexAttrTags = indexAttrMap.get(ctdAttribute);
-			if (indexAttrTags != null) {
-				for (TuringTag turingTag : indexAttrTags)
+			turingTags = indexAttrMap.get(ctdAttribute);
+			if (turingTags != null) {
+				for (TuringTag turingTag : turingTags)
 					if (commonIndexAttrMap != null && turingTag != null && turingTag.getSrcClassName() == null) {
 						if (commonIndexAttrMap.get(TuringUtils.getIndexTagName(turingTag)) != null) {
 							// Common always have one item
@@ -53,23 +53,23 @@ public class CTDMappings {
 					}
 			}
 		}
-		if (indexAttrTags == null && commonIndexAttrMap != null)
-			indexAttrTags = commonIndexAttrMap.get(ctdAttribute);
+		if (turingTags == null && commonIndexAttrMap != null)
+			turingTags = commonIndexAttrMap.get(ctdAttribute);
 
-		return indexAttrTags;
+		return turingTags;
 	}
 
 	/**
-	 * @param turingTagName
+	 * @param tagName
 	 * @return TuringTag
 	 */
-	public TuringTag findIndexTagInMappings(String turingTagName) {
+	public TuringTag findIndexTagInMappings(String tagName) {
 		TuringTag turingTag = null;
 
 		if (indexAttrMap != null) {
 			for (ArrayList<TuringTag> nTags : indexAttrMap.values()) {
 				for (TuringTag nTag : nTags) {
-					if (nTag.getTagName().equals(turingTagName)) {
+					if (nTag.getTagName().equals(tagName)) {
 						if (log.isDebugEnabled()) {
 							log.debug("Found the value in index-attr");
 						}
@@ -81,7 +81,7 @@ public class CTDMappings {
 		if (turingTag == null && commonIndexAttrMap != null) {
 			for (ArrayList<TuringTag> nTags : commonIndexAttrMap.values()) {
 				for (TuringTag nTag : nTags) {
-					if (nTag.getTagName().equals(turingTagName)) {
+					if (nTag.getTagName().equals(tagName)) {
 						if (log.isDebugEnabled()) {
 							log.debug("Found the value in common-index-attr");
 						}
@@ -100,9 +100,9 @@ public class CTDMappings {
 		HashMap<String, String> tagCtds = new HashMap<String, String>();
 		for (Entry<String, ArrayList<TuringTag>> entryCtd : indexAttrMap.entrySet()) {
 			String keyCtd = entryCtd.getKey();
-			for (TuringTag tagCtd : entryCtd.getValue()) {
+			for (TuringTag turingTag : entryCtd.getValue()) {
 
-				tagCtds.put(tagCtd.getTagName(), keyCtd);
+				tagCtds.put(turingTag.getTagName(), keyCtd);
 				returnSet.add(keyCtd);
 			}
 		}
@@ -110,11 +110,11 @@ public class CTDMappings {
 		// Add only Mandatory Attributes
 		for (Entry<String, ArrayList<TuringTag>> entry : commonIndexAttrMap.entrySet()) {
 			String key = entry.getKey();
-			for (TuringTag tag : entry.getValue()) {
+			for (TuringTag turingTag : entry.getValue()) {
 				// Doesn't repeat tags that exist in Ctd
-				if (tag.getSrcMandatory()) {
+				if (turingTag.getSrcMandatory()) {
 					if ((!key.startsWith("CLASSNAME_"))
-							|| (key.startsWith("CLASSNAME_") && tagCtds.get(tag.getTagName()) == null))
+							|| (key.startsWith("CLASSNAME_") && tagCtds.get(turingTag.getTagName()) == null))
 						returnSet.add(key);
 				}
 			}

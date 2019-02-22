@@ -25,7 +25,6 @@ import org.apache.commons.httpclient.methods.PostMethod;
 
 import com.viglet.turing.broker.TurWEM;
 import com.viglet.turing.config.IHandlerConfiguration;
-import com.viglet.turing.index.ExternalResourceObject;
 import com.viglet.turing.index.IValidToIndex;
 import com.viglet.turing.mappers.CTDMappings;
 import com.viglet.turing.mappers.MappingDefinitions;
@@ -117,41 +116,6 @@ public class TurWEMIndex {
 			return null;
 		}
 		return ctdMappings.getClassValidToIndex();
-	}
-
-	public static boolean indexCreate(ExternalResourceObject mo, String typeName, IHandlerConfiguration config) {
-		boolean success = false;
-		try {
-			log.info("Viglet Turing indexer Processing Content Type: " + typeName);
-			if (log.isDebugEnabled()) {
-				log.debug("Viglet Turing indexer Processing Content Type: " + typeName);
-			}
-
-			String className = getClassValidToIndex(typeName, config);
-			IValidToIndex instance = null;
-			if (className != null) {
-				Class<?> clazz = Class.forName(className);
-				if (clazz == null) {
-					if (log.isDebugEnabled()) {
-						log.debug("Valid to Index className is not found in the jar file: " + className);
-					}
-				} else {
-					instance = (IValidToIndex) clazz.newInstance();
-				}
-			}
-			if (instance != null && !instance.isValid(mo, config)) {
-				if (TuringUtils.isIndexed(mo, config)) {
-					TurWEMDeindex.indexDelete(mo.getId(), config);
-				}
-				return false;
-			}
-			postIndex(TurWEM.getXML(mo, config), config);
-			success = true;
-		} catch (Exception e) {
-			log.error("Can't CREATE to Viglet Turing indexer: " + e.getMessage());
-			e.printStackTrace();
-		}
-		return success;
 	}
 
 	public static void postIndex(String xml, IHandlerConfiguration config) throws HttpException, IOException {

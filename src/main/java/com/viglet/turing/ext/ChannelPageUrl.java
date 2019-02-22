@@ -18,7 +18,6 @@ package com.viglet.turing.ext;
 
 import com.viglet.turing.beans.TuringTag;
 import com.viglet.turing.config.IHandlerConfiguration;
-import com.viglet.turing.index.ExternalResourceObject;
 import com.viglet.turing.util.ETLTuringTranslator;
 import com.vignette.as.client.common.AttributeData;
 import com.vignette.as.client.common.ref.ManagedObjectVCMRef;
@@ -48,14 +47,5 @@ public class ChannelPageUrl implements ExtAttributeInterface {
 			log.debug("ChannelPageUrl URL: " + url);
 		}
 		return url;
-	}
-
-	@Override
-	public String consume(TuringTag tag, ExternalResourceObject ci, String attributeData, IHandlerConfiguration config)
-			throws Exception {
-		if (log.isDebugEnabled()) {
-			log.debug("Executing ChannelPageUrl");
-		}
-		return ci.getLink();
 	}
 }
