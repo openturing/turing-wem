@@ -20,6 +20,10 @@ import java.util.HashMap;
 
 import com.viglet.turing.beans.TurCTDMappingMap;
 import com.viglet.turing.beans.TurMiscConfigMap;
+import com.viglet.turing.config.IHandlerConfiguration;
+import com.viglet.turing.index.IValidToIndex;
+import com.vignette.as.client.exception.ApplicationException;
+import com.vignette.as.client.javabean.ContentInstance;
 import com.vignette.logging.context.ContextLogger;
 
 public class MappingDefinitions {
@@ -39,8 +43,7 @@ public class MappingDefinitions {
 	public MappingDefinitions() {
 	}
 
-	public MappingDefinitions(String mappingsXML,  TurCTDMappingMap mappingDefinitions,
-			TurMiscConfigMap mscConfig) {
+	public MappingDefinitions(String mappingsXML, TurCTDMappingMap mappingDefinitions, TurMiscConfigMap mscConfig) {
 		if (log.isDebugEnabled()) {
 			log.debug("initializing mapping definitions");
 		}
@@ -63,5 +66,47 @@ public class MappingDefinitions {
 
 	public void setMscConfig(TurMiscConfigMap mscConfig) {
 		this.mscConfig = mscConfig;
+	}
+
+	public boolean hasContentType(String contentTypeName) {
+		return mappingDefinitions.get(contentTypeName) == null ? false : true;
+	}
+
+	public boolean hasClassValidToIndex(String contentTypeName) {
+		CTDMappings ctdMappings = mappingDefinitions.get(contentTypeName);
+		boolean status = ctdMappings != null && ctdMappings.getClassValidToIndex() != null ? true : false;
+		if (!status && log.isDebugEnabled())
+			log.debug(String.format("Valid to Index className is not found in the mappingXML for the CTD: %s",
+					contentTypeName));
+		return status;
+	}
+
+	public boolean isClassValidToIndex(ContentInstance ci, IHandlerConfiguration config) {
+		String contentTypeName;
+		try {
+			contentTypeName = ci.getObjectType().getData().getName();
+
+			if (this.hasClassValidToIndex(contentTypeName)) {
+				CTDMappings ctdMappings = mappingDefinitions.get(contentTypeName);
+				IValidToIndex instance = null;
+				String className = ctdMappings.getClassValidToIndex();
+				if (className != null) {
+					Class<?> clazz = Class.forName(className);
+
+					if (clazz == null) {
+						if (log.isDebugEnabled())
+							log.debug(String.format("Valid to Index className is not found in the jar file: %s",
+									className));
+
+					} else
+						instance = (IValidToIndex) clazz.newInstance();
+				}
+				return (instance != null && !instance.isValid(ci, config)) ? false : true;
+			}	
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return false;
+
 	}
 }

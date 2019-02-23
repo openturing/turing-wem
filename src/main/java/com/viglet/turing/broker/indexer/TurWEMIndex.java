@@ -123,70 +123,31 @@ public class TurWEMIndex {
 	}
 
 	public static boolean indexCreate(ManagedObject mo, IHandlerConfiguration config) {
-
 		MappingDefinitions mappingDefinitions = MappingDefinitionsProcess.getMappingDefinitions(config);
-		boolean success = false;
-		if (mappingDefinitions == null)
-			return false;
-
-		if ((mo != null) && (mo instanceof ContentInstance)) {
+		if ((mappingDefinitions != null) && (mo != null) && (mo instanceof ContentInstance)) {
 			try {
+				ContentInstance contentInstance = (ContentInstance) mo;
+				String contentTypeName = contentInstance.getObjectType().getData().getName();
 
-				if (mappingDefinitions.getMappingDefinitions().get(mo.getObjectType().getData().getName()) != null) {
-
-					log.info(String.format("Viglet Turing indexer Processing Content Type: %s",
-							mo.getObjectType().getData().getName()));
-
-					String className = getClassValidToIndex(mo.getObjectType().getData().getName(), config);
-					IValidToIndex instance = null;
-					if (className != null) {
-						Class<?> clazz = Class.forName(className);
-						if (clazz == null) {
-							if (log.isDebugEnabled())
-								log.debug(String.format("Valid to Index className is not found in the jar file: %s",
-										className));
-
-						} else
-							instance = (IValidToIndex) clazz.newInstance();
-
-					}
-					if (instance != null && !instance.isValid((ContentInstance) mo, config))
-						return false;
-
-					postIndex(generateXMLToIndex((ContentInstance) mo, config), config);
-					success = true;
+				if (mappingDefinitions.isClassValidToIndex(contentInstance, config)) {
+					log.info(String.format("Viglet Turing indexer Processing Content Type: %s", contentTypeName));
+					return postIndex(generateXMLToIndex(contentInstance, config), config);
 
 				} else {
 					if (log.isDebugEnabled())
 						log.debug(String.format(
 								"Mapping definition is not found in the mappingXML for the CTD and ignoring: %s",
-								mo.getObjectType().getData().getName()));
-
+								contentTypeName));
 				}
-
 			} catch (Exception e) {
 				log.error(String.format("Can't Create to Viglet Turing indexer: %s", e.getMessage()));
 				e.printStackTrace();
 			}
 		}
-		return success;
+		return false;
 	}
 
-	public static String getClassValidToIndex(String objectTypeName, IHandlerConfiguration config) {
-		HashMap<String, CTDMappings> mappings = MappingDefinitionsProcess.getMappingDefinitions(config)
-				.getMappingDefinitions();
-		CTDMappings ctdMappings = mappings.get(objectTypeName);
-		if (ctdMappings.getClassValidToIndex() == null) {
-			if (log.isDebugEnabled())
-				log.debug(String.format("Valid to Index className is not found in the mappingXML for the CTD: %s",
-						objectTypeName));
-
-			return null;
-		}
-		return ctdMappings.getClassValidToIndex();
-	}
-
-	public static void postIndex(String xml, IHandlerConfiguration config) throws HttpException, IOException {
+	public static boolean postIndex(String xml, IHandlerConfiguration config) throws HttpException, IOException {
 
 		PostMethod post = new PostMethod(
 				config.getTuringURL() + "/?index=" + config.getIndex() + "&config=" + config.getConfig());
@@ -209,5 +170,7 @@ public class TurWEMIndex {
 					String.format("Viglet Turing indexer response HTTP result is: %s", post.getResponseBodyAsString()));
 		}
 		post.releaseConnection();
+
+		return true;
 	}
 }
