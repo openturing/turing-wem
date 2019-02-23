@@ -30,7 +30,6 @@ import com.viglet.turing.beans.TurCTDMappingMap;
 import com.viglet.turing.beans.TuringTag;
 import com.viglet.turing.broker.attribute.TurWEMAttrXML;
 import com.viglet.turing.config.IHandlerConfiguration;
-import com.viglet.turing.exceptions.MappingNotFoundException;
 import com.viglet.turing.mappers.CTDMappings;
 import com.viglet.turing.mappers.MappingDefinitions;
 import com.viglet.turing.mappers.MappingDefinitionsProcess;
@@ -42,7 +41,7 @@ import com.vignette.logging.context.ContextLogger;
 public class TurWEMIndex {
 
 	private static final ContextLogger log = ContextLogger.getLogger(TurWEMIndex.class);
-	
+
 	public static boolean indexCreate(ManagedObject mo, IHandlerConfiguration config) {
 		MappingDefinitions mappingDefinitions = MappingDefinitionsProcess.getMappingDefinitions(config);
 		if ((mappingDefinitions != null) && (mo != null) && (mo instanceof ContentInstance)) {
@@ -68,44 +67,40 @@ public class TurWEMIndex {
 		return false;
 	}
 
+	// Generate XML To Index By ContentInstance
 	public static String generateXMLToIndex(ContentInstance ci, IHandlerConfiguration config) throws Exception {
 		MappingDefinitions mappingDefinitions = MappingDefinitionsProcess.getMappingDefinitions(config);
 		if (log.isDebugEnabled())
 			log.debug("Generating Viglet Turing XML for a content instance");
 
 		String contentTypeName = ci.getObjectType().getData().getName();
-		
+
 		StringBuffer xml = new StringBuffer("<?xml version=\"1.0\" encoding=\"UTF-8\" ?><document>");
 		xml.append(createXMLAttribute("id", ci.getContentManagementId().getId()));
 
 		TurCTDMappingMap mappings = mappingDefinitions.getMappingDefinitions();
-		
+
 		CTDMappings ctdMappings = mappings.get(contentTypeName);
 
-		if (ctdMappings == null) {
-			String ctdMappingError = String.format("Mapping definition is not found in the mappingXML for the CTD: %s",
-					contentTypeName);
-			if (log.isDebugEnabled())
-				log.debug(ctdMappingError);
-
-			throw new MappingNotFoundException(ctdMappingError);
-		}
+		if (ctdMappings == null && log.isErrorEnabled())
+			log.error(String.format("Mapping definition is not found in the mappingXML for the CTD: %s",
+					contentTypeName));
 
 		TurAttrDefMap attributesDefs = new TurAttrDefMap();
 
-		for (String key : ctdMappings.getIndexAttrs()) {
-			for (TuringTag turingTag : ctdMappings.getIndexAttrTag(key)) {
-				if (key != null && turingTag != null && turingTag.getTagName() != null) {
+		for (String tag : ctdMappings.getTagList()) {
+			for (TuringTag turingTag : ctdMappings.getTuringTagMap().get(tag)) {
+				if (tag != null && turingTag != null && turingTag.getTagName() != null) {
 
 					if (log.isDebugEnabled()) {
 						String debugRelation = turingTag.getSrcAttributeRelation() != null
 								? TuringUtils.listToString(turingTag.getSrcAttributeRelation())
 								: null;
-						log.debug(String.format("Key: %s,  Tag:  %s, relation: %s, content Type: %s", key,
-								turingTag.getTagName(), debugRelation, turingTag.getSrcAttributeType()));
+						log.debug(String.format("Tag:  %s, relation: %s, content Type: %s", turingTag.getTagName(),
+								debugRelation, turingTag.getSrcAttributeType()));
 					}
 
-					TurAttrDefContext turAttrDefContext = new TurAttrDefContext(ci, turingTag, key, config,
+					TurAttrDefContext turAttrDefContext = new TurAttrDefContext(ci, turingTag, config,
 							mappingDefinitions);
 
 					attributesDefs = TurWEMAttrXML.attributeXML(turAttrDefContext);
@@ -119,7 +114,7 @@ public class TurWEMIndex {
 			List<String> listValue = entry.getValue();
 			for (String value : listValue) {
 				if ((value != null) && (value.toString().trim().length() > 0))
-					xml.append(createXMLAttribute(key, value.toString()));			
+					xml.append(createXMLAttribute(key, value.toString()));
 			}
 		}
 
@@ -139,7 +134,7 @@ public class TurWEMIndex {
 		return xml.toString();
 
 	}
-	
+
 	public static boolean postIndex(String xml, IHandlerConfiguration config) throws HttpException, IOException {
 
 		PostMethod post = new PostMethod(
@@ -166,10 +161,9 @@ public class TurWEMIndex {
 
 		return true;
 	}
-	
+
 	private static String createXMLAttribute(String tag, String value) {
 		return String.format("<%1$s><![CDATA[%2$s]]></%1$s>", tag, value.toString());
 	}
 
-	
 }

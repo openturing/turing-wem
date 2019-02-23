@@ -16,9 +16,11 @@
  */
 package com.viglet.turing.beans;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
-public class TurMiscConfigMap extends HashMap<String, String>{
+//HashMap <String tag, ArrayList<TuringTag> turingTags>
+public class TuringTagMap extends HashMap<String, ArrayList<TuringTag>>{
 
 	private static final long serialVersionUID = 1L;
 

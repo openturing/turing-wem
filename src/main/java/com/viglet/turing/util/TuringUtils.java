@@ -1,5 +1,3 @@
-package com.viglet.turing.util;
-
 /*
  * Copyright (C) 2016-2019 Alexandre Oliveira <alexandre.oliveira@viglet.com> 
  * 
@@ -16,40 +14,21 @@ package com.viglet.turing.util;
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-import java.util.List;
+package com.viglet.turing.util;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+
+import java.util.List;
+import java.util.Set;
+import java.util.Map.Entry;
+
+import com.viglet.turing.beans.TuringTagMap;
 import com.viglet.turing.beans.TuringTag;
 import com.vignette.logging.context.ContextLogger;
 
 public class TuringUtils {	
 	private static final ContextLogger log = ContextLogger.getLogger(TuringUtils.class);
-
-	/**
-	 * Returns the index Tag name
-	 * 
-	 * @param turingTag
-	 * @return String
-	 */
-	public static String getIndexTagName(TuringTag turingTag) {
-		String srcId = null;
-		if ((turingTag.getSrcXmlName() == null) && (turingTag.getSrcClassName() != null)) {
-			srcId = String.format("CLASSNAME_%s", turingTag.getSrcClassName());
-			
-		} else {
-			srcId = turingTag.getSrcXmlName();
-			if (turingTag.getSrcClassName() != null) {
-				srcId = String.format("%s_%s", srcId, turingTag.getSrcClassName());
-			}
-		}
-
-		if (turingTag.getSrcAttributeRelation() != null) {
-			srcId = String.format("%s_%s", srcId, turingTag.getSrcAttributeRelation());
-		}
-		if (log.isDebugEnabled())
-			log.debug(String.format("IndexTagName: %s", srcId));
-
-		return srcId;
-	}
 
 	public static String listToString(List<String> stringList) {
 		StringBuilder sb = new StringBuilder();
@@ -61,5 +40,16 @@ public class TuringUtils {
 			}
 		}
 		return sb.toString();
+	}
+	
+	// Old turIndexAttMapToSet
+	public static Set<TuringTag> turingTagMapToSet(TuringTagMap turingTagMap) {
+		Set<TuringTag> turingTags = new HashSet<TuringTag>(); 
+		for (Entry<String, ArrayList<TuringTag>> entryCtd : turingTagMap.entrySet()) {
+			for (TuringTag turingTag : entryCtd.getValue()) {
+				turingTags.add(turingTag);
+			}
+		}
+		return turingTags;
 	}
 }

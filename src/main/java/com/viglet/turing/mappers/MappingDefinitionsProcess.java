@@ -23,26 +23,26 @@ import javax.xml.parsers.DocumentBuilder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 
 import com.viglet.turing.beans.TurCTDMappingMap;
-import com.viglet.turing.beans.TurIndexAttrMap;
-import com.viglet.turing.beans.TurMiscConfigMap;
 import com.viglet.turing.beans.TuringTag;
+import com.viglet.turing.beans.TuringTagMap;
 import com.viglet.turing.config.IHandlerConfiguration;
 import com.viglet.turing.config.TurXMLConstant;
-import com.viglet.turing.util.TuringUtils;
 import com.vignette.logging.context.ContextLogger;
 
+// Open and process Mappping XML File structure
 public class MappingDefinitionsProcess {
 	private static final ContextLogger log = ContextLogger.getLogger(MappingDefinitionsProcess.class);
 
 	public static MappingDefinitions loadMappings(String resourceXml) {
 		TurCTDMappingMap mappings = null;
-		TurMiscConfigMap mscConfig = null;
 
 		try {
 			DocumentBuilderFactory dlf = DocumentBuilderFactory.newInstance();
@@ -67,7 +67,7 @@ public class MappingDefinitionsProcess {
 			log.error("Error when loading mappings");
 			return null;
 		}
-		return new MappingDefinitions(resourceXml, mappings, mscConfig);
+		return new MappingDefinitions(resourceXml, mappings);
 	}
 
 	/**
@@ -79,59 +79,116 @@ public class MappingDefinitionsProcess {
 	public static TurCTDMappingMap readCTDMappings(Element rootElement) {
 		TurCTDMappingMap mappings = new TurCTDMappingMap();
 
-		// Read common-index-attrs
-		TurIndexAttrMap commonIndexAttrsMap = readIndexAttributeMappings(rootElement,
+		// Read <common-index-attrs/>
+		List<TuringTag> commonIndexAttrs = readIndexAttributeMappings(rootElement,
 				TurXMLConstant.TAG_COMMON_INDEX_DATA);
 
+		// Get <mappingdefinition/> List
 		NodeList ctdMappingDefList = rootElement.getElementsByTagName(TurXMLConstant.TAG_MAPPING_DEF);
 
 		for (int i = 0; i < ctdMappingDefList.getLength(); i++) {
 			Element mappingDefinition = (Element) ctdMappingDefList.item(i);
+
+			// If it have contenttype attribute
 			if (mappingDefinition.hasAttribute(TurXMLConstant.TAG_ATT_MAPPING_DEF)) {
 				String ctdXmlName = mappingDefinition.getAttribute(TurXMLConstant.TAG_ATT_MAPPING_DEF);
 
-				// Read index-attr
-				TurIndexAttrMap indexAttrsMap = readIndexAttributeMappings((Element) ctdMappingDefList.item(i),
+				// Read <index-attr/>
+				List<TuringTag> indexAttrs = readIndexAttributeMappings((Element) ctdMappingDefList.item(i),
 						TurXMLConstant.TAG_INDEX_DATA);
-				CTDMappings ctdMapping = new CTDMappings(commonIndexAttrsMap, indexAttrsMap);
-				if (mappingDefinition.hasAttribute(TurXMLConstant.TAG_ATT_CUSTOM_CLASS))
-					ctdMapping.setCustomClassName(mappingDefinition.getAttribute(TurXMLConstant.TAG_ATT_CUSTOM_CLASS));
 
+				// Merge CommonIndexAttrs into IndexAttrs
+				TuringTagMap turingTagMap = mergeCommonAttrs(commonIndexAttrs, indexAttrs);
+
+				// Add attributes common and index attributes into CTDMapping
+				CTDMappings ctdMapping = new CTDMappings(turingTagMap);
+
+				// Set isValidToIndex
 				if (mappingDefinition.hasAttribute(TurXMLConstant.TAG_ATT_CLASS_VALID_TOINDEX))
 					ctdMapping.setClassValidToIndex(
 							mappingDefinition.getAttribute(TurXMLConstant.TAG_ATT_CLASS_VALID_TOINDEX));
 
+				/// HashMap of CTDs
 				mappings.put(ctdXmlName, ctdMapping);
 			}
 		}
 		return mappings;
 	}
 
-	// Read index-attrs or common-index-attrs
-	public static TurIndexAttrMap readIndexAttributeMappings(Element rootElement, String genericIndexAttrsTag) {
-		TurIndexAttrMap genericIndexAttrMap = new TurIndexAttrMap();
-		NodeList mappingList = rootElement.getElementsByTagName(genericIndexAttrsTag);
-		for (int i = 0; i < mappingList.getLength(); i++) {
-			loadAtributesFromAttrsElement((Element) mappingList.item(i), genericIndexAttrMap);
+	public static TuringTagMap mergeCommonAttrs(List<TuringTag> commonIndexAttrs, List<TuringTag> indexAttrs) {
+
+		TuringTagMap indexAttrsMapMerged = new TuringTagMap();
+
+		Map<String, TuringTag> commonIndexAttrMap = new HashMap<String, TuringTag>();
+		for (TuringTag turingTag : commonIndexAttrs)
+			commonIndexAttrMap.put(turingTag.getTagName(), turingTag);
+
+		for (TuringTag turingTag : indexAttrs) {
+			if (commonIndexAttrs != null && turingTag != null && turingTag.getSrcClassName() == null) {
+				if (commonIndexAttrMap.get(turingTag.getTagName()) != null) {
+					// Common always have one item
+					// Add ClassName of Common into Index, if doesn't have ClassName
+					turingTag.setSrcClassName(commonIndexAttrMap.get(turingTag.getTagName()).getSrcClassName());
+				}
+			}
+
+			if (!indexAttrsMapMerged.containsKey(turingTag.getTagName()))
+				indexAttrsMapMerged.put(turingTag.getTagName(), new ArrayList<TuringTag>());
+			indexAttrsMapMerged.get(turingTag.getTagName()).add(turingTag);
 		}
-		return genericIndexAttrMap;
+
+		// Add only Mandatory Attributes
+		for (TuringTag commonTuringTag : commonIndexAttrs) {
+			// Doesn't repeat tags that exist in Ctd
+			if (commonTuringTag.getSrcMandatory()) {
+				if (!indexAttrsMapMerged.containsKey(commonTuringTag.getTagName())) {
+					ArrayList<TuringTag> turingTags = new ArrayList<TuringTag>();
+					turingTags.add(commonTuringTag);
+					indexAttrsMapMerged.put(commonTuringTag.getTagName(), turingTags);
+				}
+			}
+		}
+		return indexAttrsMapMerged;
 	}
 
-	// Read srcAttr
-	public static void loadAtributesFromAttrsElement(Element AttrsElement, TurIndexAttrMap genericIndexAttrMap) {
+	// Read <index-attrs/> or <common-index-attrs/>
+	public static List<TuringTag> readIndexAttributeMappings(Element rootElement, String genericIndexAttrsTag) {
+		List<TuringTag> turingTagMap = new ArrayList<TuringTag>();
+		NodeList mappingList = rootElement.getElementsByTagName(genericIndexAttrsTag);
+		for (int i = 0; i < mappingList.getLength(); i++) {
+			// Load <srcAttr/> List
+			List<TuringTag> turingTagsPerSrcAttr = loadAtributesFromAttrsElement((Element) mappingList.item(i));
+			if (turingTagsPerSrcAttr != null)
+				turingTagMap.addAll(turingTagsPerSrcAttr);
+		}
+
+		if (log.isDebugEnabled()) {
+			log.debug(String.format("%s Attributes", genericIndexAttrsTag));
+			for (TuringTag turingTag : turingTagMap)
+				log.debug(String.format(" Tag %s - Attribute %s", turingTag.getTagName(), turingTag.getSrcXmlName()));
+		}
+		return turingTagMap;
+	}
+
+	// Load <srcAttr/> List
+	public static List<TuringTag> loadAtributesFromAttrsElement(Element AttrsElement) {
 		NodeList srcNodeList = AttrsElement.getElementsByTagName("srcAttr");
+		List<TuringTag> turingTagsPerSrcAttr = new ArrayList<TuringTag>();
 
 		for (int i = 0; i < srcNodeList.getLength(); i++) {
 			Element srcAttrNode = (Element) srcNodeList.item(i);
 			if (srcAttrNode.hasAttributes() && (srcAttrNode.hasAttribute(TurXMLConstant.XML_NAME_ATT)
 					|| srcAttrNode.hasAttribute(TurXMLConstant.CLASS_NAME_ATT))) {
-				loadSrcAttr(srcAttrNode, genericIndexAttrMap);
+				List<TuringTag> turingTags = loadSrcAttr(srcAttrNode);
+				if (turingTags != null)
+					turingTagsPerSrcAttr.addAll(turingTags);
 			}
 		}
+		return turingTagsPerSrcAttr;
 	}
 
-	// Load srcAttr XML Attribute
-	public static void loadSrcAttr(Element srcAttrNode, TurIndexAttrMap genericIndexAttrMap) {
+	// Read <srcAttr/>
+	public static List<TuringTag> loadSrcAttr(Element srcAttrNode) {
 		TuringTag turingTag = new TuringTag();
 		if (srcAttrNode.hasAttribute(TurXMLConstant.XML_NAME_ATT))
 			turingTag.setSrcXmlName(srcAttrNode.getAttribute(TurXMLConstant.XML_NAME_ATT));
@@ -189,27 +246,25 @@ public class MappingDefinitionsProcess {
 
 				if (tagName != null) {
 					turingTag.setTagName(tagName);
-					if ((turingTag.getSrcXmlName() == null) && (turingTag.getSrcClassName() != null))
-						turingTag.setSrcId(TuringUtils.getIndexTagName(turingTag));
-
 					turingTags.add(turingTag);
 
 				}
 			}
-			if (turingTags.size() > 0)
-				genericIndexAttrMap.put(turingTag.getSrcId(), turingTags);
+			if (turingTags.size() > 0) {
+				return turingTags;
+			}
+
 		}
+		return null;
 	}
 
 	public static MappingDefinitions getMappingDefinitions(IHandlerConfiguration config) {
 
 		MappingDefinitions mappingDefinitions = MappingDefinitionsProcess.loadMappings(config.getMappingsXML());
 
-		if (mappingDefinitions == null) {
-			if (log.isDebugEnabled()) {
-				log.error("Mapping definitions are not loaded properly from mappingsXML: " + config.getMappingsXML());
-			}
-		}
+		if (mappingDefinitions == null && log.isDebugEnabled())
+			log.error("Mapping definitions are not loaded properly from mappingsXML: " + config.getMappingsXML());
+
 		return mappingDefinitions;
 	}
 

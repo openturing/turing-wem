@@ -37,7 +37,7 @@ public class TurWEMAttrWidget {
 			throws Exception {
 		TuringTag turingTag = turAttrDefContext.getTuringTag();
 		ContentInstance ci = turAttrDefContext.getContentInstance();
-		String key = turAttrDefContext.getKey();
+		String attributeName = turAttrDefContext.getTuringTag().getSrcXmlName();
 		String widgetName = null;
 
 		if (turingTag.getSrcAttributeRelation() != null && turingTag.getSrcAttributeRelation().size() > 0) {
@@ -50,11 +50,11 @@ public class TurWEMAttrWidget {
 			}
 
 			if (relation.length > 0) {
-				widgetName = relation[0].getAttribute(key).getAttributeDefinition().getWidgetName();
+				widgetName = relation[0].getAttribute(attributeName).getAttributeDefinition().getWidgetName();
 			}
 
 		} else {
-			widgetName = ci.getAttribute(key).getAttributeDefinition().getWidgetName();
+			widgetName = ci.getAttribute(attributeName).getAttributeDefinition().getWidgetName();
 		}
 
 		if (widgetName != null && widgetName.equals("WCMContentSelectWidget")

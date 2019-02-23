@@ -17,137 +17,60 @@
 package com.viglet.turing.mappers;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map.Entry;
+import java.util.List;
 import java.util.Set;
 
-import com.viglet.turing.beans.TurIndexAttrMap;
 import com.viglet.turing.beans.TuringTag;
+import com.viglet.turing.beans.TuringTagMap;
 import com.viglet.turing.util.TuringUtils;
 import com.vignette.logging.context.ContextLogger;
 
 public class CTDMappings {
-	private TurIndexAttrMap commonIndexAttrMap;
-	private TurIndexAttrMap indexAttrMap;
-	private String customClassName = null;
+	private TuringTagMap turingTagMap;
 	private String classValidToIndex = null;
 	private static final ContextLogger log = ContextLogger.getLogger(CTDMappings.class);
 
-	public ArrayList<TuringTag> getIndexAttrTag(String ctdAttribute) {
+	// OLD getIndexAttrTag
+	public List<TuringTag> getTuringTagBySrcAttr(String srcAttrName) {
 
-		ArrayList<TuringTag> turingTags = null;
+		List<TuringTag> turingTags = new ArrayList<TuringTag>();
 		if (log.isDebugEnabled())
-			log.debug("CTDMappings attribute: " + ctdAttribute);
+			log.debug("CTDMappings attribute: " + srcAttrName);
 
-		if (indexAttrMap != null) {
-			turingTags = indexAttrMap.get(ctdAttribute);
-			if (turingTags != null) {
-				for (TuringTag turingTag : turingTags)
-					if (commonIndexAttrMap != null && turingTag != null && turingTag.getSrcClassName() == null) {
-						if (commonIndexAttrMap.get(TuringUtils.getIndexTagName(turingTag)) != null) {
-							// Common always have one item
-							turingTag.setSrcClassName(commonIndexAttrMap.get(TuringUtils.getIndexTagName(turingTag))
-									.get(0).getSrcClassName());
-						}
-					}
+		if (turingTagMap != null) {
+			for (TuringTag turingTag : TuringUtils.turingTagMapToSet(turingTagMap)) {
+				if (turingTag != null && turingTag.getSrcXmlName().equals(srcAttrName))
+					turingTags.add(turingTag);
+
 			}
 		}
-		if (turingTags == null && commonIndexAttrMap != null)
-			turingTags = commonIndexAttrMap.get(ctdAttribute);
-
 		return turingTags;
 	}
 
-	/**
-	 * @param tagName
-	 * @return TuringTag
-	 */
-	public TuringTag findIndexTagInMappings(String tagName) {
-		TuringTag turingTag = null;
+	// Get TagList
+	public Set<String> getTagList() {
+		Set<String> tagNames = new HashSet<String>();
 
-		if (indexAttrMap != null) {
-			for (ArrayList<TuringTag> nTags : indexAttrMap.values()) {
-				for (TuringTag nTag : nTags) {
-					if (nTag.getTagName().equals(tagName)) {
-						if (log.isDebugEnabled()) {
-							log.debug("Found the value in index-attr");
-						}
-						turingTag = nTag;
-					}
-				}
-			}
-		}
-		if (turingTag == null && commonIndexAttrMap != null) {
-			for (ArrayList<TuringTag> nTags : commonIndexAttrMap.values()) {
-				for (TuringTag nTag : nTags) {
-					if (nTag.getTagName().equals(tagName)) {
-						if (log.isDebugEnabled()) {
-							log.debug("Found the value in common-index-attr");
-						}
-						turingTag = nTag;
-					}
-				}
-			}
-		}
-
-		return turingTag;
-	}
-
-	public Set<String> getIndexAttrs() {
-		Set<String> returnSet = new HashSet<String>();
-
-		HashMap<String, String> tagCtds = new HashMap<String, String>();
-		for (Entry<String, ArrayList<TuringTag>> entryCtd : indexAttrMap.entrySet()) {
-			String keyCtd = entryCtd.getKey();
-			for (TuringTag turingTag : entryCtd.getValue()) {
-
-				tagCtds.put(turingTag.getTagName(), keyCtd);
-				returnSet.add(keyCtd);
-			}
-		}
-
-		// Add only Mandatory Attributes
-		for (Entry<String, ArrayList<TuringTag>> entry : commonIndexAttrMap.entrySet()) {
-			String key = entry.getKey();
-			for (TuringTag turingTag : entry.getValue()) {
-				// Doesn't repeat tags that exist in Ctd
-				if (turingTag.getSrcMandatory()) {
-					if ((!key.startsWith("CLASSNAME_"))
-							|| (key.startsWith("CLASSNAME_") && tagCtds.get(turingTag.getTagName()) == null))
-						returnSet.add(key);
-				}
-			}
-		}
+		for (TuringTag turingTag : TuringUtils.turingTagMapToSet(turingTagMap)) {
+			tagNames.add(turingTag.getTagName());
+		}		
 
 		if (log.isDebugEnabled()) {
-			log.debug("CTDMappings getIndexAttrs");
-			for (String setItem : returnSet)
-				log.debug(setItem);
+			log.debug("getIndexAttrs Tag Names");
+			for (String tagName : tagNames)
+				log.debug(tagName);
 		}
 
-		return returnSet;
+		return tagNames;
 	}
 
-	public CTDMappings(TurIndexAttrMap commonIndexAttrMap, TurIndexAttrMap indexAttrMap) {
-		this.commonIndexAttrMap = commonIndexAttrMap;
-		this.indexAttrMap = indexAttrMap;
+	public CTDMappings(TuringTagMap turingTagMap) {
+		this.turingTagMap = turingTagMap;
 	}
 
-	public TurIndexAttrMap getCommonIndexAttrMap() {
-		return commonIndexAttrMap;
-	}
-
-	public TurIndexAttrMap getIndexAttrMap() {
-		return indexAttrMap;
-	}
-
-	public String getCustomClassName() {
-		return customClassName;
-	}
-
-	public void setCustomClassName(String customClassName) {
-		this.customClassName = customClassName;
+	public TuringTagMap getTuringTagMap() {
+		return turingTagMap;
 	}
 
 	public String getClassValidToIndex() {

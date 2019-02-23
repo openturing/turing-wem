@@ -16,10 +16,7 @@
  */
 package com.viglet.turing.mappers;
 
-import java.util.HashMap;
-
 import com.viglet.turing.beans.TurCTDMappingMap;
-import com.viglet.turing.beans.TurMiscConfigMap;
 import com.viglet.turing.config.IHandlerConfiguration;
 import com.viglet.turing.index.IValidToIndex;
 import com.vignette.as.client.javabean.ContentInstance;
@@ -28,7 +25,6 @@ import com.vignette.logging.context.ContextLogger;
 
 public class MappingDefinitions {
 	private TurCTDMappingMap mappingDefinitions;
-	private TurMiscConfigMap mscConfig;
 	private String mappingsXML;
 	private static final ContextLogger log = ContextLogger.getLogger(MappingDefinitions.class);
 
@@ -43,29 +39,21 @@ public class MappingDefinitions {
 	public MappingDefinitions() {
 	}
 
-	public MappingDefinitions(String mappingsXML, TurCTDMappingMap mappingDefinitions, TurMiscConfigMap mscConfig) {
+	public MappingDefinitions(String mappingsXML, TurCTDMappingMap mappingDefinitions) {
 		if (log.isDebugEnabled()) {
 			log.debug("initializing mapping definitions");
 		}
 		setMappingsXML(mappingsXML);
 		setMappingDefinitions(mappingDefinitions);
-		setMscConfig(mscConfig);
 	}
 
 	public TurCTDMappingMap getMappingDefinitions() {
 		return mappingDefinitions;
 	}
 
-	public HashMap<String, String> getMscConfig() {
-		return mscConfig;
-	}
 
 	public void setMappingDefinitions(TurCTDMappingMap mappingDefinitions) {
 		this.mappingDefinitions = mappingDefinitions;
-	}
-
-	public void setMscConfig(TurMiscConfigMap mscConfig) {
-		this.mscConfig = mscConfig;
 	}
 
 	public boolean hasContentType(String contentTypeName) {

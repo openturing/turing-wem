@@ -10,7 +10,6 @@ public class TurAttrDefContext {
 
 	private ContentInstance contentInstance;
 	private TuringTag turingTag;
-	private String key;
 	private IHandlerConfiguration iHandlerConfiguration;
 	private MappingDefinitions mappingDefinitions;
 	private AttributeData attributeData;
@@ -19,16 +18,14 @@ public class TurAttrDefContext {
 		this.setAttributeData(turAttrDefContext.getAttributeData());
 		this.setContentInstance(turAttrDefContext.getContentInstance());
 		this.setiHandlerConfiguration(turAttrDefContext.getiHandlerConfiguration());
-		this.setKey(turAttrDefContext.getKey());
 		this.setMappingDefinitions(turAttrDefContext.getMappingDefinitions());
 		this.setTuringTag(turAttrDefContext.getTuringTag());
 	}
 
-	public TurAttrDefContext(ContentInstance contentInstance, TuringTag turingTag, String key,
+	public TurAttrDefContext(ContentInstance contentInstance, TuringTag turingTag,
 			IHandlerConfiguration iHandlerConfiguration, MappingDefinitions mappingDefinitions) {
 		this.setContentInstance(contentInstance);
 		this.setiHandlerConfiguration(iHandlerConfiguration);
-		this.setKey(key);
 		this.setMappingDefinitions(mappingDefinitions);
 		this.setTuringTag(turingTag);
 	}
@@ -49,14 +46,6 @@ public class TurAttrDefContext {
 		this.turingTag = turingTag;
 	}
 
-	public String getKey() {
-		return key;
-	}
-
-	public void setKey(String key) {
-		this.key = key;
-	}
-
 	public IHandlerConfiguration getiHandlerConfiguration() {
 		return iHandlerConfiguration;
 	}
@@ -74,12 +63,11 @@ public class TurAttrDefContext {
 	}
 
 	public AttributeData getAttributeData() {
-		if (attributeData != null) {
+		if (attributeData != null)
 			return attributeData;
-		}
 
 		try {
-			return contentInstance.getAttribute(key);
+			return contentInstance.getAttribute(turingTag.getSrcXmlName());
 		} catch (ApplicationException e) {
 			e.printStackTrace();
 		}

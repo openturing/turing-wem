@@ -21,7 +21,6 @@ import com.viglet.turing.beans.TurAttrDefMap;
 import com.viglet.turing.beans.TurCTDMappingMap;
 import com.viglet.turing.beans.TuringTag;
 import com.viglet.turing.broker.attribute.TurWEMAttrXML;
-import com.viglet.turing.exceptions.MappingNotFoundException;
 import com.viglet.turing.mappers.CTDMappings;
 import com.viglet.turing.mappers.MappingDefinitions;
 import com.viglet.turing.util.TuringUtils;
@@ -36,42 +35,37 @@ public class TurWEMUpdateContentSelectWidget {
 
 	public static TurAttrDefMap attributeContentSelectUpdate(TurAttrDefContext turAttrDefContext,
 			AttributeData attributeData) throws Exception {
+
 		MappingDefinitions mappingDefinitions = turAttrDefContext.getMappingDefinitions();
 		TurAttrDefMap attributesDefs = new TurAttrDefMap();
 
 		ContentInstance ciRelated = (ContentInstance) ManagedObject
 				.findByContentManagementId(new ManagedObjectVCMRef(attributeData.getValue().toString()));
 		if (ciRelated != null) {
+			String contentTypeName = ciRelated.getObjectType().getData().getName();
 			if (log.isDebugEnabled())
-				log.debug("CTD Related: " + ciRelated.getObjectType().getData().getName());
+				log.debug(String.format("CTD Related: %s", contentTypeName));
 
 			// we force the type on the Viglet Turing side
 			TurCTDMappingMap relatedMappings = mappingDefinitions.getMappingDefinitions();
 
-			CTDMappings ctdRelatedMappings = relatedMappings.get(ciRelated.getObjectType().getData().getName());
+			CTDMappings ctdRelatedMappings = relatedMappings.get(contentTypeName);
 
-			if (ctdRelatedMappings == null) {
+			if (ctdRelatedMappings == null && log.isErrorEnabled())
+				log.error(String.format("Mapping definition is not found in the mappingXML for the CTD: %s",
+						contentTypeName));
 
-				if (log.isDebugEnabled()) {
-					log.debug("Mapping definition is not found in the mappingXML for the CTD: "
-							+ ciRelated.getObjectType().getData().getName());
-				}
-				throw new MappingNotFoundException("Mapping definition is not found in the mappingXML for the CTD: "
-						+ ciRelated.getObjectType().getData().getName());
-			}
-
-			for (String keyRelated : ctdRelatedMappings.getIndexAttrs()) {
+			// Process URL from Relation.
+			for (String tag : ctdRelatedMappings.getTagList()) {
 				TurAttrDefContext turAttrDefContextRelated = new TurAttrDefContext(turAttrDefContext);
-				turAttrDefContextRelated.setContentInstance(ciRelated);			
-				turAttrDefContextRelated.setKey(keyRelated);
-
-				for (TuringTag tagRelated : ctdRelatedMappings.getIndexAttrTag(keyRelated)) {
-					if (keyRelated != null && tagRelated != null && tagRelated.getTagName() != null
+				turAttrDefContextRelated.setContentInstance(ciRelated);
+				for (TuringTag tagRelated : ctdRelatedMappings.getTuringTagMap().get(tag)) {
+					if (tag != null && tagRelated != null && tagRelated.getTagName() != null
 							&& tagRelated.getTagName().equals("url")) {
 						if (log.isDebugEnabled())
 							log.debug(
 									String.format("Key Related: %s,  Tag Related: %s, relation: %s, content Type: %s ",
-											keyRelated, tagRelated.getTagName(),
+											tag, tagRelated.getTagName(),
 											TuringUtils.listToString(tagRelated.getSrcAttributeRelation()),
 											tagRelated.getSrcAttributeType()));
 						attributesDefs = TurWEMAttrXML.attributeXML(turAttrDefContextRelated);

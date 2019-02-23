@@ -55,7 +55,7 @@ public class TurWEMAttrXML {
 	private static TurAttrDefMap addAttributeWithRelator(TurAttrDefContext turAttrDefContext) throws Exception {
 		TuringTag turingTag = turAttrDefContext.getTuringTag();
 		ContentInstance ci = turAttrDefContext.getContentInstance();
-		String key = turAttrDefContext.getKey();
+		String attributeName = turAttrDefContext.getTuringTag().getSrcXmlName();
 		AttributedObject[] relation = ci.getRelations(turingTag.getSrcAttributeRelation().get(0));
 		TurAttrDefMap attributesDefs = new TurAttrDefMap();
 		if (turingTag.getSrcAttributeRelation().size() > 1) {
@@ -68,13 +68,13 @@ public class TurWEMAttrXML {
 		if (relation != null) {
 			List<String> listAttributeValues = new ArrayList<String>();
 			for (int i = 0; i < relation.length; i++) {
-				if (relation[i].getAttributeValue(key) != null) {
-					String attributeValue = relation[i].getAttributeValue(key).toString();
-					AttributeData attributeData = relation[i].getAttribute(key);
+				if (relation[i].getAttributeValue(attributeName) != null) {
+					String attributeValue = relation[i].getAttributeValue(attributeName).toString();
+					AttributeData attributeData = relation[i].getAttribute(attributeName);
 					if (log.isDebugEnabled()) {
-						log.debug(String.format("Key: %s,  Value: %s", key, attributeValue));
+						log.debug(String.format("Attribute: %s,  Value: %s", attributeName, attributeValue));
 					}
-					if (attributeValue != null && !attributeValue.trim().equals("")) {
+					if (attributeValue != null && attributeValue.trim().length() > 0) {
 						attributesDefs.putAll(attributeXMLUpdate(turAttrDefContext, attributeData));
 					}
 				}
@@ -97,13 +97,12 @@ public class TurWEMAttrXML {
 	private static TurAttrDefMap addAttributeWithoutRelator(TurAttrDefContext turAttrDefContext) throws Exception {
 		TuringTag turingTag = turAttrDefContext.getTuringTag();
 		ContentInstance ci = turAttrDefContext.getContentInstance();
-		String key = turAttrDefContext.getKey();
-		if (ci.getAttributeValue(key) != null && ci.getAttributeValue(key).toString().trim().length() > 0) {
-			AttributeData attributeData = ci.getAttribute(key);
+		String attributeName = turAttrDefContext.getTuringTag().getSrcXmlName();
+		if (ci.getAttributeValue(attributeName) != null && ci.getAttributeValue(attributeName).toString().trim().length() > 0) {
+			AttributeData attributeData = ci.getAttribute(attributeName);
 			return attributeXMLUpdate(turAttrDefContext, attributeData);
-		} else if (turingTag.getSrcClassName() != null
-				&& (turingTag.getSrcId().startsWith("CLASSNAME_") || ci.getAttributeValue(key) != null)) {
-			AttributeData attributeData = ci.getAttribute(key);
+		} else if (turingTag.getSrcClassName() != null) {
+			AttributeData attributeData = ci.getAttribute(attributeName);
 			return TurWEMAttrClass.attributeByClass(turAttrDefContext, attributeData);
 		} else {
 			return new TurAttrDefMap();
