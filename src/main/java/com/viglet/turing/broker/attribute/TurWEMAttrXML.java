@@ -102,7 +102,7 @@ public class TurWEMAttrXML {
 			AttributeData attributeData = ci.getAttribute(key);
 			return attributeXMLUpdate(turAttrDefContext, attributeData);
 		} else if (turingTag.getSrcClassName() != null
-				&& (turingTag.getSrcAttribute().startsWith("CLASSNAME_") || ci.getAttributeValue(key) != null)) {
+				&& (turingTag.getSrcId().startsWith("CLASSNAME_") || ci.getAttributeValue(key) != null)) {
 			AttributeData attributeData = ci.getAttribute(key);
 			return TurWEMAttrClass.attributeByClass(turAttrDefContext, attributeData);
 		} else {

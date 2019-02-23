@@ -26,10 +26,6 @@ public class TurXMLConstant {
 	public static final String TAG_INDEX_DATA = "index-attrs";
 	public static final String TAG_MAPPING_DEF = "mappingDefinition";
 	public static final String TAG_ATT_MAPPING_DEF = "contentType";
-	public static final String TAG_MSC_CONFIG = "misc-attrs";
-	public static final String TAG_MSC_ATTR = "attr";
-	public static final String TAG_MSC_KEY = "key";
-	public static final String TAG_MSC_VALUE = "value";
 	public static final String TAG_ATT_CUSTOM_CLASS = "customClassName";
 	public static final String TAG_ATT_CLASS_VALID_TOINDEX = "validToIndex";
 	public static final String UNIQUE_VALUES_ATT = "uniqueValues";

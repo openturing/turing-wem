@@ -22,7 +22,8 @@ public class TuringTag {
 	private String tagName;
 	private List<String> srcAttributeRelation;
 	private String srcAttributeType;
-	private String srcAttribute;
+	private String srcId;
+	private String srcXmlName;
 	private String srcClassName;
 	private boolean srcMandatory;
 	private boolean srcUniqueValues;
@@ -30,8 +31,8 @@ public class TuringTag {
 	@Override
 	public String toString() {
 		return String.format(
-				"tagName: %s, srcAttr: %s, srcAttrRelation: %s, srcAttrType: %s, className: %s, mandatory: %s",
-				this.getTagName(), this.getSrcAttribute(), this.getSrcAttributeRelation(), this.getSrcAttributeType(),
+				"tagName: %s, srcId: %s, srcXmlName %s, srcAttrRelation: %s, srcAttrType: %s, className: %s, mandatory: %s",
+				this.getTagName(), this.getSrcId(), this.getSrcXmlName(), this.getSrcAttributeRelation(), this.getSrcAttributeType(),
 				this.getSrcClassName(), this.getSrcMandatory());
 	}
 
@@ -77,13 +78,21 @@ public class TuringTag {
 	public void setTagName(String tagName) {
 		this.tagName = tagName;
 	}
-
-	public void setSrcAttribute(String srcAttribute) {
-		this.srcAttribute = srcAttribute;
+	
+	public String getSrcId() {
+		return srcId;
 	}
 
-	public String getSrcAttribute() {
-		return srcAttribute;
+	public void setSrcId(String srcId) {
+		this.srcId = srcId;
+	}
+
+	public String getSrcXmlName() {
+		return srcXmlName;
+	}
+
+	public void setSrcXmlName(String srcXmlName) {
+		this.srcXmlName = srcXmlName;
 	}
 
 	@Override

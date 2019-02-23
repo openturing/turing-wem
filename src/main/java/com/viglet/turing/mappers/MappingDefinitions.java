@@ -22,8 +22,8 @@ import com.viglet.turing.beans.TurCTDMappingMap;
 import com.viglet.turing.beans.TurMiscConfigMap;
 import com.viglet.turing.config.IHandlerConfiguration;
 import com.viglet.turing.index.IValidToIndex;
-import com.vignette.as.client.exception.ApplicationException;
 import com.vignette.as.client.javabean.ContentInstance;
+import com.vignette.as.client.javabean.ObjectType;
 import com.vignette.logging.context.ContextLogger;
 
 public class MappingDefinitions {
@@ -81,10 +81,11 @@ public class MappingDefinitions {
 		return status;
 	}
 
-	public boolean isClassValidToIndex(ContentInstance ci, IHandlerConfiguration config) {
-		String contentTypeName;
+	public IValidToIndex validToIndex(ObjectType ot, IHandlerConfiguration config) {
+		
 		try {
-			contentTypeName = ci.getObjectType().getData().getName();
+			String contentTypeName;
+			contentTypeName = ot.getData().getName();
 
 			if (this.hasClassValidToIndex(contentTypeName)) {
 				CTDMappings ctdMappings = mappingDefinitions.get(contentTypeName);
@@ -101,12 +102,22 @@ public class MappingDefinitions {
 					} else
 						instance = (IValidToIndex) clazz.newInstance();
 				}
-				return (instance != null && !instance.isValid(ci, config)) ? false : true;
-			}	
+				return instance;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+
+	}
+
+	public boolean isClassValidToIndex(ContentInstance ci, IHandlerConfiguration config) {		
+		try {
+			IValidToIndex iValidToIndex = validToIndex(ci.getObjectType(), config);
+			return (iValidToIndex != null && !iValidToIndex.isValid(ci, config)) ? false : true;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return false;
-
 	}
 }

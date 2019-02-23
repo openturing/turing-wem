@@ -21,7 +21,7 @@ import java.util.List;
 import com.viglet.turing.beans.TuringTag;
 import com.vignette.logging.context.ContextLogger;
 
-public class TuringUtils {
+public class TuringUtils {	
 	private static final ContextLogger log = ContextLogger.getLogger(TuringUtils.class);
 
 	/**
@@ -31,10 +31,24 @@ public class TuringUtils {
 	 * @return String
 	 */
 	public static String getIndexTagName(TuringTag turingTag) {
-		return ((turingTag.getSrcAttribute() == null) && (turingTag.getSrcClassName() != null))
-				? String.format("CLASSNAME_%s", turingTag.getTagName())
-				: turingTag.getTagName();
+		String srcId = null;
+		if ((turingTag.getSrcXmlName() == null) && (turingTag.getSrcClassName() != null)) {
+			srcId = String.format("CLASSNAME_%s", turingTag.getSrcClassName());
+			
+		} else {
+			srcId = turingTag.getSrcXmlName();
+			if (turingTag.getSrcClassName() != null) {
+				srcId = String.format("%s_%s", srcId, turingTag.getSrcClassName());
+			}
+		}
 
+		if (turingTag.getSrcAttributeRelation() != null) {
+			srcId = String.format("%s_%s", srcId, turingTag.getSrcAttributeRelation());
+		}
+		if (log.isDebugEnabled())
+			log.debug(String.format("IndexTagName: %s", srcId));
+
+		return srcId;
 	}
 
 	public static String listToString(List<String> stringList) {

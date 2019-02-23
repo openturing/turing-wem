@@ -58,8 +58,6 @@ public class MappingDefinitionsProcess {
 				// Loading mapping definitions
 				mappings = readCTDMappings(rootElement);
 
-				// Loading Miscellaneous config
-				mscConfig = readMscConfig(rootElement, TurXMLConstant.TAG_MSC_CONFIG);
 			} else {
 				return null;
 			}
@@ -72,62 +70,54 @@ public class MappingDefinitionsProcess {
 		return new MappingDefinitions(resourceXml, mappings, mscConfig);
 	}
 
-	// Loading mapping definitions
+	/**
+	 * Loading mapping definitions
+	 * 
+	 * @param rootElement
+	 * @return TurCTDMappingMap
+	 */
 	public static TurCTDMappingMap readCTDMappings(Element rootElement) {
 		TurCTDMappingMap mappings = new TurCTDMappingMap();
-		
-		TurIndexAttrMap commonIndexAttrsMap = readIndexAttributeMappings(rootElement, TurXMLConstant.TAG_COMMON_INDEX_DATA);
-		
+
+		// Read common-index-attrs
+		TurIndexAttrMap commonIndexAttrsMap = readIndexAttributeMappings(rootElement,
+				TurXMLConstant.TAG_COMMON_INDEX_DATA);
+
 		NodeList ctdMappingDefList = rootElement.getElementsByTagName(TurXMLConstant.TAG_MAPPING_DEF);
-		
+
 		for (int i = 0; i < ctdMappingDefList.getLength(); i++) {
 			Element mappingDefinition = (Element) ctdMappingDefList.item(i);
 			if (mappingDefinition.hasAttribute(TurXMLConstant.TAG_ATT_MAPPING_DEF)) {
 				String ctdXmlName = mappingDefinition.getAttribute(TurXMLConstant.TAG_ATT_MAPPING_DEF);
+
+				// Read index-attr
 				TurIndexAttrMap indexAttrsMap = readIndexAttributeMappings((Element) ctdMappingDefList.item(i),
 						TurXMLConstant.TAG_INDEX_DATA);
 				CTDMappings ctdMapping = new CTDMappings(commonIndexAttrsMap, indexAttrsMap);
-				if (mappingDefinition.hasAttribute(TurXMLConstant.TAG_ATT_CUSTOM_CLASS)) {
+				if (mappingDefinition.hasAttribute(TurXMLConstant.TAG_ATT_CUSTOM_CLASS))
 					ctdMapping.setCustomClassName(mappingDefinition.getAttribute(TurXMLConstant.TAG_ATT_CUSTOM_CLASS));
-				}
-				if (mappingDefinition.hasAttribute(TurXMLConstant.TAG_ATT_CLASS_VALID_TOINDEX)) {
+
+				if (mappingDefinition.hasAttribute(TurXMLConstant.TAG_ATT_CLASS_VALID_TOINDEX))
 					ctdMapping.setClassValidToIndex(
 							mappingDefinition.getAttribute(TurXMLConstant.TAG_ATT_CLASS_VALID_TOINDEX));
-				}
+
 				mappings.put(ctdXmlName, ctdMapping);
 			}
 		}
 		return mappings;
 	}
 
-	// Loading Miscellaneous config
-	public static TurMiscConfigMap readMscConfig(Element rootElement, String mscTagName) {
-		TurMiscConfigMap mscConfig = new TurMiscConfigMap();
-		NodeList configNodeList = rootElement.getElementsByTagName(mscTagName);
-		for (int i = 0; i < configNodeList.getLength(); i++) {
-			Element mscConfigElement = (Element) configNodeList.item(i);
-			NodeList attributeLilst = mscConfigElement.getElementsByTagName(TurXMLConstant.TAG_MSC_ATTR);
-			for (int j = 0; j < attributeLilst.getLength(); j++) {
-				Element attrElement = (Element) attributeLilst.item(j);
-				String key = attrElement.getAttribute(TurXMLConstant.TAG_MSC_KEY);
-				String value = attrElement.getAttribute(TurXMLConstant.TAG_MSC_VALUE);
-				if (key != null && value != null) {
-					mscConfig.put(key, value);
-				}
-			}
-		}
-		return mscConfig;
-	}
-
-	public static TurIndexAttrMap readIndexAttributeMappings(Element rootElement, String tagName) {
+	// Read index-attrs or common-index-attrs
+	public static TurIndexAttrMap readIndexAttributeMappings(Element rootElement, String genericIndexAttrsTag) {
 		TurIndexAttrMap genericIndexAttrMap = new TurIndexAttrMap();
-		NodeList mappingList = rootElement.getElementsByTagName(tagName);
+		NodeList mappingList = rootElement.getElementsByTagName(genericIndexAttrsTag);
 		for (int i = 0; i < mappingList.getLength(); i++) {
 			loadAtributesFromAttrsElement((Element) mappingList.item(i), genericIndexAttrMap);
 		}
 		return genericIndexAttrMap;
 	}
 
+	// Read srcAttr
 	public static void loadAtributesFromAttrsElement(Element AttrsElement, TurIndexAttrMap genericIndexAttrMap) {
 		NodeList srcNodeList = AttrsElement.getElementsByTagName("srcAttr");
 
@@ -144,7 +134,7 @@ public class MappingDefinitionsProcess {
 	public static void loadSrcAttr(Element srcAttrNode, TurIndexAttrMap genericIndexAttrMap) {
 		TuringTag turingTag = new TuringTag();
 		if (srcAttrNode.hasAttribute(TurXMLConstant.XML_NAME_ATT))
-			turingTag.setSrcAttribute(srcAttrNode.getAttribute(TurXMLConstant.XML_NAME_ATT));
+			turingTag.setSrcXmlName(srcAttrNode.getAttribute(TurXMLConstant.XML_NAME_ATT));
 
 		if (srcAttrNode.hasAttribute(TurXMLConstant.CLASS_NAME_ATT))
 			turingTag.setSrcClassName(srcAttrNode.getAttribute(TurXMLConstant.CLASS_NAME_ATT));
@@ -157,10 +147,9 @@ public class MappingDefinitionsProcess {
 					Arrays.asList(srcAttrNode.getAttribute(TurXMLConstant.RELATION_ATT).split("\\.")));
 
 		if (srcAttrNode.hasAttribute(TurXMLConstant.MANDATORY_ATT)) {
-			if (log.isDebugEnabled()) {
-				log.debug("MANDATORY: " + srcAttrNode.getAttribute(TurXMLConstant.MANDATORY_ATT));
+			if (log.isDebugEnabled())
+				log.debug(String.format("MANDATORY: %s", srcAttrNode.getAttribute(TurXMLConstant.MANDATORY_ATT)));
 
-			}
 			turingTag.setSrcMandatory(
 					Boolean.valueOf(srcAttrNode.getAttribute(TurXMLConstant.MANDATORY_ATT)).booleanValue());
 
@@ -179,10 +168,10 @@ public class MappingDefinitionsProcess {
 		if (log.isDebugEnabled())
 			log.debug(String.format("Unique Values: %b", turingTag.isSrcUniqueValues()));
 
-		if ((turingTag.getSrcAttribute() != null) || (turingTag.getSrcClassName() != null)) {
+		if ((turingTag.getSrcXmlName() != null) || (turingTag.getSrcClassName() != null)) {
 			NodeList tagList = (srcAttrNode).getElementsByTagName("tag");
 			if (log.isDebugEnabled()) {
-				log.debug("Node Parent: " + turingTag.getSrcAttribute());
+				log.debug("Node Parent: " + turingTag.getSrcXmlName());
 				log.debug("Node.getLength(): " + tagList.getLength());
 			}
 
@@ -196,25 +185,25 @@ public class MappingDefinitionsProcess {
 				Node tagNode = tagList.item(nodePos);
 				tagName = tagNode.getFirstChild().getNodeValue();
 				if (log.isDebugEnabled())
-					log.debug("NodeName:" + tagName);
-				
+					log.debug("tagName:" + tagName);
+
 				if (tagName != null) {
 					turingTag.setTagName(tagName);
-					if ((turingTag.getSrcAttribute() == null) && (turingTag.getSrcClassName() != null))
-						turingTag.setSrcAttribute(TuringUtils.getIndexTagName(turingTag));
+					if ((turingTag.getSrcXmlName() == null) && (turingTag.getSrcClassName() != null))
+						turingTag.setSrcId(TuringUtils.getIndexTagName(turingTag));
 
 					turingTags.add(turingTag);
 
 				}
 			}
 			if (turingTags.size() > 0)
-				genericIndexAttrMap.put(turingTag.getSrcAttribute(), turingTags);
+				genericIndexAttrMap.put(turingTag.getSrcId(), turingTags);
 		}
 	}
-	
+
 	public static MappingDefinitions getMappingDefinitions(IHandlerConfiguration config) {
-		
-		MappingDefinitions	mappingDefinitions = MappingDefinitionsProcess.loadMappings(config.getMappingsXML());
+
+		MappingDefinitions mappingDefinitions = MappingDefinitionsProcess.loadMappings(config.getMappingsXML());
 
 		if (mappingDefinitions == null) {
 			if (log.isDebugEnabled()) {

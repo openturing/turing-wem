@@ -17,7 +17,6 @@
 package com.viglet.turing.broker.indexer;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
@@ -32,7 +31,6 @@ import com.viglet.turing.beans.TuringTag;
 import com.viglet.turing.broker.attribute.TurWEMAttrXML;
 import com.viglet.turing.config.IHandlerConfiguration;
 import com.viglet.turing.exceptions.MappingNotFoundException;
-import com.viglet.turing.index.IValidToIndex;
 import com.viglet.turing.mappers.CTDMappings;
 import com.viglet.turing.mappers.MappingDefinitions;
 import com.viglet.turing.mappers.MappingDefinitionsProcess;
@@ -44,23 +42,49 @@ import com.vignette.logging.context.ContextLogger;
 public class TurWEMIndex {
 
 	private static final ContextLogger log = ContextLogger.getLogger(TurWEMIndex.class);
+	
+	public static boolean indexCreate(ManagedObject mo, IHandlerConfiguration config) {
+		MappingDefinitions mappingDefinitions = MappingDefinitionsProcess.getMappingDefinitions(config);
+		if ((mappingDefinitions != null) && (mo != null) && (mo instanceof ContentInstance)) {
+			try {
+				ContentInstance contentInstance = (ContentInstance) mo;
+				String contentTypeName = contentInstance.getObjectType().getData().getName();
+
+				if (mappingDefinitions.isClassValidToIndex(contentInstance, config)) {
+					log.info(String.format("Viglet Turing indexer Processing Content Type: %s", contentTypeName));
+					return postIndex(generateXMLToIndex(contentInstance, config), config);
+
+				} else {
+					if (log.isDebugEnabled())
+						log.debug(String.format(
+								"Mapping definition is not found in the mappingXML for the CTD and ignoring: %s",
+								contentTypeName));
+				}
+			} catch (Exception e) {
+				log.error(String.format("Can't Create to Viglet Turing indexer: %s", e.getMessage()));
+				e.printStackTrace();
+			}
+		}
+		return false;
+	}
 
 	public static String generateXMLToIndex(ContentInstance ci, IHandlerConfiguration config) throws Exception {
 		MappingDefinitions mappingDefinitions = MappingDefinitionsProcess.getMappingDefinitions(config);
 		if (log.isDebugEnabled())
 			log.debug("Generating Viglet Turing XML for a content instance");
 
+		String contentTypeName = ci.getObjectType().getData().getName();
+		
 		StringBuffer xml = new StringBuffer("<?xml version=\"1.0\" encoding=\"UTF-8\" ?><document>");
 		xml.append(createXMLAttribute("id", ci.getContentManagementId().getId()));
 
-		// we force the type on the Viglet Turing side
 		TurCTDMappingMap mappings = mappingDefinitions.getMappingDefinitions();
-
-		CTDMappings ctdMappings = mappings.get(ci.getObjectType().getData().getName());
+		
+		CTDMappings ctdMappings = mappings.get(contentTypeName);
 
 		if (ctdMappings == null) {
 			String ctdMappingError = String.format("Mapping definition is not found in the mappingXML for the CTD: %s",
-					ci.getObjectType().getData().getName());
+					contentTypeName);
 			if (log.isDebugEnabled())
 				log.debug(ctdMappingError);
 
@@ -94,9 +118,8 @@ public class TurWEMIndex {
 			String key = entry.getKey();
 			List<String> listValue = entry.getValue();
 			for (String value : listValue) {
-				if ((value != null) && (value.toString().trim().length() > 0)) {
-					xml.append(createXMLAttribute(key, value.toString()));
-				}
+				if ((value != null) && (value.toString().trim().length() > 0))
+					xml.append(createXMLAttribute(key, value.toString()));			
 			}
 		}
 
@@ -110,43 +133,13 @@ public class TurWEMIndex {
 
 		xml.append("</document>");
 
-		if (log.isDebugEnabled()) {
-			log.debug("Viglet Turing XML content: " + xml.toString());
-		}
+		if (log.isDebugEnabled())
+			log.debug(String.format("Viglet Turing XML content: %s", xml.toString()));
 
 		return xml.toString();
 
 	}
-
-	private static String createXMLAttribute(String tag, String value) {
-		return String.format("<%1$s><![CDATA[%2$s]]></%1$s>", tag, value.toString());
-	}
-
-	public static boolean indexCreate(ManagedObject mo, IHandlerConfiguration config) {
-		MappingDefinitions mappingDefinitions = MappingDefinitionsProcess.getMappingDefinitions(config);
-		if ((mappingDefinitions != null) && (mo != null) && (mo instanceof ContentInstance)) {
-			try {
-				ContentInstance contentInstance = (ContentInstance) mo;
-				String contentTypeName = contentInstance.getObjectType().getData().getName();
-
-				if (mappingDefinitions.isClassValidToIndex(contentInstance, config)) {
-					log.info(String.format("Viglet Turing indexer Processing Content Type: %s", contentTypeName));
-					return postIndex(generateXMLToIndex(contentInstance, config), config);
-
-				} else {
-					if (log.isDebugEnabled())
-						log.debug(String.format(
-								"Mapping definition is not found in the mappingXML for the CTD and ignoring: %s",
-								contentTypeName));
-				}
-			} catch (Exception e) {
-				log.error(String.format("Can't Create to Viglet Turing indexer: %s", e.getMessage()));
-				e.printStackTrace();
-			}
-		}
-		return false;
-	}
-
+	
 	public static boolean postIndex(String xml, IHandlerConfiguration config) throws HttpException, IOException {
 
 		PostMethod post = new PostMethod(
@@ -173,4 +166,10 @@ public class TurWEMIndex {
 
 		return true;
 	}
+	
+	private static String createXMLAttribute(String tag, String value) {
+		return String.format("<%1$s><![CDATA[%2$s]]></%1$s>", tag, value.toString());
+	}
+
+	
 }

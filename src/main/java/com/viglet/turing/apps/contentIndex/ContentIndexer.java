@@ -41,6 +41,8 @@ import com.viglet.turing.broker.indexer.TurWEMIndex;
 import com.viglet.turing.broker.indexer.TurWEMIndexer;
 import com.viglet.turing.config.IHandlerConfiguration;
 import com.viglet.turing.index.IValidToIndex;
+import com.viglet.turing.mappers.MappingDefinitions;
+import com.viglet.turing.mappers.MappingDefinitionsProcess;
 import com.vignette.as.apps.contentIndex.ContentIndexException;
 import com.vignette.as.apps.contentIndex.ContentIndexMsg;
 import com.vignette.as.apps.contentIndex.ContentIndexerMsg;
@@ -475,22 +477,12 @@ public class ContentIndexer {
 	}
 
 	private IPagingList retrieveInstances(ObjectType ot, String locale) throws Exception {
+		MappingDefinitions mappingDefinitions = MappingDefinitionsProcess.getMappingDefinitions(turingConfig);
 		RequestParameters rp = new RequestParameters();
 		rp.setTopRelationOnly(false);
 		IPagingList results = null;
 		AsObjectType aot = AsObjectType.getInstance((ObjectTypeRef) new ObjectTypeRef((ManagedObject) ot));
-		String className = TurWEMIndex.getClassValidToIndex(ot.getData().getName(), turingConfig);
-		IValidToIndex instance = null;
-		if (className != null) {
-			Class<?> clazz = Class.forName(className);
-			if (clazz == null) {
-				if (logger.isDebugEnabled()) {
-					logger.debug("Valid to Index className is not found in the jar file: " + className);
-				}
-			} else {
-				instance = (IValidToIndex) clazz.newInstance();
-			}
-		}
+		IValidToIndex instance = mappingDefinitions.validToIndex(ot, turingConfig);
 		if (aot.isStaticFile()) {
 			StaticFileWhereClause clause = new StaticFileWhereClause();
 			if (locale != null) {
