@@ -17,11 +17,11 @@
 package com.viglet.turing.broker.update;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import com.viglet.turing.beans.TurAttrDef;
 import com.viglet.turing.beans.TurAttrDefContext;
+import com.viglet.turing.beans.TurMultiValue;
 import com.viglet.turing.beans.TuringTag;
 import com.viglet.turing.config.IHandlerConfiguration;
 import com.viglet.turing.util.ETLTuringTranslator;
@@ -35,25 +35,27 @@ public class TurWEMUpdateFileWidget {
 
 	public static List<TurAttrDef> attributeFileWidgetUpdate(TurAttrDefContext turAttrDefContext,
 			AttributeData attributeData) throws Exception {
-		
+
 		TuringTag turingTag = turAttrDefContext.getTuringTag();
 		ContentInstance ci = turAttrDefContext.getContentInstance();
-		IHandlerConfiguration config = turAttrDefContext.getiHandlerConfiguration();	
-		
+		IHandlerConfiguration config = turAttrDefContext.getiHandlerConfiguration();
+
 		if (log.isDebugEnabled()) {
 			log.debug("TurWEMUpdateFileWidget started");
 		}
-		
+
 		ETLTuringTranslator etlTranslator = new ETLTuringTranslator(config);
 		List<TurAttrDef> attributesDefs = new ArrayList<TurAttrDef>();
-		
+
 		if (turingTag.getSrcClassName() == null) {
 
 			String url = etlTranslator.getSiteDomain(ci) + attributeData.getValue().toString();
 			if (log.isDebugEnabled())
 				log.debug("TurWEMUpdateFileWidget url" + url);
-			
-			TurAttrDef turAttrDef = new TurAttrDef(turingTag.getTagName(), Arrays.asList(url) );
+
+			TurMultiValue turMultiValue = new TurMultiValue();
+			turMultiValue.add(url);
+			TurAttrDef turAttrDef = new TurAttrDef(turingTag.getTagName(), turMultiValue);
 			attributesDefs.add(turAttrDef);
 
 		}

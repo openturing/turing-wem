@@ -25,9 +25,18 @@ import java.util.Map.Entry;
 
 import com.viglet.turing.beans.TuringTagMap;
 import com.viglet.turing.beans.TuringTag;
+import com.vignette.as.client.common.AttributeData;
+import com.vignette.as.client.common.AttributeDefinitionData;
+import com.vignette.as.client.common.DataType;
+import com.vignette.as.client.common.ref.ManagedObjectRef;
+import com.vignette.as.client.common.ref.ObjectTypeRef;
+import com.vignette.as.client.exception.ApplicationException;
+import com.vignette.as.client.javabean.ContentInstance;
+import com.vignette.as.client.javabean.ContentType;
+import com.vignette.as.client.javabean.ManagedObject;
 import com.vignette.logging.context.ContextLogger;
 
-public class TuringUtils {	
+public class TuringUtils {
 	private static final ContextLogger log = ContextLogger.getLogger(TuringUtils.class);
 
 	public static String listToString(List<String> stringList) {
@@ -41,10 +50,10 @@ public class TuringUtils {
 		}
 		return sb.toString();
 	}
-	
+
 	// Old turIndexAttMapToSet
 	public static Set<TuringTag> turingTagMapToSet(TuringTagMap turingTagMap) {
-		Set<TuringTag> turingTags = new HashSet<TuringTag>(); 
+		Set<TuringTag> turingTags = new HashSet<TuringTag>();
 		for (Entry<String, ArrayList<TuringTag>> entryCtd : turingTagMap.entrySet()) {
 			for (TuringTag turingTag : entryCtd.getValue()) {
 				turingTags.add(turingTag);
@@ -52,4 +61,41 @@ public class TuringUtils {
 		}
 		return turingTags;
 	}
+
+	public static ContentInstance findContentInstanceByKey(ContentType contentType, String primaryKeyValue)
+			throws Exception {
+
+		ContentInstance ci = null;
+		try {
+			AttributeDefinitionData add = getKeyAttributeDefinitionData(contentType);
+			DataType dt = add.getDataType();
+			Object val = primaryKeyValue;
+			if (dt.isInt() || dt.isNumerical() || dt.isTinyInt())
+				val = new Integer(primaryKeyValue);
+			ObjectTypeRef otr = new ObjectTypeRef(contentType);
+			AttributeData atd = new AttributeData(add, val, otr);
+			ManagedObjectRef ref = new ManagedObjectRef(otr, new AttributeData[] { atd });
+			ci = (ContentInstance) ManagedObject.findById(ref);
+		} catch (ApplicationException e) {
+			throw e;
+		}
+
+		return ci;
+	}
+
+	public static AttributeDefinitionData getKeyAttributeDefinitionData(ContentType ct) throws Exception {
+		AttributeDefinitionData adds[] = new AttributeDefinitionData[0];
+		adds = ct.getData().getTopRelation().getKeyAttributeDefinitions();
+		if (adds == null)
+			throw new Exception("Failed to retrieve primary key definition", null);
+		if (adds.length == 0)
+			throw new Exception("No primary key found", null);
+		if (adds.length > 1) {
+			StringBuilder sb = new StringBuilder();
+			sb.append("Works with one primary key only: ").append(adds.length);
+			throw new Exception(sb.toString(), null);
+		} else
+			return adds[0];
+	}
+
 }

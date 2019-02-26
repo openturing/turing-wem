@@ -16,6 +16,7 @@
  */
 package com.viglet.turing.ext;
 
+import com.viglet.turing.beans.TurMultiValue;
 import com.viglet.turing.beans.TuringTag;
 import com.viglet.turing.config.IHandlerConfiguration;
 import com.vignette.as.client.common.AttributeData;
@@ -28,7 +29,7 @@ public class TurChannelPath implements ExtAttributeInterface {
 	private static final ContextLogger log = ContextLogger.getLogger(TurChannelPath.class);
 
 	@Override
-	public String consume(TuringTag tag, ContentInstance ci, AttributeData attributeData, IHandlerConfiguration config)
+	public TurMultiValue consume(TuringTag tag, ContentInstance ci, AttributeData attributeData, IHandlerConfiguration config)
 			throws Exception {
 		if (log.isDebugEnabled())
 			log.debug("Executing TurChannelPath");
@@ -37,16 +38,16 @@ public class TurChannelPath implements ExtAttributeInterface {
 		StringBuffer channelPath = new StringBuffer();
 		ChannelRef[] cref = ci.getChannelAssociations();
 		for (int i = 0; i < cref.length; i++) {
-
 			Channel currentChannel = cref[i].getChannel();
 			String[] breadcrumb = currentChannel.getBreadcrumbNamePath(true);
-			for (int j = 0; j < breadcrumb.length; j++) {
+			for (int j = 0; j < breadcrumb.length; j++)
 				channelPath.append("/" + breadcrumb[j]);
-			}
-
 		}
-
-		return channelPath.toString();
+		
+		TurMultiValue turMultiValue = new TurMultiValue();
+		turMultiValue.add(channelPath.toString());
+		
+		return turMultiValue;		
 	}
 
 }

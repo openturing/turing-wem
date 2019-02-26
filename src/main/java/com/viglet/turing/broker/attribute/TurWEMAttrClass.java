@@ -16,13 +16,12 @@
  */
 package com.viglet.turing.broker.attribute;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import com.viglet.turing.beans.TurAttrDef;
 import com.viglet.turing.beans.TurAttrDefContext;
+import com.viglet.turing.beans.TurMultiValue;
 import com.viglet.turing.beans.TuringTag;
 import com.viglet.turing.config.IHandlerConfiguration;
 import com.viglet.turing.ext.ExtAttributeInterface;
@@ -48,15 +47,18 @@ public class TurWEMAttrClass {
 				log.debug("ClassName : " + className);
 
 			Object extAttribute = Class.forName(className).newInstance();
-			TurAttrDef turAttrDef = new TurAttrDef(turingTag.getTagName(),
-					Arrays.asList(((ExtAttributeInterface) extAttribute).consume(turingTag, ci, attributeData, config)));
+			TurMultiValue turMultiValue = ((ExtAttributeInterface) extAttribute).consume(turingTag, ci, attributeData, config);			
+			TurAttrDef turAttrDef = new TurAttrDef(turingTag.getTagName(),turMultiValue);
 			attributesDefs.add(turAttrDef);
 		} else {
-			if (turingTag.getSrcAttributeType() != null && turingTag.getSrcAttributeType().equals("html")) {
-				TurAttrDef turAttrDef = new TurAttrDef(turingTag.getTagName(),Arrays.asList(HtmlManipulator.Html2Text(attributeData.getValue().toString())));
+			TurMultiValue turMultiValue = new TurMultiValue();
+			if (turingTag.getSrcAttributeType() != null && turingTag.getSrcAttributeType().equals("html")) {				
+				turMultiValue.add(HtmlManipulator.Html2Text(attributeData.getValue().toString()));							
+				TurAttrDef turAttrDef = new TurAttrDef(turingTag.getTagName(),turMultiValue);
 				attributesDefs.add(turAttrDef);
 			} else if (attributeData != null && attributeData.getValue() != null) {
-				TurAttrDef turAttrDef = new TurAttrDef(turingTag.getTagName(),Arrays.asList(attributeData.getValue().toString()));
+				turMultiValue.add(attributeData.getValue().toString());
+				TurAttrDef turAttrDef = new TurAttrDef(turingTag.getTagName(),turMultiValue);
 				attributesDefs.add(turAttrDef);				
 			}
 

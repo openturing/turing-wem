@@ -20,6 +20,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.TimeZone;
 
+import com.viglet.turing.beans.TurMultiValue;
 import com.viglet.turing.beans.TuringTag;
 import com.viglet.turing.config.IHandlerConfiguration;
 import com.vignette.as.client.common.AttributeData;
@@ -31,17 +32,19 @@ public class TurWEMModificationDate implements ExtAttributeInterface {
 	private static final ContextLogger log = ContextLogger.getLogger(TurWEMModificationDate.class);
 
 	@Override
-	public String consume(TuringTag tag, ContentInstance ci, AttributeData attributeData, IHandlerConfiguration config)
-			throws Exception {
-		if (log.isDebugEnabled()) {
+	public TurMultiValue consume(TuringTag tag, ContentInstance ci, AttributeData attributeData,
+			IHandlerConfiguration config) throws Exception {
+		if (log.isDebugEnabled())
 			log.debug("Start TurWEMOriginalDate");
-		}
-		
+
 		TimeZone tz = TimeZone.getTimeZone("UTC");
 		DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");
 		df.setTimeZone(tz);
-	 
-		return ci.getLastModTime() != null ? df.format(ci.getLastModTime()) : df.format(ci.getCreationTime());
+
+		TurMultiValue turMultiValue = new TurMultiValue();
+		turMultiValue.add(ci.getLastModTime() != null ? df.format(ci.getLastModTime()) : df.format(ci.getCreationTime()));
+		
+		return turMultiValue;
 	}
 
 }

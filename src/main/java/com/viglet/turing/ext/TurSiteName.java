@@ -16,6 +16,7 @@
  */
 package com.viglet.turing.ext;
 
+import com.viglet.turing.beans.TurMultiValue;
 import com.viglet.turing.beans.TuringTag;
 import com.viglet.turing.config.IHandlerConfiguration;
 import com.viglet.turing.util.ETLTuringTranslator;
@@ -27,13 +28,16 @@ public class TurSiteName implements ExtAttributeInterface {
 	private static final ContextLogger log = ContextLogger.getLogger(TurSiteName.class);
 
 	@Override
-	public String consume(TuringTag tag, ContentInstance ci, AttributeData attributeData, IHandlerConfiguration config)
-			throws Exception {
+	public TurMultiValue consume(TuringTag tag, ContentInstance ci, AttributeData attributeData,
+			IHandlerConfiguration config) throws Exception {
 		if (log.isDebugEnabled())
 			log.debug("Executing TurSiteName");
 
 		ETLTuringTranslator etlTranslator = new ETLTuringTranslator(config);
 
-		return etlTranslator.getSiteName(ci);
+		TurMultiValue turMultiValue = new TurMultiValue();
+		turMultiValue.add(etlTranslator.getSiteName(ci));
+		
+		return turMultiValue;
 	}
 }

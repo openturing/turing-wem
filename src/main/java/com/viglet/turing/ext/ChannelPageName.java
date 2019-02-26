@@ -16,6 +16,7 @@
  */
 package com.viglet.turing.ext;
 
+import com.viglet.turing.beans.TurMultiValue;
 import com.viglet.turing.beans.TuringTag;
 import com.viglet.turing.config.IHandlerConfiguration;
 import com.vignette.as.client.common.AttributeData;
@@ -29,7 +30,7 @@ public class ChannelPageName implements ExtAttributeInterface {
 	private static final ContextLogger log = ContextLogger.getLogger(ChannelPageName.class);
 
 	@Override
-	public String consume(TuringTag tag, ContentInstance ci, AttributeData attributeData, IHandlerConfiguration config)
+	public TurMultiValue consume(TuringTag tag, ContentInstance ci, AttributeData attributeData, IHandlerConfiguration config)
 			throws Exception {
 		String name = "";
 		if (log.isDebugEnabled()) {
@@ -42,6 +43,9 @@ public class ChannelPageName implements ExtAttributeInterface {
 			}
 
 		}
-		return name;
+		TurMultiValue turMultiValue = new TurMultiValue();
+		turMultiValue.add(name);
+		
+		return turMultiValue;
 	}	
 }

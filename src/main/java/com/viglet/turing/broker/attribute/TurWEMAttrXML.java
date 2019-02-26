@@ -66,21 +66,16 @@ public class TurWEMAttrXML {
 		}
 
 		if (relation != null) {
-			List<String> listAttributeValues = new ArrayList<String>();
-			for (int i = 0; i < relation.length; i++) {
-				if (relation[i].getAttributeValue(attributeName) != null) {
-					String attributeValue = relation[i].getAttributeValue(attributeName).toString();
-					AttributeData attributeData = relation[i].getAttribute(attributeName);
-					if (log.isDebugEnabled()) {
+			for (AttributedObject attributedObject : relation) {
+				if (attributedObject.getAttributeValue(attributeName) != null) {
+					String attributeValue = attributedObject.getAttributeValue(attributeName).toString();
+					AttributeData attributeData = attributedObject.getAttribute(attributeName);
+					if (log.isDebugEnabled())
 						log.debug(String.format("Attribute: %s,  Value: %s", attributeName, attributeValue));
-					}
-					if (attributeValue != null && attributeValue.trim().length() > 0) {
+					if (attributeValue != null && attributeValue.trim().length() > 0)
 						attributesDefs.addAll(attributeXMLUpdate(turAttrDefContext, attributeData));
-					}
 				}
-
 			}
-			
 		}
 		return attributesDefs;
 	}
@@ -89,7 +84,8 @@ public class TurWEMAttrXML {
 		TuringTag turingTag = turAttrDefContext.getTuringTag();
 		ContentInstance ci = turAttrDefContext.getContentInstance();
 		String attributeName = turAttrDefContext.getTuringTag().getSrcXmlName();
-		if (ci.getAttributeValue(attributeName) != null && ci.getAttributeValue(attributeName).toString().trim().length() > 0) {
+		if (ci.getAttributeValue(attributeName) != null
+				&& ci.getAttributeValue(attributeName).toString().trim().length() > 0) {
 			AttributeData attributeData = ci.getAttribute(attributeName);
 			return attributeXMLUpdate(turAttrDefContext, attributeData);
 		} else if (turingTag.getSrcClassName() != null) {

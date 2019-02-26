@@ -16,6 +16,7 @@
  */
 package com.viglet.turing.ext;
 
+import com.viglet.turing.beans.TurMultiValue;
 import com.viglet.turing.beans.TuringTag;
 import com.viglet.turing.config.IHandlerConfiguration;
 import com.viglet.turing.util.ETLTuringTranslator;
@@ -25,31 +26,32 @@ import com.vignette.logging.context.ContextLogger;
 
 public class DPSUrl implements ExtAttributeInterface {
 	private static final ContextLogger log = ContextLogger.getLogger(DPSUrl.class);
-	
+
 	@Override
-	public String consume(TuringTag tag, ContentInstance ci, AttributeData attributeData, IHandlerConfiguration config)
-			throws Exception {
+	public TurMultiValue consume(TuringTag tag, ContentInstance ci, AttributeData attributeData,
+			IHandlerConfiguration config) throws Exception {
 		ETLTuringTranslator etlTranslator = new ETLTuringTranslator(config);
-		
+
 		if (log.isDebugEnabled()) {
 			log.debug("Executing DPSUrl");
 		}
-		
+
 		String attribContent = null;
 		if (attributeData != null) {
 			attribContent = attributeData.getValue().toString();
 		}
+		TurMultiValue turMultiValue = new TurMultiValue();
+
 		if (attribContent == null) {
-			return etlTranslator.translateByGUID(ci.getContentManagementId().getId());
+			turMultiValue.add(etlTranslator.translateByGUID(ci.getContentManagementId().getId()));
+			return turMultiValue;
 		} else {
-			if (attribContent.toLowerCase().startsWith("http")) {
-				return attribContent;
-			} else {
-				return etlTranslator.translate(attribContent);
-
-			}
+			if (attribContent.toLowerCase().startsWith("http"))
+				turMultiValue.add(attribContent);
+			else
+				turMultiValue.add(etlTranslator.translate(attribContent));
 		}
-
+		return turMultiValue;
 	}
 
 }

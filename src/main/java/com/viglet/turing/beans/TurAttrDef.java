@@ -4,9 +4,9 @@ import java.util.List;
 
 public class TurAttrDef {
 	private String tagName;
-	private List<String> multiValue;
+	private TurMultiValue multiValue;
 
-	public TurAttrDef (String tagName, List<String> multiValue) {
+	public TurAttrDef (String tagName, TurMultiValue multiValue) {
 		this.tagName = tagName;
 		this.multiValue = multiValue;
 	}
@@ -22,7 +22,7 @@ public class TurAttrDef {
 		return multiValue;
 	}
 
-	public void setMultiValue(List<String> multiValue) {
+	public void setMultiValue(TurMultiValue multiValue) {
 		this.multiValue = multiValue;
 	}
 

@@ -27,6 +27,7 @@ import org.apache.commons.httpclient.methods.PostMethod;
 import com.viglet.turing.beans.TurAttrDef;
 import com.viglet.turing.beans.TurAttrDefContext;
 import com.viglet.turing.beans.TurCTDMappingMap;
+import com.viglet.turing.beans.TurMultiValue;
 import com.viglet.turing.beans.TuringTag;
 import com.viglet.turing.broker.attribute.TurWEMAttrXML;
 import com.viglet.turing.config.IHandlerConfiguration;
@@ -111,7 +112,7 @@ public class TurWEMIndex {
 					List<TurAttrDef> attributeDefsXML = TurWEMAttrXML.attributeXML(turAttrDefContext);
 					if (turingTag.isSrcUniqueValues()) {
 
-						List<String> multiValue = new ArrayList<String>();
+						TurMultiValue multiValue = new TurMultiValue();
 						for (TurAttrDef turAttrDef : attributeDefsXML) {
 							for (String singleValue : turAttrDef.getMultiValue()) {
 								if (!multiValue.contains(singleValue)) {

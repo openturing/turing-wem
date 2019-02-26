@@ -16,6 +16,7 @@
  */
 package com.viglet.turing.ext;
 
+import com.viglet.turing.beans.TurMultiValue;
 import com.viglet.turing.beans.TuringTag;
 import com.viglet.turing.config.IHandlerConfiguration;
 import com.viglet.turing.util.ETLTuringTranslator;
@@ -29,7 +30,7 @@ public class ChannelPageUrl implements ExtAttributeInterface {
 	private static final ContextLogger log = ContextLogger.getLogger(ChannelPageUrl.class);
 
 	@Override
-	public String consume(TuringTag tag, ContentInstance ci, AttributeData attributeData, IHandlerConfiguration config)
+	public TurMultiValue consume(TuringTag tag, ContentInstance ci, AttributeData attributeData, IHandlerConfiguration config)
 			throws Exception {
 		String url = "";
 		ETLTuringTranslator etlTranslator = new ETLTuringTranslator(config);
@@ -46,6 +47,10 @@ public class ChannelPageUrl implements ExtAttributeInterface {
 		if (log.isDebugEnabled()) {
 			log.debug("ChannelPageUrl URL: " + url);
 		}
-		return url;
+		
+		TurMultiValue turMultiValue = new TurMultiValue();
+		turMultiValue.add(url);
+		
+		return turMultiValue;
 	}
 }
