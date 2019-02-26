@@ -19,8 +19,8 @@ package com.viglet.turing.broker.attribute;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.viglet.turing.beans.TurAttrDef;
 import com.viglet.turing.beans.TurAttrDefContext;
-import com.viglet.turing.beans.TurAttrDefMap;
 import com.viglet.turing.beans.TuringTag;
 import com.viglet.turing.broker.relator.TurWEMRelator;
 import com.viglet.turing.broker.update.TurWEMUpdateContentSelectWidget;
@@ -33,7 +33,7 @@ import com.vignette.logging.context.ContextLogger;
 public class TurWEMAttrWidget {
 	private static final ContextLogger log = ContextLogger.getLogger(TurWEMAttrWidget.class);
 
-	public static TurAttrDefMap attributeByWidget(TurAttrDefContext turAttrDefContext, AttributeData attributeData)
+	public static List<TurAttrDef> attributeByWidget(TurAttrDefContext turAttrDefContext, AttributeData attributeData)
 			throws Exception {
 		TuringTag turingTag = turAttrDefContext.getTuringTag();
 		ContentInstance ci = turAttrDefContext.getContentInstance();

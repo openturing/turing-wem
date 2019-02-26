@@ -17,15 +17,15 @@
 package com.viglet.turing.broker.indexer;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map.Entry;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.methods.PostMethod;
 
+import com.viglet.turing.beans.TurAttrDef;
 import com.viglet.turing.beans.TurAttrDefContext;
-import com.viglet.turing.beans.TurAttrDefMap;
 import com.viglet.turing.beans.TurCTDMappingMap;
 import com.viglet.turing.beans.TuringTag;
 import com.viglet.turing.broker.attribute.TurWEMAttrXML;
@@ -86,9 +86,15 @@ public class TurWEMIndex {
 			log.error(String.format("Mapping definition is not found in the mappingXML for the CTD: %s",
 					contentTypeName));
 
-		TurAttrDefMap attributesDefs = new TurAttrDefMap();
+		List<TurAttrDef> attributesDefs = new ArrayList<TurAttrDef>();
 
 		for (String tag : ctdMappings.getTagList()) {
+			if (log.isDebugEnabled()) {
+				log.debug("generateXMLToIndex: TagList");
+				for (String tags : ctdMappings.getTagList()) {
+					log.debug("generateXMLToIndex: Tags: " + tags);
+				}
+			}
 			for (TuringTag turingTag : ctdMappings.getTuringTagMap().get(tag)) {
 				if (tag != null && turingTag != null && turingTag.getTagName() != null) {
 
@@ -102,19 +108,39 @@ public class TurWEMIndex {
 
 					TurAttrDefContext turAttrDefContext = new TurAttrDefContext(ci, turingTag, config,
 							mappingDefinitions);
+					List<TurAttrDef> attributeDefsXML = TurWEMAttrXML.attributeXML(turAttrDefContext);
+					if (turingTag.isSrcUniqueValues()) {
 
-					attributesDefs = TurWEMAttrXML.attributeXML(turAttrDefContext);
+						List<String> multiValue = new ArrayList<String>();
+						for (TurAttrDef turAttrDef : attributeDefsXML) {
+							for (String singleValue : turAttrDef.getMultiValue()) {
+								if (!multiValue.contains(singleValue)) {
+									multiValue.add(singleValue);
+								}
+							}
+						}
+						TurAttrDef turAttrDefUnique = new TurAttrDef(turingTag.getTagName(), multiValue);
+						attributesDefs.add(turAttrDefUnique);
+					} else {
+						attributesDefs.addAll(attributeDefsXML);
+					}
 				}
 			}
 		}
 
 		// Create xml of attributesDefs
-		for (Entry<String, List<String>> entry : attributesDefs.entrySet()) {
-			String key = entry.getKey();
-			List<String> listValue = entry.getValue();
-			for (String value : listValue) {
+		for (TurAttrDef turAttrDef : attributesDefs) {
+			if (log.isDebugEnabled()) {
+				log.debug("AttributeDef - TagName: " + turAttrDef.getTagName());
+				for (String string : turAttrDef.getMultiValue()) {
+					log.debug("AttributeDef - Value: " + string);
+				}
+
+			}
+
+			for (String value : turAttrDef.getMultiValue()) {
 				if ((value != null) && (value.toString().trim().length() > 0))
-					xml.append(createXMLAttribute(key, value.toString()));
+					xml.append(createXMLAttribute(turAttrDef.getTagName(), value.toString()));
 			}
 		}
 

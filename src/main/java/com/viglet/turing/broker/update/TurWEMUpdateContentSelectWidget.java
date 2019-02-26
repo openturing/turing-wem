@@ -16,8 +16,11 @@
  */
 package com.viglet.turing.broker.update;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import com.viglet.turing.beans.TurAttrDef;
 import com.viglet.turing.beans.TurAttrDefContext;
-import com.viglet.turing.beans.TurAttrDefMap;
 import com.viglet.turing.beans.TurCTDMappingMap;
 import com.viglet.turing.beans.TuringTag;
 import com.viglet.turing.broker.attribute.TurWEMAttrXML;
@@ -33,11 +36,11 @@ import com.vignette.logging.context.ContextLogger;
 public class TurWEMUpdateContentSelectWidget {
 	private static final ContextLogger log = ContextLogger.getLogger(TurWEMUpdateContentSelectWidget.class);
 
-	public static TurAttrDefMap attributeContentSelectUpdate(TurAttrDefContext turAttrDefContext,
+	public static List<TurAttrDef> attributeContentSelectUpdate(TurAttrDefContext turAttrDefContext,
 			AttributeData attributeData) throws Exception {
 
 		MappingDefinitions mappingDefinitions = turAttrDefContext.getMappingDefinitions();
-		TurAttrDefMap attributesDefs = new TurAttrDefMap();
+		List<TurAttrDef> attributesDefs = new ArrayList<TurAttrDef>();
 
 		ContentInstance ciRelated = (ContentInstance) ManagedObject
 				.findByContentManagementId(new ManagedObjectVCMRef(attributeData.getValue().toString()));

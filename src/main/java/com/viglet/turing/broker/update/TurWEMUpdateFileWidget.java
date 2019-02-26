@@ -17,9 +17,11 @@
 package com.viglet.turing.broker.update;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
+import com.viglet.turing.beans.TurAttrDef;
 import com.viglet.turing.beans.TurAttrDefContext;
-import com.viglet.turing.beans.TurAttrDefMap;
 import com.viglet.turing.beans.TuringTag;
 import com.viglet.turing.config.IHandlerConfiguration;
 import com.viglet.turing.util.ETLTuringTranslator;
@@ -31,7 +33,7 @@ import com.vignette.logging.context.ContextLogger;
 public class TurWEMUpdateFileWidget {
 	private static final ContextLogger log = ContextLogger.getLogger(TurWEMUpdateFileWidget.class);
 
-	public static TurAttrDefMap attributeFileWidgetUpdate(TurAttrDefContext turAttrDefContext,
+	public static List<TurAttrDef> attributeFileWidgetUpdate(TurAttrDefContext turAttrDefContext,
 			AttributeData attributeData) throws Exception {
 		
 		TuringTag turingTag = turAttrDefContext.getTuringTag();
@@ -43,17 +45,16 @@ public class TurWEMUpdateFileWidget {
 		}
 		
 		ETLTuringTranslator etlTranslator = new ETLTuringTranslator(config);
-		TurAttrDefMap attributesDefs = new TurAttrDefMap();
+		List<TurAttrDef> attributesDefs = new ArrayList<TurAttrDef>();
 		
 		if (turingTag.getSrcClassName() == null) {
-			if (attributesDefs.get(turingTag.getTagName()) == null)
-				attributesDefs.put(turingTag.getTagName(), new ArrayList<String>());
 
 			String url = etlTranslator.getSiteDomain(ci) + attributeData.getValue().toString();
 			if (log.isDebugEnabled())
 				log.debug("TurWEMUpdateFileWidget url" + url);
-				
-			attributesDefs.get(turingTag.getTagName()).add(url);
+			
+			TurAttrDef turAttrDef = new TurAttrDef(turingTag.getTagName(), Arrays.asList(url) );
+			attributesDefs.add(turAttrDef);
 
 		}
 

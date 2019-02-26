@@ -19,8 +19,8 @@ package com.viglet.turing.broker.attribute;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.viglet.turing.beans.TurAttrDef;
 import com.viglet.turing.beans.TurAttrDefContext;
-import com.viglet.turing.beans.TurAttrDefMap;
 import com.viglet.turing.beans.TuringTag;
 import com.viglet.turing.broker.relator.TurWEMRelator;
 import com.vignette.as.client.common.AttributeData;
@@ -31,7 +31,7 @@ import com.vignette.logging.context.ContextLogger;
 public class TurWEMAttrXML {
 	private static final ContextLogger log = ContextLogger.getLogger(TurWEMAttrXML.class);
 
-	public static TurAttrDefMap attributeXML(TurAttrDefContext turAttrDefContext) throws Exception {
+	public static List<TurAttrDef> attributeXML(TurAttrDefContext turAttrDefContext) throws Exception {
 		TuringTag turingTag = turAttrDefContext.getTuringTag();
 		if (turingTag.getSrcAttributeRelation() != null && turingTag.getSrcAttributeRelation().size() > 0)
 			return addAttributeWithRelator(turAttrDefContext);
@@ -39,7 +39,7 @@ public class TurWEMAttrXML {
 			return addAttributeWithoutRelator(turAttrDefContext);
 	}
 
-	public static TurAttrDefMap attributeXMLUpdate(TurAttrDefContext turAttrDefContext, AttributeData attributeData)
+	public static List<TurAttrDef> attributeXMLUpdate(TurAttrDefContext turAttrDefContext, AttributeData attributeData)
 			throws Exception {
 		TuringTag turingTag = turAttrDefContext.getTuringTag();
 		if (log.isDebugEnabled() && attributeData != null)
@@ -49,15 +49,15 @@ public class TurWEMAttrXML {
 				&& attributeData.getValue().toString().trim().length() > 0)
 			return TurWEMAttrWidget.attributeByWidget(turAttrDefContext, attributeData);
 
-		return new TurAttrDefMap();
+		return new ArrayList<TurAttrDef>();
 	}
 
-	private static TurAttrDefMap addAttributeWithRelator(TurAttrDefContext turAttrDefContext) throws Exception {
+	private static List<TurAttrDef> addAttributeWithRelator(TurAttrDefContext turAttrDefContext) throws Exception {
 		TuringTag turingTag = turAttrDefContext.getTuringTag();
 		ContentInstance ci = turAttrDefContext.getContentInstance();
 		String attributeName = turAttrDefContext.getTuringTag().getSrcXmlName();
 		AttributedObject[] relation = ci.getRelations(turingTag.getSrcAttributeRelation().get(0));
-		TurAttrDefMap attributesDefs = new TurAttrDefMap();
+		List<TurAttrDef> attributesDefs = new ArrayList<TurAttrDef>();
 		if (turingTag.getSrcAttributeRelation().size() > 1) {
 			log.debug("Attribute has nested relator");
 			List<AttributedObject[]> nestedRelation = new ArrayList<AttributedObject[]>();
@@ -75,26 +75,17 @@ public class TurWEMAttrXML {
 						log.debug(String.format("Attribute: %s,  Value: %s", attributeName, attributeValue));
 					}
 					if (attributeValue != null && attributeValue.trim().length() > 0) {
-						attributesDefs.putAll(attributeXMLUpdate(turAttrDefContext, attributeData));
+						attributesDefs.addAll(attributeXMLUpdate(turAttrDefContext, attributeData));
 					}
 				}
 
 			}
-			if (turingTag.isSrcUniqueValues()) {
-				if (attributesDefs.get(turingTag.getTagName()) != null) {
-					for (String item : attributesDefs.get(turingTag.getTagName())) {
-						if (!listAttributeValues.contains(item)) {
-							listAttributeValues.add(item);
-						}
-					}
-					attributesDefs.put(turingTag.getTagName(), listAttributeValues);
-				}
-			}
+			
 		}
 		return attributesDefs;
 	}
 
-	private static TurAttrDefMap addAttributeWithoutRelator(TurAttrDefContext turAttrDefContext) throws Exception {
+	private static List<TurAttrDef> addAttributeWithoutRelator(TurAttrDefContext turAttrDefContext) throws Exception {
 		TuringTag turingTag = turAttrDefContext.getTuringTag();
 		ContentInstance ci = turAttrDefContext.getContentInstance();
 		String attributeName = turAttrDefContext.getTuringTag().getSrcXmlName();
@@ -105,7 +96,7 @@ public class TurWEMAttrXML {
 			AttributeData attributeData = ci.getAttribute(attributeName);
 			return TurWEMAttrClass.attributeByClass(turAttrDefContext, attributeData);
 		} else {
-			return new TurAttrDefMap();
+			return new ArrayList<TurAttrDef>();
 		}
 	}
 

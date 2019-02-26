@@ -16,10 +16,13 @@
  */
 package com.viglet.turing.broker.attribute;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
+import com.viglet.turing.beans.TurAttrDef;
 import com.viglet.turing.beans.TurAttrDefContext;
-import com.viglet.turing.beans.TurAttrDefMap;
 import com.viglet.turing.beans.TuringTag;
 import com.viglet.turing.config.IHandlerConfiguration;
 import com.viglet.turing.ext.ExtAttributeInterface;
@@ -31,31 +34,30 @@ import com.vignette.logging.context.ContextLogger;
 public class TurWEMAttrClass {
 	private static final ContextLogger log = ContextLogger.getLogger(TurWEMAttrXML.class);
 
-	public static TurAttrDefMap attributeByClass(TurAttrDefContext turAttrDefContext, AttributeData attributeData)
+	public static List<TurAttrDef> attributeByClass(TurAttrDefContext turAttrDefContext, AttributeData attributeData)
 			throws Exception {
 		
 		TuringTag turingTag = turAttrDefContext.getTuringTag();
 		ContentInstance ci = turAttrDefContext.getContentInstance();
 		IHandlerConfiguration config = turAttrDefContext.getiHandlerConfiguration();		
-		TurAttrDefMap attributesDefs = new TurAttrDefMap();
+		List<TurAttrDef> attributesDefs = new ArrayList<TurAttrDef>();
 		
-		if (attributesDefs.get(turingTag.getTagName()) == null) {
-			attributesDefs.put(turingTag.getTagName(), new ArrayList<String>());
-		}
 		if (turingTag.getSrcClassName() != null) {
 			String className = turingTag.getSrcClassName();
 			if (log.isDebugEnabled())
 				log.debug("ClassName : " + className);
 
 			Object extAttribute = Class.forName(className).newInstance();
-			attributesDefs.get(turingTag.getTagName())
-					.add(((ExtAttributeInterface) extAttribute).consume(turingTag, ci, attributeData, config));
+			TurAttrDef turAttrDef = new TurAttrDef(turingTag.getTagName(),
+					Arrays.asList(((ExtAttributeInterface) extAttribute).consume(turingTag, ci, attributeData, config)));
+			attributesDefs.add(turAttrDef);
 		} else {
 			if (turingTag.getSrcAttributeType() != null && turingTag.getSrcAttributeType().equals("html")) {
-				attributesDefs.get(turingTag.getTagName())
-						.add(HtmlManipulator.Html2Text(attributeData.getValue().toString()));
+				TurAttrDef turAttrDef = new TurAttrDef(turingTag.getTagName(),Arrays.asList(HtmlManipulator.Html2Text(attributeData.getValue().toString())));
+				attributesDefs.add(turAttrDef);
 			} else if (attributeData != null && attributeData.getValue() != null) {
-				attributesDefs.get(turingTag.getTagName()).add(attributeData.getValue().toString());
+				TurAttrDef turAttrDef = new TurAttrDef(turingTag.getTagName(),Arrays.asList(attributeData.getValue().toString()));
+				attributesDefs.add(turAttrDef);				
 			}
 
 		}

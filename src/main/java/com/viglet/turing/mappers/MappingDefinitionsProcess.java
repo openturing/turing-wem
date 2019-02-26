@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -110,6 +111,26 @@ public class MappingDefinitionsProcess {
 
 				/// HashMap of CTDs
 				mappings.put(ctdXmlName, ctdMapping);
+				if (log.isDebugEnabled()) {
+					int index = 0;
+					for (Entry<String, CTDMappings> mappingEntry : mappings.entrySet()) {
+						log.debug(String.format("%d - MappingEntry CTD : %s", index, mappingEntry.getKey()));
+						for (Entry<String, ArrayList<TuringTag>> turingTagEntry : mappingEntry.getValue()
+								.getTuringTagMap().entrySet()) {
+							log.debug("TuringTag Key (TagName): " + turingTagEntry.getKey());
+							for (TuringTag turingTag : turingTagEntry.getValue()) {
+								log.debug("TuringTag Item - getTagName : " + turingTag.getTagName());
+								log.debug("TuringTag Item - getSrcAttributeType : " + turingTag.getSrcAttributeType());
+								log.debug("TuringTag Item - getSrcClassName : " + turingTag.getSrcClassName());
+								log.debug("TuringTag Item - getSrcXmlName : " + turingTag.getSrcXmlName());
+								log.debug("TuringTag Item - getSrcAttributeRelation : "
+										+ turingTag.getSrcAttributeRelation());
+								log.debug("TuringTag Item - getSrcMandatory : " + turingTag.getSrcMandatory());
+							}
+						}
+						index++;
+					}
+				}
 			}
 		}
 		return mappings;
@@ -148,6 +169,7 @@ public class MappingDefinitionsProcess {
 				}
 			}
 		}
+
 		return indexAttrsMapMerged;
 	}
 
