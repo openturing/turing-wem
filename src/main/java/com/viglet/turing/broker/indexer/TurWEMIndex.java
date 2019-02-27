@@ -110,6 +110,8 @@ public class TurWEMIndex {
 					TurAttrDefContext turAttrDefContext = new TurAttrDefContext(ci, turingTag, config,
 							mappingDefinitions);
 					List<TurAttrDef> attributeDefsXML = TurWEMAttrXML.attributeXML(turAttrDefContext);
+					
+					// Unique
 					if (turingTag.isSrcUniqueValues()) {
 
 						TurMultiValue multiValue = new TurMultiValue();

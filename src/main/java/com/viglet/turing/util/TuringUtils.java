@@ -75,9 +75,10 @@ public class TuringUtils {
 			ObjectTypeRef otr = new ObjectTypeRef(contentType);
 			AttributeData atd = new AttributeData(add, val, otr);
 			ManagedObjectRef ref = new ManagedObjectRef(otr, new AttributeData[] { atd });
+
 			ci = (ContentInstance) ManagedObject.findById(ref);
 		} catch (ApplicationException e) {
-			throw e;
+			log.error(e.getStackTrace());
 		}
 
 		return ci;
