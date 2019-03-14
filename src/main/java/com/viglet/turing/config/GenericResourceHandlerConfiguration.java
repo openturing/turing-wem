@@ -26,21 +26,12 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.Properties;
 
-/**
- * The format of the generic resource value should be as follows:<br/>
- * <code>
- * ostn.server=demo.nstein.com<br/>
- * otsn.port=80<br/>
- * </code>
- */
-
 /* Updated to add cda properties */
 public class GenericResourceHandlerConfiguration implements IHandlerConfiguration {
 
 	public static final String RESOURCE_TYPE = "Properties";
 	public static final String RESOURCE_NAME = "VigletTuring";
 
-	// <string, CollabClientServiceConfigAdapter>
 	private String turingURL;
 	private String index;
 	private String config;
@@ -50,7 +41,7 @@ public class GenericResourceHandlerConfiguration implements IHandlerConfiguratio
 	private String cdaContextName;
 	private String cdaServer;
 	private String cdaPort;
-	private String siteFormat;
+	private String cdaFormatName;
 	private boolean isLive;
 
 	private static final ContextLogger log = ContextLogger.getLogger(GenericResourceHandlerConfiguration.class);
@@ -101,11 +92,23 @@ public class GenericResourceHandlerConfiguration implements IHandlerConfiguratio
 
 	@Override
 	public String getCDAContextName(String site) {
-		return getDynamicProperties("cda." + site + ".contextname");
+		String contextName = getDynamicProperties("cda." + site + ".contextname");
+		return contextName != null ? contextName : getCDAContextName();
 	}
 
 	public void setCDAContextName(String cdaContextName) {
 		this.cdaContextName = cdaContextName;
+	}
+
+	@Override
+	public String getCDAFormatName() {
+		return cdaFormatName;
+	}
+
+	@Override
+	public String getCDAFormatName(String site) {
+		String formatName = getDynamicProperties("cda." + site + ".formatname");
+		return formatName != null ? formatName : getCDAFormatName();
 	}
 
 	@Override
@@ -115,7 +118,8 @@ public class GenericResourceHandlerConfiguration implements IHandlerConfiguratio
 
 	@Override
 	public String getCDAServer(String site) {
-		return getDynamicProperties("cda." + site + ".server");
+		String server = getDynamicProperties("cda." + site + ".server");
+		return server != null ? server : getCDAServer();
 	}
 
 	public void setCDAServer(String cdaServer) {
@@ -129,20 +133,12 @@ public class GenericResourceHandlerConfiguration implements IHandlerConfiguratio
 
 	@Override
 	public String getCDAPort(String site) {
-		return getDynamicProperties("cda." + site + ".port");
+		String port = getDynamicProperties("cda." + site + ".port");
+		return port != null ? port : getCDAPort();
 	}
 
 	public void setCDAPort(String cdaPort) {
 		this.cdaPort = cdaPort;
-	}
-
-	@Override
-	public String getSiteFormat() {
-		return siteFormat;
-	}
-
-	public void setSiteFormat(String siteFormat) {
-		this.siteFormat = siteFormat;
 	}
 
 	private void parsePropertiesFromResource() {
@@ -215,11 +211,11 @@ public class GenericResourceHandlerConfiguration implements IHandlerConfiguratio
 		index = properties.getProperty("turing.index");
 		locale = properties.getProperty("turing.locale");
 		channel = properties.getProperty("turing.channel");
-		mappingsXML = properties.getProperty("turing.mappingsxml", "/CTD-Nstein-Mappings.xml");
+		mappingsXML = properties.getProperty("turing.mappingsxml", "/CTD-Turing-Mappings.xml");
 		cdaContextName = properties.getProperty("cda.default.contextname");
 		cdaServer = properties.getProperty("cda.default.server");
 		cdaPort = properties.getProperty("cda.default.port");
-		siteFormat = properties.getProperty("site.format", "web");
+		cdaFormatName = properties.getProperty("cda.default.formatname");
 		isLive = Boolean.parseBoolean(properties.getProperty("otsn.isLive", "false"));
 	}
 

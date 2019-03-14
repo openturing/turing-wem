@@ -220,20 +220,26 @@ public class ETLTuringTranslator {
 					log.debug("ETLTuringTranslator getSiteUrl:" + siteNameAssociated);
 				}
 
-				if ((config.getCDAContextName(siteNameAssociated) == null || !config.hasContext(siteNameAssociated))
-						&& !config.hasSiteName(siteNameAssociated)) {
-					return getSiteDomain(mo);
-				} else {
-					String cdaContextName = "/";
-					if (config.getCDAContextName(siteNameAssociated) != null && config.hasContext(siteNameAssociated)) {
-						cdaContextName = "/" + config.getCDAContextName(siteNameAssociated) + "/";
-					}
-					if (config.hasSiteName(siteNameAssociated)) {
-						return getSiteDomain(mo) + cdaContextName + normalizeText(siteNameAssociated);
-					} else {
-						return getSiteDomain(mo) + cdaContextName;
-					}
+				final String SLASH = "/";
+				StringBuilder url = new StringBuilder(getSiteDomain(mo));
+
+				if (config.getCDAContextName(siteNameAssociated) != null && config.hasContext(siteNameAssociated)) {
+					url.append(SLASH);
+					url.append(config.getCDAContextName(siteNameAssociated));
 				}
+				
+				if (config.hasSiteName(siteNameAssociated) && normalizeText(siteNameAssociated) != null) {
+					url.append(SLASH);
+					url.append(normalizeText(siteNameAssociated));
+				}
+				
+				if (config.hasFormat(siteNameAssociated) && config.getCDAFormatName(siteNameAssociated) != null) {
+					url.append(SLASH);
+					url.append(config.getCDAFormatName(siteNameAssociated));
+				}
+				
+				return url.toString();
+
 			} else {
 				if (log.isDebugEnabled()) {
 					log.debug("ETLTuringTranslator Content without channel:" + mo.getName().toString());
