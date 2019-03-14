@@ -1,3 +1,5 @@
+[![viglet_logo.png](https://openturing.github.io/turing/img/banner/viglet_turing.png)](http://viglet.com/turing)
+
 # Listener WEM for Viglet Turing 
 Open Text Web Experience Management (WEM) Listener to publish content to Viglet Turing
 
