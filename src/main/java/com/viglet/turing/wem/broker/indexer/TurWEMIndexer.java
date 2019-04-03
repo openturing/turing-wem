@@ -24,7 +24,7 @@ public class TurWEMIndexer {
 
 	private static final ContextLogger log = ContextLogger.getLogger(TurWEMIndexer.class);
 
-	public static boolean IndexCreate(ManagedObject mo, IHandlerConfiguration config, String siteID, String site) {
+	public static boolean indexCreate(ManagedObject mo, IHandlerConfiguration config, String siteID, String site) {
 		if (log.isDebugEnabled()) {
 			log.debug("Creating Object in Viglet Turing index");
 		}
@@ -32,7 +32,7 @@ public class TurWEMIndexer {
 		return true;
 	}
 
-	public static boolean IndexUpdate(ManagedObject mo, IHandlerConfiguration config, String siteID, String site) {
+	public static boolean indexUpdate(ManagedObject mo, IHandlerConfiguration config, String siteID, String site) {
 		if (log.isDebugEnabled()) {
 			log.debug("Updating Object in Viglet Turing index");
 		}
@@ -40,7 +40,7 @@ public class TurWEMIndexer {
 		return true;
 	}
 
-	public static boolean IndexDelete(String GUID, IHandlerConfiguration config, String siteID, String site) {
+	public static boolean indexDelete(String GUID, IHandlerConfiguration config, String siteID, String site) {
 		if (log.isDebugEnabled()) {
 			log.debug("Deleting Object in Viglet Turing index");
 		}
@@ -48,7 +48,7 @@ public class TurWEMIndexer {
 		return true;
 	}
 
-	public static boolean IndexDeleteByType(String typeName, IHandlerConfiguration config) {
+	public static boolean indexDeleteByType(String typeName, IHandlerConfiguration config) {
 		if (log.isDebugEnabled()) {
 			log.debug("Deleting Object in Viglet Turing index");
 		}

@@ -214,7 +214,7 @@ public class TurWEMCommander {
 		Iterator<?> it = null;
 		int totalEntries;
 		try {
-			TurWEMIndexer.IndexDeleteByType(ot.getData().getName(), turingConfig);
+			TurWEMIndexer.indexDeleteByType(ot.getData().getName(), turingConfig);
 			MappingDefinitions mappingDefinitions = MappingDefinitionsProcess.getMappingDefinitions(turingConfig);
 			RequestParameters rp = new RequestParameters();
 			rp.setTopRelationOnly(false);
@@ -328,7 +328,7 @@ public class TurWEMCommander {
 				if (logger.isDebugEnabled())
 					logger.debug(String.format("Attempting to index the Content Instance: %s",
 							mo.getContentManagementId().getId()));
-				TurWEMIndexer.IndexCreate(mo, turingConfig, null, null);
+				TurWEMIndexer.indexCreate(mo, turingConfig, null, null);
 			}
 		}
 	}

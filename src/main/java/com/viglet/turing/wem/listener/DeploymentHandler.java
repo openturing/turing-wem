@@ -34,18 +34,18 @@ public class DeploymentHandler {
     }
 
     public void onManagedObjectCreate(ManagedObject mo, AsDeploymentEvent deploymentEvent) {
-        boolean result = TurWEMIndexer.IndexCreate(mo, config, deploymentEvent.getSiteId().getId(), deploymentEvent.getSiteName());
+        boolean result = TurWEMIndexer.indexCreate(mo, config, deploymentEvent.getSiteId().getId(), deploymentEvent.getSiteName());
         log.debug("Viglet Turing Indexing Create: " + result);
      }
 
     public void onManagedObjectUpdate(ManagedObject mo, AsDeploymentEvent deploymentEvent) {
-        boolean result = TurWEMIndexer.IndexUpdate(mo, config, deploymentEvent.getSiteId().getId(), deploymentEvent.getSiteName());
+        boolean result = TurWEMIndexer.indexUpdate(mo, config, deploymentEvent.getSiteId().getId(), deploymentEvent.getSiteName());
         log.debug("Viglet Turing Indexing Update: " + result);
     }
 
     public void onManagedObjectDelete(ManagedObject mo, AsDeploymentEvent deploymentEvent) {
         String GUID = deploymentEvent.getManagedObjectVCMRef().getId();
-        boolean result = TurWEMIndexer.IndexDelete(GUID, config, deploymentEvent.getSiteId().getId(), deploymentEvent.getSiteName());
+        boolean result = TurWEMIndexer.indexDelete(GUID, config, deploymentEvent.getSiteId().getId(), deploymentEvent.getSiteName());
         log.debug("Viglet Turing Indexing Delete: " + result);
     }
 
