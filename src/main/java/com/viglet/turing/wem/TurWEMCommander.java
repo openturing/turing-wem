@@ -208,19 +208,19 @@ public class TurWEMCommander {
 		}
 	}
 
-	private void indexByContentType(ObjectType ot)
+	private void indexByContentType(ObjectType objectType)
 			throws ApplicationException, ContentIndexException, ConfigException, MalformedURLException {
 		int totalPages = 0;
 		Iterator<?> it = null;
 		int totalEntries;
 		try {
-			TurWEMIndexer.indexDeleteByType(ot.getData().getName(), turingConfig);
+			TurWEMIndexer.indexDeleteByType(objectType.getData().getName(), turingConfig);
 			MappingDefinitions mappingDefinitions = MappingDefinitionsProcess.getMappingDefinitions(turingConfig);
 			RequestParameters rp = new RequestParameters();
 			rp.setTopRelationOnly(false);
 			IPagingList results = null;
-			AsObjectType aot = AsObjectType.getInstance((ObjectTypeRef) new ObjectTypeRef((ManagedObject) ot));
-			IValidToIndex instance = mappingDefinitions.validToIndex(ot, turingConfig);
+			AsObjectType aot = AsObjectType.getInstance((ObjectTypeRef) new ObjectTypeRef((ManagedObject) objectType));
+			IValidToIndex instance = mappingDefinitions.validToIndex(objectType, turingConfig);
 			if (aot.isStaticFile()) {
 				StaticFileWhereClause clause = new StaticFileWhereClause();
 				StaticFileDBQuery query = new StaticFileDBQuery();
@@ -230,7 +230,7 @@ public class TurWEMCommander {
 				results = QueryManager.execute((Query) query, (AsObjectRequestParameters) rp);
 			} else {
 				ContentInstanceWhereClause clause = new ContentInstanceWhereClause();
-				ContentInstanceDBQuery query = new ContentInstanceDBQuery(new ContentTypeRef(ot.getId()));
+				ContentInstanceDBQuery query = new ContentInstanceDBQuery(new ContentTypeRef(objectType.getId()));
 				if (instance != null)
 					instance.whereToValid(clause, turingConfig);
 
@@ -238,8 +238,8 @@ public class TurWEMCommander {
 				results = QueryManager.execute((Query) query, (AsObjectRequestParameters) rp);
 			}
 			totalEntries = results.size();
-			System.out.println(String.format("Number of Content Instances of type %s %s = %d", ot.getData().getName(),
-					ot.getContentManagementId().toString(), totalEntries));
+			System.out.println(String.format("Number of Content Instances of type %s %s = %d", objectType.getData().getName(),
+					objectType.getContentManagementId().toString(), totalEntries));
 			totalPages = totalEntries > 0 ? (totalEntries + pageSize - 1) / pageSize : totalEntries / pageSize;
 			it = results.pageIterator(pageSize);
 		} catch (Exception e) {
