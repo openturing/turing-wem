@@ -1,4 +1,15 @@
+buildscript {
+	repositories {
+		mavenCentral()
+		 jcenter()
+	}
+	dependencies {
+        classpath 'com.github.jengelman.gradle.plugins:shadow:4.0.4'
+    }
+}
+
 apply plugin: 'java'
+apply plugin: 'com.github.johnrengelman.shadow'
 
 sourceCompatibility = 1.6
 compileJava.options.encoding = "UTF-8"
@@ -54,6 +65,7 @@ task compileOne (type: JavaCompile) {
 
 dependencies {
     compile files(fileTree(dir: 'lib', includes: ['*.jar']))
+    compile group: 'com.beust', name: 'jcommander', version: '1.47'	
     compile group: 'log4j', name: 'log4j', version: '1.2.7'
     compile group: 'com.github.openviglet', name: 'turing-java-sdk', version: 'master'
 }
@@ -63,5 +75,11 @@ jar {
         attributes 'Main-Class': 'com.viglet.turing.apps.contentIndex.ContentIndexDriver'
     }
  }
+ 
+ shadowJar {
+   baseName = 'turing-wem'
+   classifier = null
+   version = 'all'
+}
 
 compileOne.options.compilerArgs = ["-sourcepath", "$projectDir/src/main/java"]
