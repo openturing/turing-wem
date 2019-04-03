@@ -16,13 +16,9 @@
  */
 package com.viglet.turing.wem;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.RandomAccessFile;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -53,7 +49,6 @@ import com.vignette.as.client.common.ref.ContentTypeRef;
 import com.vignette.as.client.common.ref.ManagedObjectVCMRef;
 import com.vignette.as.client.common.ref.ObjectTypeRef;
 import com.vignette.as.client.exception.ApplicationException;
-import com.vignette.as.client.exception.AuthorizationException;
 import com.vignette.as.client.exception.ValidationException;
 import com.vignette.as.client.javabean.ContentInstance;
 import com.vignette.as.client.javabean.ContentItem;
@@ -106,7 +101,7 @@ public class TurWEMCommander {
 	@Parameter(names = { "--chunk",
 			"-z" }, description = "The page size. After processing a page the processed count is written to an offset file."
 					+ " This helps the indexer to resume from that page even after failure. ")
-	private int chunk = 500;
+	private int pageSize = 500;
 
 	@Parameter(names = "-debug", description = "Change the log level to debug", help = true)
 	private boolean debug = false;
@@ -147,12 +142,60 @@ public class TurWEMCommander {
 			ConfigUtil.setContainerType(ConfigUtil.CONTAINER_TYPE_SERVLET);
 
 			turingConfig = new GenericResourceHandlerConfiguration();
-			if (allObjectTypes)
-				indexByObjectTypes(getAllOT());
-			else if (contentType != null)
-				indexByObjectType(contentType);
-			else if (guidFilePath != null)
-				indexGUIDsFromFile(guidFilePath);
+			if (allObjectTypes) {
+				
+				IPagingList contentTypeIPagingList = ContentType.findAll();
+				@SuppressWarnings("unchecked")
+				List<Object> contentTypes = contentTypeIPagingList.asList();
+				contentTypes.add(StaticFile.getTypeObjectTypeRef().getObjectType());
+				
+				System.out.println(String.format("Total number of Object Types: %d", contentTypes.size()));
+				for (Object objectType : contentTypes) {
+					ObjectType ot = (ObjectType) objectType;
+					System.out.println(String.format("Retrieved Object Type: %s %s", ot.getData().getName(),
+							ot.getContentManagementId().toString()));
+					this.indexByContentType(ot);
+				}
+			} else if (contentType != null) {
+				ObjectType objectType = ObjectType.findByName((String) contentType);
+				if (objectType != null)
+					this.indexByContentType(objectType);
+			} else if (guidFilePath != null) {
+				ArrayList<String> contentInstances = new ArrayList<String>();
+				BufferedReader br = null;
+				FileReader fr = null;
+				try {
+					fr = new FileReader(guidFilePath);
+					br = new BufferedReader(fr);
+					String sCurrentLine;
+
+					while ((sCurrentLine = br.readLine()) != null) {
+						if (sCurrentLine.endsWith("STFL") || sCurrentLine.endsWith("RCRD"))
+							contentInstances.add(sCurrentLine);
+			
+						if (contentInstances.size() != pageSize)
+							continue;
+						if (contentInstances.size() > 0) {
+							this.indexGUIDList(contentInstances);
+							contentInstances = new ArrayList<String>();
+						}					
+					}
+					if (contentInstances.size() > 0)
+						this.indexGUIDList(contentInstances);
+
+				} catch (IOException e) {
+					logger.error(e);
+				} finally {
+					try {
+						if (br != null)
+							br.close();
+						if (fr != null)
+							fr.close();
+					} catch (IOException ex) {
+						logger.error(ex);
+					}
+				}
+			}
 
 		} catch (ConfigException exception) {
 			if (logger.isDebugEnabled())
@@ -165,133 +208,38 @@ public class TurWEMCommander {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
-	private List<?> getAllOT() throws ApplicationException, ValidationException {
-		IPagingList contentTypes = ContentType.findAll();
-		List<Object> contentTypeList = contentTypes.asList();
-		contentTypeList.add(StaticFile.getTypeObjectTypeRef().getObjectType());
-		return contentTypeList;
-	}
-
-	private void indexByObjectType(String objectTypeName) throws Exception {
-		ObjectType ot;
-		if (null == (ot = ObjectType.findByName((String) objectTypeName))) {
-			return;
-
-		}
-		this.indexByObjectType(ot);
-	}
-
-	private void indexByObjectType(ObjectType ot)
-			throws ApplicationException, ContentIndexException, ConfigException, MalformedURLException {
-		this.retrieveAndRegisterInstances(ot);
-	}
-
-	private boolean indexGUIDsFromFile(String filePath)
-			throws ApplicationException, ValidationException, ConfigException, ContentIndexException {
-
-		File vgnGUIDsFile = new File(filePath);
-		RandomAccessFile raFile = null;
-		boolean validGUIDsRead = false;
-		ArrayList<String> recordGuids = new ArrayList<String>();
-		ArrayList<String> staticfileGuids = new ArrayList<String>();
-		long offset = this.getOffset(vgnGUIDsFile);
-		int pageSize = chunk;
-		try {
-			String temp = "";
-			raFile = new RandomAccessFile(vgnGUIDsFile, "r");
-			raFile.seek(offset);
-			while ((temp = raFile.readLine()) != null) {
-				if (temp.length() <= 0 || "EOF".equals(temp))
-					continue;
-				if (temp.endsWith("STFL"))
-					staticfileGuids.add(temp);
-				else if (temp.endsWith("RCRD"))
-					recordGuids.add(temp);
-
-				if (recordGuids.size() + staticfileGuids.size() != pageSize)
-					continue;
-				if (recordGuids.size() > 0) {
-					this.indexByGUIDs(recordGuids);
-					recordGuids = new ArrayList<String>();
-				}
-				if (staticfileGuids.size() > 0) {
-					this.indexByGUIDs(staticfileGuids);
-					staticfileGuids = new ArrayList<String>();
-				}
-				this.writeOutPageOffset(vgnGUIDsFile, raFile.getFilePointer());
-			}
-			if (recordGuids.size() > 0)
-				this.indexByGUIDs(recordGuids);
-
-			if (staticfileGuids.size() > 0)
-				this.indexByGUIDs(staticfileGuids);
-
-			this.deleteOffsetFile(vgnGUIDsFile);
-		} catch (IOException e) {
-			validGUIDsRead = false;
-		} finally {
-			try {
-				if (null != raFile)
-					raFile.close();
-			} catch (IOException e) {
-				validGUIDsRead = false;
-			}
-		}
-		return validGUIDsRead;
-	}
-
-	private void indexByObjectTypes(List<?> otList) throws ValidationException, ApplicationException,
-			AuthorizationException, ContentIndexException, ConfigException, MalformedURLException {
-
-		System.out.println(String.format("Total number of Object Types: %d", otList.size()));
-
-		for (Object type : otList) {
-			ObjectType ot = (ObjectType) type;
-			System.out.println(String.format("Retrieved Object Type: %s %s", ot.getData().getName(),
-					ot.getContentManagementId().toString()));
-			this.indexByObjectType(ot);
-		}
-	}
-
-	private long getOffset(File vgnGUIDsFile) {
-		long offset = 0;
-		File offsetFile = new File(vgnGUIDsFile.getParentFile(), vgnGUIDsFile.getName() + ".offset");
-		if (offsetFile.isFile()) {
-			FileInputStream fis = null;
-			ObjectInputStream ois = null;
-			try {
-				fis = new FileInputStream(offsetFile);
-				ois = new ObjectInputStream(fis);
-				offset = ois.readLong();
-			} catch (IOException e) {
-				logger.error(e);
-			} finally {
-				try {
-					if (fis != null)
-						fis.close();
-					if (ois != null)
-						ois.close();
-				} catch (IOException e) {
-					logger.error(e);
-				}
-			}
-		}
-		return offset;
-	}
-
-	private void retrieveAndRegisterInstances(ObjectType ot)
+	private void indexByContentType(ObjectType ot)
 			throws ApplicationException, ContentIndexException, ConfigException, MalformedURLException {
 		int totalPages = 0;
 		Iterator<?> it = null;
 		int totalEntries;
 		try {
 			TurWEMIndexer.IndexDeleteByType(ot.getData().getName(), turingConfig);
-			IPagingList results = this.retrieveInstances(ot);
+			MappingDefinitions mappingDefinitions = MappingDefinitionsProcess.getMappingDefinitions(turingConfig);
+			RequestParameters rp = new RequestParameters();
+			rp.setTopRelationOnly(false);
+			IPagingList results = null;
+			AsObjectType aot = AsObjectType.getInstance((ObjectTypeRef) new ObjectTypeRef((ManagedObject) ot));
+			IValidToIndex instance = mappingDefinitions.validToIndex(ot, turingConfig);
+			if (aot.isStaticFile()) {
+				StaticFileWhereClause clause = new StaticFileWhereClause();
+				StaticFileDBQuery query = new StaticFileDBQuery();
+				if (instance != null)
+					instance.whereToValid(clause, turingConfig);
+				query.setWhereClause((WhereClause) clause);
+				results = QueryManager.execute((Query) query, (AsObjectRequestParameters) rp);
+			} else {
+				ContentInstanceWhereClause clause = new ContentInstanceWhereClause();
+				ContentInstanceDBQuery query = new ContentInstanceDBQuery(new ContentTypeRef(ot.getId()));
+				if (instance != null)
+					instance.whereToValid(clause, turingConfig);
+
+				query.setWhereClause((WhereClause) clause);
+				results = QueryManager.execute((Query) query, (AsObjectRequestParameters) rp);
+			}
 			totalEntries = results.size();
 			System.out.println(String.format("Number of Content Instances of type %s %s = %d", ot.getData().getName(),
 					ot.getContentManagementId().toString(), totalEntries));
-			int pageSize = chunk;
 			totalPages = totalEntries > 0 ? (totalEntries + pageSize - 1) / pageSize : totalEntries / pageSize;
 			it = results.pageIterator(pageSize);
 		} catch (Exception e) {
@@ -300,160 +248,45 @@ public class TurWEMCommander {
 		int currentPage = 1;
 		if (it != null) {
 			while (it.hasNext()) {
-				List<?> moList = (List<?>) it.next();
+				List<?> managedObjects = (List<?>) it.next();
 				System.out.println(String.format("Processing Page %d of %d pages", currentPage++, totalPages));
 				long start = System.currentTimeMillis();
 				try {
-					this.indexByManagedObjects(moList);
+					HashSet<ManagedObjectVCMRef> validGuids = new HashSet<ManagedObjectVCMRef>();
+					HashMap<String, ManagedObject> objectMap = new HashMap<String, ManagedObject>(managedObjects.size());
+					for (Object object : managedObjects) {
+						ManagedObject mo = (ManagedObject) object;
+						if (mo instanceof ContentItem) {
+							ContentItem ci = (ContentItem) mo;
+							if (ci.getChannelAssociations() == null || ci.getChannelAssociations().length == 0)
+								continue;
+
+						}
+						objectMap.put(mo.getContentManagementId().getId(), mo);
+						validGuids.add(mo.getContentManagementId());
+					}
+					ManagedObjectVCMRef[] guids = null;
+					if (validGuids.size() > 0)
+						guids = validGuids.toArray(new ManagedObjectVCMRef[0]);
+
+					System.out.println(String.format("Processing the registration of %d assets", validGuids.size()));
+					this.indexContentInstances(guids, objectMap);
 				} catch (Exception e) {
 					logger.error(e);
 				}
 				long elapsed = System.currentTimeMillis() - start;
-				System.out.println(String.format("%d items processed in %dms", moList.size(), elapsed));
+				System.out.println(String.format("%d items processed in %dms", managedObjects.size(), elapsed));
 
 			}
 		}
 	}
-
-	private IPagingList retrieveInstances(ObjectType ot) throws Exception {
-		MappingDefinitions mappingDefinitions = MappingDefinitionsProcess.getMappingDefinitions(turingConfig);
-		RequestParameters rp = new RequestParameters();
-		rp.setTopRelationOnly(false);
-		IPagingList results = null;
-		AsObjectType aot = AsObjectType.getInstance((ObjectTypeRef) new ObjectTypeRef((ManagedObject) ot));
-		IValidToIndex instance = mappingDefinitions.validToIndex(ot, turingConfig);
-		if (aot.isStaticFile()) {
-			StaticFileWhereClause clause = new StaticFileWhereClause();
-			StaticFileDBQuery query = new StaticFileDBQuery();
-			if (instance != null)
-				instance.whereToValid(clause, turingConfig);
-			query.setWhereClause((WhereClause) clause);
-			results = QueryManager.execute((Query) query, (AsObjectRequestParameters) rp);
-		} else {
-			ContentInstanceWhereClause clause = new ContentInstanceWhereClause();
-			ContentInstanceDBQuery query = new ContentInstanceDBQuery(new ContentTypeRef(ot.getId()));
-			if (instance != null)
-				instance.whereToValid(clause, turingConfig);
 	
-			query.setWhereClause((WhereClause) clause);
-			results = QueryManager.execute((Query) query, (AsObjectRequestParameters) rp);
-		}
-		return results;
-	}
-
-	private void indexByManagedObjects(List<?> moList) throws Exception {
-		HashSet<ManagedObjectVCMRef> validGuids = new HashSet<ManagedObjectVCMRef>();
-		HashMap<String, ManagedObject> objectMap = new HashMap<String, ManagedObject>(moList.size());
-		for (Object object : moList) {
-			ManagedObject mo = (ManagedObject) object;
-			if (mo instanceof ContentItem) {
-				ContentItem ci = (ContentItem) mo;
-				if (ci.getChannelAssociations() == null || ci.getChannelAssociations().length == 0)
-					continue;
-
-			}
-			objectMap.put(mo.getContentManagementId().getId(), mo);
-			validGuids.add(mo.getContentManagementId());
-		}
-		ManagedObjectVCMRef[] guids = null;
-		if (validGuids.size() > 0)
-			guids = validGuids.toArray(new ManagedObjectVCMRef[0]);
-
-		System.out.println(String.format("Processing the registration of %d assets", validGuids.size()));
-		this.registerObjects(guids, objectMap);
-	}
-
-	private void indexByGUIDs(List<String> ids)
+	private void indexGUIDList(List<String> guids)
 			throws ValidationException, ApplicationException, ContentIndexException, ConfigException {
-		System.out.println(String.format("Processing a total of %d GUID Strings", ids.size()));
-		ManagedObjectVCMRef[] validGUIDs = this.getManagedObjectVCMRefsFromStringIds(ids);
-		if (validGUIDs == null || validGUIDs.length == 0) {
-			logger.error("No GUIDs");
-			return;
-		}
-		RequestParameters params = new RequestParameters();
-		params.setTopRelationOnly(false);
-		IPagingList managedObjects = ManagedObject.findByContentManagementIds((ManagedObjectVCMRef[]) validGUIDs,
-				(RequestParameters) params);
-		List<?> moList = managedObjects.asList();
-		HashMap<String, ManagedObject> objectMap = new HashMap<String, ManagedObject>(moList.size());
-		for (Object object : moList) {
-			ManagedObject mo = (ManagedObject) object;
-			objectMap.put(mo.getContentManagementId().getId(), mo);
-		}
-		System.out.println(String.format("Processing the registration of %d assets", managedObjects.size()));
-		this.registerObjects(validGUIDs, objectMap);
-	}
+		System.out.println(String.format("Processing a total of %d GUID Strings", guids.size()));
 
-	private void registerObjects(ManagedObjectVCMRef[] refs, HashMap<String, ?> objects)
-			throws ApplicationException, ConfigException, ContentIndexException {
-		for (ManagedObjectVCMRef ref : refs) {
-			ManagedObject mo = (ManagedObject) objects.get(ref.getId());
-			if (mo != null) {
-				this.registerObject(mo);
-				continue;
-			}
-		}
-	}
-
-	private void writeOutPageOffset(File vgnGUIDFile, long filePointer) {
-		fileBlock: {
-			File fileDirectory = vgnGUIDFile.getParentFile();
-			File offsetFile = new File(fileDirectory, vgnGUIDFile.getName() + ".offset");
-			FileOutputStream fos = null;
-			ObjectOutputStream oos = null;
-			try {
-				if (offsetFile.exists() || offsetFile.createNewFile()) {
-					fos = new FileOutputStream(offsetFile);
-					oos = new ObjectOutputStream(fos);
-					oos.writeLong(filePointer);
-					break fileBlock;
-				}
-
-			} catch (IOException e) {
-				logger.error(e);
-			} finally {
-				try {
-					if (oos != null)
-						oos.close();
-					if (fos != null)
-						fos.close();
-				} catch (IOException e) {
-					logger.error(e);
-				}
-			}
-		}
-	}
-
-	private void deleteOffsetFile(File vgnGUIDsFile) {
-		File offsetFile = new File(vgnGUIDsFile.getParentFile(), vgnGUIDsFile.getName() + ".offset");
-		boolean deleted = offsetFile.delete();
-		if (!deleted && offsetFile.isFile())
-			logger.error("File was not deleted");
-	}
-
-	private void registerObject(ManagedObject mo)
-			throws ApplicationException, ContentIndexException {
-		String guid = "";
-		boolean indexed = false;
-		while (!indexed) {
-			guid = mo.getContentManagementId().getId();
-			logger.debug("Attempting to register object: " + guid);
-			if (mo instanceof ContentInstance) {
-				indexed = TurWEMIndexer.IndexCreate(mo, turingConfig, null, null);
-				continue;
-			}
-			if (!(mo instanceof StaticFile))
-				continue;
-			indexed = true;
-			continue;
-
-		}
-	}
-
-	private ManagedObjectVCMRef[] getManagedObjectVCMRefsFromStringIds(List<String> ids) {
 		ArrayList<ManagedObjectVCMRef> validGuids = new ArrayList<ManagedObjectVCMRef>();
-		for (Object guid : ids) {
+		for (Object guid : guids) {
 			String id = (String) guid;
 			if (id != null && id.length() > 0) {
 				try {
@@ -465,9 +298,38 @@ public class TurWEMCommander {
 				continue;
 			}
 		}
-		ManagedObjectVCMRef[] guids = null;
+		ManagedObjectVCMRef[] managedObjectVCMRefs = null;
 		if (validGuids.size() > 0)
-			guids = validGuids.toArray(new ManagedObjectVCMRef[0]);
-		return guids;
+			managedObjectVCMRefs = validGuids.toArray(new ManagedObjectVCMRef[0]);
+
+		if (managedObjectVCMRefs == null || managedObjectVCMRefs.length == 0)
+			logger.error("No GUIDs");
+		else {
+			RequestParameters params = new RequestParameters();
+			params.setTopRelationOnly(false);
+			IPagingList managedObjects = ManagedObject.findByContentManagementIds((ManagedObjectVCMRef[]) managedObjectVCMRefs,
+					(RequestParameters) params);
+			List<?> moList = managedObjects.asList();
+			HashMap<String, ManagedObject> objectMap = new HashMap<String, ManagedObject>(moList.size());
+			for (Object object : moList) {
+				ManagedObject mo = (ManagedObject) object;
+				objectMap.put(mo.getContentManagementId().getId(), mo);
+			}
+			System.out.println(String.format("Processing the registration of %d assets", managedObjects.size()));
+			this.indexContentInstances(managedObjectVCMRefs, objectMap);
+		}
+	}
+
+	private void indexContentInstances(ManagedObjectVCMRef[] refs, HashMap<String, ?> objects)
+			throws ApplicationException, ConfigException, ContentIndexException {
+		for (ManagedObjectVCMRef ref : refs) {
+			ManagedObject mo = (ManagedObject) objects.get(ref.getId());
+			if (mo != null && mo instanceof ContentInstance) {
+				if (logger.isDebugEnabled())
+					logger.debug(String.format("Attempting to index the Content Instance: %s",
+							mo.getContentManagementId().getId()));
+				TurWEMIndexer.IndexCreate(mo, turingConfig, null, null);
+			}
+		}
 	}
 }
