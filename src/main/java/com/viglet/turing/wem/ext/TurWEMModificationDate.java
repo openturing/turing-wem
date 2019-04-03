@@ -38,7 +38,7 @@ public class TurWEMModificationDate implements ExtAttributeInterface {
 			log.debug("Start TurWEMOriginalDate");
 
 		TimeZone tz = TimeZone.getTimeZone("UTC");
-		DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");
+		DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 		df.setTimeZone(tz);
 
 		TurMultiValue turMultiValue = new TurMultiValue();

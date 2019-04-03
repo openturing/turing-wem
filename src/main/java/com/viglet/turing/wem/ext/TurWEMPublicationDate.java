@@ -39,7 +39,7 @@ public class TurWEMPublicationDate implements ExtAttributeInterface {
 		}
 
 		TimeZone tz = TimeZone.getTimeZone("UTC");
-		DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");
+		DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 		df.setTimeZone(tz);
 		String modDate = ci.getLastModTime() != null ? df.format(ci.getLastModTime()) : df.format(ci.getCreationTime());
 

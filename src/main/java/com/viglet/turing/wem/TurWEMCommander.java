@@ -98,19 +98,18 @@ public class TurWEMCommander {
 			"-g" }, description = "The path to a file containing the GUID(s) of content instances or static files to be indexed.")
 	private String guidFilePath = null;
 
-	@Parameter(names = { "--chunk",
+	@Parameter(names = { "--page-size",
 			"-z" }, description = "The page size. After processing a page the processed count is written to an offset file."
 					+ " This helps the indexer to resume from that page even after failure. ")
 	private int pageSize = 500;
 
-	@Parameter(names = "-debug", description = "Change the log level to debug", help = true)
+	@Parameter(names = "--debug", description = "Change the log level to debug", help = true)
 	private boolean debug = false;
 
 	@Parameter(names = "--help", description = "Print usage instructions", help = true)
 	private boolean help = false;
 
 	public static void main(String... argv) {
-
 		TurWEMCommander main = new TurWEMCommander();
 		JCommander jCommander = new JCommander();
 		jCommander.addObject(main);
