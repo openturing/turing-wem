@@ -40,7 +40,6 @@ import com.viglet.turing.wem.index.IValidToIndex;
 import com.viglet.turing.wem.mappers.MappingDefinitions;
 import com.viglet.turing.wem.mappers.MappingDefinitionsProcess;
 import com.vignette.as.apps.contentIndex.ContentIndexException;
-import com.vignette.as.apps.contentIndex.SearchBundleUtils;
 import com.vignette.as.client.common.AsObjectRequestParameters;
 import com.vignette.as.client.common.AsObjectType;
 import com.vignette.as.client.common.ContentInstanceDBQuery;
@@ -65,8 +64,6 @@ import com.vignette.as.client.javabean.ObjectType;
 import com.vignette.as.client.javabean.QueryManager;
 import com.vignette.as.client.javabean.StaticFile;
 import com.vignette.as.config.ConfigUtil;
-import com.vignette.cms.client.common.CMSObjectBundle;
-import com.vignette.cms.client.common.CMSObjectBundleFlags;
 import com.vignette.config.client.common.ConfigException;
 import com.vignette.config.util.ConfigLog;
 import com.vignette.logging.LoggingManager;
@@ -80,8 +77,6 @@ public class TurWEMCommander {
 	private static final String WORKING_DIR = "com.vignette.workingDir";
 
 	private IHandlerConfiguration turingConfig = null;
-	private CMSObjectBundleFlags staticFileBundleFlags;
-	private CMSObjectBundleFlags recordBundleFlags;
 	@Parameter(names = { "--host",
 			"-h" }, description = "The host on which Content Management server is installed.", required = true)
 	private String hostAndPort = null;
@@ -217,20 +212,20 @@ public class TurWEMCommander {
 				if (recordGuids.size() + staticfileGuids.size() != pageSize)
 					continue;
 				if (recordGuids.size() > 0) {
-					this.indexByGUIDs(recordGuids, this.getRecordBundleFlags());
+					this.indexByGUIDs(recordGuids);
 					recordGuids = new ArrayList<String>();
 				}
 				if (staticfileGuids.size() > 0) {
-					this.indexByGUIDs(staticfileGuids, this.getStaticFileBundleFlags());
+					this.indexByGUIDs(staticfileGuids);
 					staticfileGuids = new ArrayList<String>();
 				}
 				this.writeOutPageOffset(vgnGUIDsFile, raFile.getFilePointer());
 			}
 			if (recordGuids.size() > 0)
-				this.indexByGUIDs(recordGuids, this.getRecordBundleFlags());
+				this.indexByGUIDs(recordGuids);
 
 			if (staticfileGuids.size() > 0)
-				this.indexByGUIDs(staticfileGuids, this.getStaticFileBundleFlags());
+				this.indexByGUIDs(staticfileGuids);
 
 			this.deleteOffsetFile(vgnGUIDsFile);
 		} catch (IOException e) {
@@ -309,7 +304,7 @@ public class TurWEMCommander {
 				System.out.println(String.format("Processing Page %d of %d pages", currentPage++, totalPages));
 				long start = System.currentTimeMillis();
 				try {
-					this.indexByManagedObjects(moList, this.getBundleFlags(ot));
+					this.indexByManagedObjects(moList);
 				} catch (Exception e) {
 					logger.error(e);
 				}
@@ -330,24 +325,23 @@ public class TurWEMCommander {
 		if (aot.isStaticFile()) {
 			StaticFileWhereClause clause = new StaticFileWhereClause();
 			StaticFileDBQuery query = new StaticFileDBQuery();
-			if (instance != null) {
+			if (instance != null)
 				instance.whereToValid(clause, turingConfig);
-			}
 			query.setWhereClause((WhereClause) clause);
 			results = QueryManager.execute((Query) query, (AsObjectRequestParameters) rp);
 		} else {
 			ContentInstanceWhereClause clause = new ContentInstanceWhereClause();
 			ContentInstanceDBQuery query = new ContentInstanceDBQuery(new ContentTypeRef(ot.getId()));
-			if (instance != null) {
+			if (instance != null)
 				instance.whereToValid(clause, turingConfig);
-			}
+	
 			query.setWhereClause((WhereClause) clause);
 			results = QueryManager.execute((Query) query, (AsObjectRequestParameters) rp);
 		}
 		return results;
 	}
 
-	private void indexByManagedObjects(List<?> moList, CMSObjectBundleFlags flags) throws Exception {
+	private void indexByManagedObjects(List<?> moList) throws Exception {
 		HashSet<ManagedObjectVCMRef> validGuids = new HashSet<ManagedObjectVCMRef>();
 		HashMap<String, ManagedObject> objectMap = new HashMap<String, ManagedObject>(moList.size());
 		for (Object object : moList) {
@@ -366,10 +360,10 @@ public class TurWEMCommander {
 			guids = validGuids.toArray(new ManagedObjectVCMRef[0]);
 
 		System.out.println(String.format("Processing the registration of %d assets", validGuids.size()));
-		this.registerObjects(guids, objectMap, flags);
+		this.registerObjects(guids, objectMap);
 	}
 
-	private void indexByGUIDs(List<String> ids, CMSObjectBundleFlags flags)
+	private void indexByGUIDs(List<String> ids)
 			throws ValidationException, ApplicationException, ContentIndexException, ConfigException {
 		System.out.println(String.format("Processing a total of %d GUID Strings", ids.size()));
 		ManagedObjectVCMRef[] validGUIDs = this.getManagedObjectVCMRefsFromStringIds(ids);
@@ -388,25 +382,22 @@ public class TurWEMCommander {
 			objectMap.put(mo.getContentManagementId().getId(), mo);
 		}
 		System.out.println(String.format("Processing the registration of %d assets", managedObjects.size()));
-		this.registerObjects(validGUIDs, objectMap, flags);
+		this.registerObjects(validGUIDs, objectMap);
 	}
 
-	private void registerObjects(ManagedObjectVCMRef[] refs, HashMap<String, ?> objects, CMSObjectBundleFlags flags)
+	private void registerObjects(ManagedObjectVCMRef[] refs, HashMap<String, ?> objects)
 			throws ApplicationException, ConfigException, ContentIndexException {
-		SearchBundleUtils utils = new SearchBundleUtils();
-		HashMap<?, ?> bundleMap = utils.getBundles(objects.values(), flags);
 		for (ManagedObjectVCMRef ref : refs) {
 			ManagedObject mo = (ManagedObject) objects.get(ref.getId());
 			if (mo != null) {
-				CMSObjectBundle bundle = (CMSObjectBundle) bundleMap.get(ref.getId());
-				this.registerObject(mo, bundle);
+				this.registerObject(mo);
 				continue;
 			}
 		}
 	}
 
 	private void writeOutPageOffset(File vgnGUIDFile, long filePointer) {
-		block14: {
+		fileBlock: {
 			File fileDirectory = vgnGUIDFile.getParentFile();
 			File offsetFile = new File(fileDirectory, vgnGUIDFile.getName() + ".offset");
 			FileOutputStream fos = null;
@@ -416,7 +407,7 @@ public class TurWEMCommander {
 					fos = new FileOutputStream(offsetFile);
 					oos = new ObjectOutputStream(fos);
 					oos.writeLong(filePointer);
-					break block14;
+					break fileBlock;
 				}
 
 			} catch (IOException e) {
@@ -437,12 +428,11 @@ public class TurWEMCommander {
 	private void deleteOffsetFile(File vgnGUIDsFile) {
 		File offsetFile = new File(vgnGUIDsFile.getParentFile(), vgnGUIDsFile.getName() + ".offset");
 		boolean deleted = offsetFile.delete();
-		if (!deleted && offsetFile.isFile()) {
+		if (!deleted && offsetFile.isFile())
 			logger.error("File was not deleted");
-		}
 	}
 
-	private void registerObject(ManagedObject mo, CMSObjectBundle bundle)
+	private void registerObject(ManagedObject mo)
 			throws ApplicationException, ContentIndexException {
 		String guid = "";
 		boolean indexed = false;
@@ -479,27 +469,5 @@ public class TurWEMCommander {
 		if (validGuids.size() > 0)
 			guids = validGuids.toArray(new ManagedObjectVCMRef[0]);
 		return guids;
-	}
-
-	private CMSObjectBundleFlags getBundleFlags(ObjectType ot) throws ApplicationException, ValidationException {
-		AsObjectType aot = AsObjectType.getInstance((ObjectTypeRef) new ObjectTypeRef((ManagedObject) ot));
-		if (aot == null)
-			return null;
-		if (aot.isStaticFile())
-			return this.getStaticFileBundleFlags();
-
-		return this.getRecordBundleFlags();
-	}
-
-	private CMSObjectBundleFlags getRecordBundleFlags() {
-		if (this.recordBundleFlags == null)
-			this.recordBundleFlags = SearchBundleUtils.getRecordBundleFlags();
-		return this.recordBundleFlags;
-	}
-
-	private CMSObjectBundleFlags getStaticFileBundleFlags() {
-		if (this.staticFileBundleFlags == null)
-			this.staticFileBundleFlags = SearchBundleUtils.getStaticFileBundleFlags();
-		return this.staticFileBundleFlags;
 	}
 }
