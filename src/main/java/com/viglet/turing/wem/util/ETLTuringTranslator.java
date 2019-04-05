@@ -186,10 +186,7 @@ public class ETLTuringTranslator {
 			log.debug("ETLTuringTranslator getSiteUrl:" + siteName);
 		}
 
-		String cdaServer = config.getCDAServer(siteName) + ":";
-		String cdaPort = config.getCDAPort(siteName);
-
-		return "http://" + cdaServer + cdaPort;
+		return config.getCDAURLPrefix(siteName);
 
 	}
 

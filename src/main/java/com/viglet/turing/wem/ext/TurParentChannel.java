@@ -35,8 +35,7 @@ public class TurParentChannel implements ExtAttributeInterface {
 			log.debug("Executing TurParentChannel");
 
 		String cdaContextName = "/" + config.getCDAContextName() + "/";
-		String cdaServer = config.getCDAServer() + ":";
-		String cdaPort = config.getCDAPort();
+		String cdaURLPrefix = config.getCDAURLPrefix();
 
 		Channel firstChannel;
 		ChannelRef[] fcref = ci.getChannelAssociations();
@@ -62,7 +61,7 @@ public class TurParentChannel implements ExtAttributeInterface {
 		moFurlName = chFurlName.replaceAll("-", "–").replaceAll(" ", "-");
 		
 		TurMultiValue turMultiValue = new TurMultiValue();
-		turMultiValue.add("http://" + cdaServer + cdaPort + cdaContextName
+		turMultiValue.add(cdaURLPrefix + cdaContextName
 				+ siteNameAssociated.replaceAll("-", "–").replaceAll(" ", "-") + moFurlName);
 		
 		return turMultiValue;			

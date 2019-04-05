@@ -39,8 +39,7 @@ public class GenericResourceHandlerConfiguration implements IHandlerConfiguratio
 	private String channel;
 	private String mappingsXML;
 	private String cdaContextName;
-	private String cdaServer;
-	private String cdaPort;
+	private String cdaURLPrefix;
 	private String cdaFormatName;
 	private boolean isLive;
 
@@ -112,33 +111,18 @@ public class GenericResourceHandlerConfiguration implements IHandlerConfiguratio
 	}
 
 	@Override
-	public String getCDAServer() {
-		return cdaServer;
+	public String getCDAURLPrefix() {
+		return cdaURLPrefix;
 	}
 
 	@Override
-	public String getCDAServer(String site) {
-		String server = getDynamicProperties("cda." + site + ".server");
-		return server != null ? server : getCDAServer();
+	public String getCDAURLPrefix(String site) {
+		String urlPrefix = getDynamicProperties("cda." + site + ".urlprefix");
+		return urlPrefix != null ? urlPrefix : getCDAURLPrefix();
 	}
 
-	public void setCDAServer(String cdaServer) {
-		this.cdaServer = cdaServer;
-	}
-
-	@Override
-	public String getCDAPort() {
-		return cdaPort;
-	}
-
-	@Override
-	public String getCDAPort(String site) {
-		String port = getDynamicProperties("cda." + site + ".port");
-		return port != null ? port : getCDAPort();
-	}
-
-	public void setCDAPort(String cdaPort) {
-		this.cdaPort = cdaPort;
+	public void setCDAURLPrefix(String cdaURLPrefix) {
+		this.cdaURLPrefix = cdaURLPrefix;
 	}
 
 	private void parsePropertiesFromResource() {
@@ -213,8 +197,7 @@ public class GenericResourceHandlerConfiguration implements IHandlerConfiguratio
 		channel = properties.getProperty("turing.channel");
 		mappingsXML = properties.getProperty("turing.mappingsxml", "/CTD-Turing-Mappings.xml");
 		cdaContextName = properties.getProperty("cda.default.contextname");
-		cdaServer = properties.getProperty("cda.default.server");
-		cdaPort = properties.getProperty("cda.default.port");
+		cdaURLPrefix = properties.getProperty("cda.default.urlprefix");
 		cdaFormatName = properties.getProperty("cda.default.formatname");
 		isLive = Boolean.parseBoolean(properties.getProperty("otsn.isLive", "false"));
 	}

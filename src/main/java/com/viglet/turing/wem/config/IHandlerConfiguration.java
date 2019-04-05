@@ -26,10 +26,8 @@ public interface IHandlerConfiguration {
     String getMappingsXML();
     String getCDAContextName(); 
     String getCDAFormatName();
-    String getCDAServer();
-    String getCDAPort();
-    String getCDAServer(String site);
-    String getCDAPort(String site);
+    String getCDAURLPrefix();
+    String getCDAURLPrefix(String site);
     String getCDAContextName(String site);
     String getCDAFormatName(String site);
     boolean hasSiteName(String site);
