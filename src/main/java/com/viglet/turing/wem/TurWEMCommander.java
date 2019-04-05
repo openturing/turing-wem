@@ -70,7 +70,8 @@ public class TurWEMCommander {
 	private static ContextLogger logger = LoggingManager.getContextLogger(TurWEMCommander.class);
 
 	private static final String WORKING_DIR = "com.vignette.workingDir";
-
+	private static final String STFL = "STFL";
+	private static final String RCRD = "RCRD";
 	private IHandlerConfiguration turingConfig = null;
 	@Parameter(names = { "--host",
 			"-h" }, description = "The host on which Content Management server is installed.", required = true)
@@ -142,12 +143,12 @@ public class TurWEMCommander {
 
 			turingConfig = new GenericResourceHandlerConfiguration();
 			if (allObjectTypes) {
-				
+
 				IPagingList contentTypeIPagingList = ContentType.findAll();
 				@SuppressWarnings("unchecked")
 				List<Object> contentTypes = contentTypeIPagingList.asList();
 				contentTypes.add(StaticFile.getTypeObjectTypeRef().getObjectType());
-				
+
 				System.out.println(String.format("Total number of Object Types: %d", contentTypes.size()));
 				for (Object objectType : contentTypes) {
 					ObjectType ot = (ObjectType) objectType;
@@ -169,15 +170,15 @@ public class TurWEMCommander {
 					String sCurrentLine;
 
 					while ((sCurrentLine = br.readLine()) != null) {
-						if (sCurrentLine.endsWith("STFL") || sCurrentLine.endsWith("RCRD"))
+						if (sCurrentLine.endsWith(STFL) || sCurrentLine.endsWith(RCRD))
 							contentInstances.add(sCurrentLine);
-			
+
 						if (contentInstances.size() != pageSize)
 							continue;
 						if (contentInstances.size() > 0) {
 							this.indexGUIDList(contentInstances);
 							contentInstances = new ArrayList<String>();
-						}					
+						}
 					}
 					if (contentInstances.size() > 0)
 						this.indexGUIDList(contentInstances);
@@ -237,8 +238,8 @@ public class TurWEMCommander {
 				results = QueryManager.execute((Query) query, (AsObjectRequestParameters) rp);
 			}
 			totalEntries = results.size();
-			System.out.println(String.format("Number of Content Instances of type %s %s = %d", objectType.getData().getName(),
-					objectType.getContentManagementId().toString(), totalEntries));
+			System.out.println(String.format("Number of Content Instances of type %s %s = %d",
+					objectType.getData().getName(), objectType.getContentManagementId().toString(), totalEntries));
 			totalPages = totalEntries > 0 ? (totalEntries + pageSize - 1) / pageSize : totalEntries / pageSize;
 			it = results.pageIterator(pageSize);
 		} catch (Exception e) {
@@ -252,7 +253,8 @@ public class TurWEMCommander {
 				long start = System.currentTimeMillis();
 				try {
 					HashSet<ManagedObjectVCMRef> validGuids = new HashSet<ManagedObjectVCMRef>();
-					HashMap<String, ManagedObject> objectMap = new HashMap<String, ManagedObject>(managedObjects.size());
+					HashMap<String, ManagedObject> objectMap = new HashMap<String, ManagedObject>(
+							managedObjects.size());
 					for (Object object : managedObjects) {
 						ManagedObject mo = (ManagedObject) object;
 						if (mo instanceof ContentItem) {
@@ -279,17 +281,16 @@ public class TurWEMCommander {
 			}
 		}
 	}
-	
+
 	private void indexGUIDList(List<String> guids)
 			throws ValidationException, ApplicationException, ContentIndexException, ConfigException {
 		System.out.println(String.format("Processing a total of %d GUID Strings", guids.size()));
 
 		ArrayList<ManagedObjectVCMRef> validGuids = new ArrayList<ManagedObjectVCMRef>();
-		for (Object guid : guids) {
-			String id = (String) guid;
-			if (id != null && id.length() > 0) {
+		for (String guid : guids) {
+			if (guid != null && guid.length() > 0) {
 				try {
-					ManagedObjectVCMRef ref = new ManagedObjectVCMRef(id);
+					ManagedObjectVCMRef ref = new ManagedObjectVCMRef(guid);
 					validGuids.add(ref);
 				} catch (VgnIllegalArgumentException e) {
 					logger.error(e);
@@ -306,8 +307,8 @@ public class TurWEMCommander {
 		else {
 			RequestParameters params = new RequestParameters();
 			params.setTopRelationOnly(false);
-			IPagingList managedObjects = ManagedObject.findByContentManagementIds((ManagedObjectVCMRef[]) managedObjectVCMRefs,
-					(RequestParameters) params);
+			IPagingList managedObjects = ManagedObject.findByContentManagementIds(
+					(ManagedObjectVCMRef[]) managedObjectVCMRefs, (RequestParameters) params);
 			List<?> moList = managedObjects.asList();
 			HashMap<String, ManagedObject> objectMap = new HashMap<String, ManagedObject>(moList.size());
 			for (Object object : moList) {

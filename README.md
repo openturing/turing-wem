@@ -22,14 +22,14 @@ Create the variable JDK6_HOME with JDK6 Path.
 
 ```shell
 export JDK6_HOME=/opt/WEM/Content/VERSION/java
-$ ./gradlew build
+$ ./gradlew shadowJar
 ```
 
 ### 3. Configuration
 
 #### WEM Deploy
 
-Add the turing-wem.jar into WEM using configp
+Add the turing-wem-all.jar into WEM using configp
 
 ```shell
 
@@ -176,12 +176,12 @@ Manage Applications: Extension JAR Path
   Important!! Deployment of an extension could take
   up to 15 mins.
 
-JAR Path (example: C:\vign_extn.jar): /opt/viglet/turing-wem/listener/turing-wem.jar
+JAR Path (example: C:\vign_extn.jar): /opt/viglet/turing-wem/listener/turing-wem-all.jar
 
 *****************************************
  You have entered the following:
 
-  JAR Path (example: C:\vign_extn.jar) = /opt/viglet/turing-wem/listener/turing-wem.jar
+  JAR Path (example: C:\vign_extn.jar) = /opt/viglet/turing-wem/listener/turing-wem-all.jar
 
 
 Is this correct ( (y)es, (n)o, (b)ack, (c)ancel, (u)ndo )?[y]: y
@@ -256,12 +256,15 @@ Create a /opt/viglet/turing-wem/conf/CTD-Turing-Mappings.xml file with the follo
 Create a Resource called VigletTuring, type Properties and add the following lines:
 
 ```properties
-cda.default.server=localhost
-cda.default.port=80
+cda.default.server=http://localhost
 cda.default.contextname=sites
+cda.default.hasContext=true
+cda.default.hasSiteName=true
+cda.default.hasFormat=true
+
 turing.url=http://localhost:2700/api/otsn/broker
 turing.locale=en
-turing.index=1
+turing.index=Intra
 turing.config=wem
 turing.mappingsxml=/opt/viglet/turing-wem/conf/CTD-Turing-Mappings.xml
 ```
@@ -271,17 +274,17 @@ turing.mappingsxml=/opt/viglet/turing-wem/conf/CTD-Turing-Mappings.xml
 Deployment.ManagedObjectCreate
 
 ```shell
-com.viglet.turing.listener.DeploymentEventListener
+com.viglet.turing.listener.wem.DeploymentEventListener
 ```
 
 Deployment.ManagedObjectUpdate
 
 ```shell
-com.viglet.turing.listener.DeploymentEventListener
+com.viglet.turing.listener.wem.DeploymentEventListener
 ```
 
 Deployment.ManagedObjectDelete
 
 ```shell
-com.viglet.turing.listener.DeploymentEventListener
+com.viglet.turing.listener.wem.DeploymentEventListener
 ```
