@@ -256,7 +256,7 @@ Create a /opt/viglet/turing-wem/conf/CTD-Turing-Mappings.xml file with the follo
 Create a Resource called VigletTuring, type Properties and add the following lines:
 
 ```properties
-cda.default.server=http://localhost
+cda.default.urlprefix=http://localhost
 cda.default.contextname=sites
 cda.default.hasContext=true
 cda.default.hasSiteName=true
@@ -264,7 +264,7 @@ cda.default.hasFormat=true
 
 turing.url=http://localhost:2700/api/otsn/broker
 turing.locale=en
-turing.index=Intra
+turing.index=Sample
 turing.config=wem
 turing.mappingsxml=/opt/viglet/turing-wem/conf/CTD-Turing-Mappings.xml
 ```
