@@ -19,11 +19,13 @@ package com.viglet.turing.wem.ext;
 import com.viglet.turing.wem.beans.TurMultiValue;
 import com.viglet.turing.wem.beans.TuringTag;
 import com.viglet.turing.wem.config.IHandlerConfiguration;
+import com.viglet.turing.wem.util.ETLTuringTranslator;
 import com.vignette.as.client.common.AttributeData;
 import com.vignette.as.client.common.ref.ChannelRef;
 import com.vignette.as.client.common.ref.SiteRef;
 import com.vignette.as.client.javabean.Channel;
 import com.vignette.as.client.javabean.ContentInstance;
+import com.vignette.as.client.javabean.ManagedObject;
 import com.vignette.logging.context.ContextLogger;
 
 public class TurParentChannel implements ExtAttributeInterface {
@@ -34,36 +36,22 @@ public class TurParentChannel implements ExtAttributeInterface {
 		if (log.isDebugEnabled())
 			log.debug("Executing TurParentChannel");
 
-		String cdaContextName = "/" + config.getCDAContextName() + "/";
-		String cdaURLPrefix = config.getCDAURLPrefix();
+		ETLTuringTranslator etlTranslator = new ETLTuringTranslator(config);
 
 		Channel firstChannel;
 		ChannelRef[] fcref = ci.getChannelAssociations();
-		String chFurlName = "";
-		String siteNameAssociated = "";
-		String moFurlName = "";
-		StringBuffer channelPath = new StringBuffer();
 
 		if (fcref.length > 0) {
-			SiteRef[] sref = fcref[0].getChannel().getSiteRefs();
-			siteNameAssociated = sref[0].getSite().getName();
 			firstChannel = fcref[0].getChannel();
 
 			Channel[] breadcrumb = firstChannel.getBreadcrumbPath(true);
-			for (int j = 0; j < breadcrumb.length; j++) {
-				if (j > 0)
-					channelPath.append("/" + breadcrumb[j].getFurlName());
-			}
-			channelPath.append("/");
-			chFurlName = channelPath.toString();
+			TurMultiValue turMultiValue = new TurMultiValue();
+			turMultiValue.add(
+					etlTranslator.translateByGUID(breadcrumb[breadcrumb.length - 1].getContentManagementId().getId()));
+			return turMultiValue;
 
 		}
-		moFurlName = chFurlName.replaceAll("-", "–").replaceAll(" ", "-");
-		
-		TurMultiValue turMultiValue = new TurMultiValue();
-		turMultiValue.add(cdaURLPrefix + cdaContextName
-				+ siteNameAssociated.replaceAll("-", "–").replaceAll(" ", "-") + moFurlName);
-		
-		return turMultiValue;			
+
+		return null;
 	}
 }
