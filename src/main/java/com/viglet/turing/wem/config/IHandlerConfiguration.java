@@ -16,6 +16,8 @@
  */
 package com.viglet.turing.wem.config;
 
+import java.util.List;
+
 public interface IHandlerConfiguration {
 
     String getTuringURL();
@@ -24,12 +26,13 @@ public interface IHandlerConfiguration {
     String getLocale();
     String getChannel();
     String getMappingsXML();
+    List<String> getSitesAssocPriority();
     String getCDAContextName(); 
     String getCDAFormatName();
     String getCDAURLPrefix();
     String getCDAURLPrefix(String site);
     String getCDAContextName(String site);
-    String getCDAFormatName(String site);
+    String getCDAFormatName(String site); 
     boolean hasSiteName(String site);
     boolean hasContext(String site);
     boolean hasFormat(String site);

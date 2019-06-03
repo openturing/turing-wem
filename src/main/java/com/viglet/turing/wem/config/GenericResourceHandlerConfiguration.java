@@ -24,6 +24,8 @@ import com.vignette.util.MsgObject;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 /* Updated to add cda properties */
@@ -41,6 +43,7 @@ public class GenericResourceHandlerConfiguration implements IHandlerConfiguratio
 	private String cdaContextName;
 	private String cdaURLPrefix;
 	private String cdaFormatName;
+	private String sitesAssociationPriority;
 	private boolean isLive;
 
 	private static final ContextLogger log = ContextLogger.getLogger(GenericResourceHandlerConfiguration.class);
@@ -199,6 +202,7 @@ public class GenericResourceHandlerConfiguration implements IHandlerConfiguratio
 		cdaContextName = properties.getProperty("cda.default.contextname");
 		cdaURLPrefix = properties.getProperty("cda.default.urlprefix");
 		cdaFormatName = properties.getProperty("cda.default.formatname");
+		sitesAssociationPriority = properties.getProperty("sites.association.priority");
 		isLive = Boolean.parseBoolean(properties.getProperty("otsn.isLive", "false"));
 	}
 
@@ -226,5 +230,24 @@ public class GenericResourceHandlerConfiguration implements IHandlerConfiguratio
 	public boolean hasFormat(String site) {
 		String hasFormatString = getDynamicProperties("cda." + site + ".hasFormat");
 		return (hasFormatString == null) ? true : Boolean.parseBoolean(hasFormatString);
+	}
+
+	@Override
+	public List<String> getSitesAssocPriority() {
+		if (sitesAssociationPriority != null) {
+			String[] sites = sitesAssociationPriority.split(",");
+
+			List<String> siteList = new ArrayList<String>();
+			for (String site : sites) {
+				siteList.add(site.trim());
+			}
+			if (siteList.size() > 0)
+				return siteList;
+			else
+				return null;
+
+		} else
+			return null;
+
 	}
 }

@@ -17,7 +17,8 @@
 package com.viglet.turing.wem.util;
 
 import java.rmi.RemoteException;
-
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -31,6 +32,7 @@ import com.vignette.as.client.exception.ValidationException;
 import com.vignette.as.client.javabean.Channel;
 import com.vignette.as.client.javabean.ContentInstance;
 import com.vignette.as.client.javabean.ManagedObject;
+import com.vignette.as.client.javabean.Site;
 import com.vignette.logging.context.ContextLogger;
 
 public class ETLTuringTranslator {
@@ -86,57 +88,87 @@ public class ETLTuringTranslator {
 	public String translateByGUID(String guid)
 			throws ApplicationException, AuthorizationException, ValidationException, RemoteException {
 
-		ChannelRef[] fcref = null;
-		Channel firstChannel;
+		ChannelRef[] channelRefs = null;
 		String chFurlName = "";
 		String ciFurlName = "";
-		StringBuffer channelPath = new StringBuffer();
+
 		String moFurlName = "";
 		ManagedObject mo = ManagedObject.findByContentManagementId(new ManagedObjectVCMRef(guid));
 		if (mo instanceof ContentInstance) {
 			if (log.isDebugEnabled()) {
-				log.error("ETLTuringTranslator MO: ContentInstance");
+				log.debug("ETLTuringTranslator MO: ContentInstance");
 			}
 			ContentInstance ci = (ContentInstance) mo;
 
-			fcref = ci.getChannelAssociations();
+			channelRefs = ci.getChannelAssociations();
 			ciFurlName = ci.getFurlName();
-			if (fcref.length > 0) {
-				firstChannel = fcref[0].getChannel();
 
-				Channel[] breadcrumb = firstChannel.getBreadcrumbPath(true);
-				for (int j = 0; j < breadcrumb.length; j++) {
-					if (j > 0) {
-						channelPath.append("/" + breadcrumb[j].getFurlName());
-					}
-				}
-				channelPath.append("/");
-				chFurlName = channelPath.toString();
+			List<String> siteNames = new ArrayList<String>();
+
+			for (ChannelRef channelRef : channelRefs) {
+				this.getSiteNames(siteNames, channelRef.getChannel());
 
 			}
+
+			String siteName = null;
+			if (siteNames.size() > 0)
+				siteName = this.chosenSite(siteNames);
+			
+			boolean foundSite = false;
+			Channel chosenChannel = null;
+			if (siteName != null) {
+				for (ChannelRef channelRef : channelRefs) {
+					for (SiteRef siteRef : channelRef.getChannel().getSiteRefs()) {
+						if (!foundSite && siteRef.getSite().getName().equals(siteName)) {
+							chosenChannel = channelRef.getChannel();
+							foundSite = true;
+						}
+					}
+				}
+				if (!foundSite) {
+					chosenChannel = channelRefs[0].getChannel();
+				}
+			} else if (channelRefs != null && channelRefs.length > 0) {
+				chosenChannel = channelRefs[0].getChannel();
+
+			}
+			if (chosenChannel != null)
+				chFurlName = channelBreadcrumb(chosenChannel);
 			moFurlName = normalizeText(chFurlName + ciFurlName);
 
 		} else if (mo instanceof Channel) {
 			if (log.isDebugEnabled()) {
-				log.error("ETLTuringTranslator MO: Channel");
+				log.debug("ETLTuringTranslator MO: Channel");
 			}
-			Channel ch = (Channel) mo;
-			Channel[] breadcrumb = ch.getBreadcrumbPath(true);
+			Channel channel = (Channel) mo;
+			chFurlName = channelBreadcrumb(channel);
+
+			moFurlName = normalizeText(chFurlName);
+		}
+		String siteUrl = getSiteUrl(mo);
+		if (siteUrl != null)
+			return siteUrl + moFurlName;
+		else
+			return null;
+
+	}
+
+	private String channelBreadcrumb(Channel channel) throws ApplicationException, ValidationException {
+		if (channel != null) {
+			StringBuffer channelPath = new StringBuffer();
+			String chFurlName;
+			Channel[] breadcrumb = channel.getBreadcrumbPath(true);
 			for (int j = 0; j < breadcrumb.length; j++) {
 				if (j > 0) {
 					channelPath.append("/" + breadcrumb[j].getFurlName());
 				}
 			}
+			channelPath.append("/");
 			chFurlName = channelPath.toString();
-			moFurlName = normalizeText(chFurlName);
-		}
-		String siteUrl = getSiteUrl(mo);
-		if (siteUrl != null) {
-			return siteUrl + moFurlName;
+			return chFurlName;
 		} else {
-			return null;
+			return "";
 		}
-
 	}
 
 	public String normalizeText(String text) {
@@ -145,32 +177,65 @@ public class ETLTuringTranslator {
 
 	public String getSiteName(ManagedObject mo)
 			throws ApplicationException, RemoteException, AuthorizationException, ValidationException {
-		ChannelRef[] fcref = null;
-		Channel firstChannel;
-		SiteRef[] sr = null;
-		String siteNameAssociated = "default";
+		ChannelRef[] channelRefs = null;
+		List<String> siteNames = new ArrayList<String>();
 		if (mo instanceof ContentInstance) {
 			ContentInstance ci = (ContentInstance) mo;
-			fcref = ci.getChannelAssociations();
-
-			if (fcref.length > 0) {
-				firstChannel = fcref[0].getChannel();
-				sr = firstChannel.getSiteRefs();
+			channelRefs = ci.getChannelAssociations();
+			for (ChannelRef channelRef : channelRefs) {
+				this.getSiteNames(siteNames, channelRef.getChannel());
 			}
 		} else if (mo instanceof Channel) {
-			Channel ch = (Channel) mo;
-			sr = ch.getSiteRefs();
+			Channel channel = (Channel) mo;
+			this.getSiteNames(siteNames, channel);
 		}
 
-		if ((sr != null) && (sr.length > 0)) {
-			siteNameAssociated = sr[0].getSite().getName();
-
-			return siteNameAssociated;
+		if (siteNames.size() > 0) {
+			return this.chosenSite(siteNames);
 		} else {
-			log.info("ETLTuringTranslator Content without channel:" + mo.getName().toString());
+			log.info("ETLTuringTranslator Content without Site:" + mo.getName().toString());
 			return null;
 		}
 
+	}
+
+	private String chosenSite(List<String> siteNames) {
+		String siteNameAssociated;
+		if (config.getSitesAssocPriority() != null && config.getSitesAssocPriority().size() > 0) {
+			boolean foundSite = false;
+			String siteName = null;
+			for (String siteAssocPriority : config.getSitesAssocPriority()) {
+				if (!foundSite && siteNames.contains(siteAssocPriority)) {
+					siteName = siteAssocPriority;
+					foundSite = true;
+				}
+			}
+			if (foundSite && siteName != null)
+				siteNameAssociated = siteName;
+			else
+				siteNameAssociated = siteNames.get(0);
+		} else
+			siteNameAssociated = siteNames.get(0);
+		return siteNameAssociated;
+	}
+
+	private void getSiteNames(List<String> siteNames, Channel channel) throws ApplicationException, RemoteException {
+		List<Site> sites = this.getSitesFromChannel(channel);
+		for (Site site : sites) {
+			if (!siteNames.contains(site.getName())) {
+				siteNames.add(site.getName());
+			}
+		}
+	}
+
+	private List<Site> getSitesFromChannel(Channel channel) throws ApplicationException, RemoteException {
+		List<Site> sites = new ArrayList<Site>();
+		if (channel != null) {
+			for (SiteRef siteRef : channel.getSiteRefs()) {
+				sites.add(siteRef.getSite());
+			}
+		}
+		return sites;
 	}
 
 	public String getSiteDomain(ManagedObject mo)
@@ -192,27 +257,27 @@ public class ETLTuringTranslator {
 
 	public String getSiteUrl(ManagedObject mo)
 			throws ApplicationException, RemoteException, AuthorizationException, ValidationException {
-		ChannelRef[] fcref = null;
-		Channel firstChannel;
-		SiteRef[] sr = null;
-		String siteNameAssociated = "default";
+		ChannelRef[] channelRefs = null;
+		String siteNameAssociated = null;
 		if (mo != null) {
 			if (mo instanceof ContentInstance) {
 				ContentInstance ci = (ContentInstance) mo;
-				fcref = ci.getChannelAssociations();
+				channelRefs = ci.getChannelAssociations();
 
-				if (fcref.length > 0) {
-					firstChannel = fcref[0].getChannel();
-					sr = firstChannel.getSiteRefs();
+				List<String> siteNames = new ArrayList<String>();
+
+				for (ChannelRef channelRef : channelRefs) {
+					this.getSiteNames(siteNames, channelRef.getChannel());
 				}
-			} else if (mo instanceof Channel) {
-				Channel ch = (Channel) mo;
-				sr = ch.getSiteRefs();
+
+				if (siteNames.size() > 0)
+					siteNameAssociated = this.chosenSite(siteNames);
 			}
 
-			if ((sr != null) && (sr.length > 0)) {
-				siteNameAssociated = sr[0].getSite().getName();
+			if (siteNameAssociated == null)
+				siteNameAssociated = getSiteName(mo);
 
+			if (siteNameAssociated != null) {
 				if (log.isDebugEnabled()) {
 					log.debug("ETLTuringTranslator getSiteUrl:" + siteNameAssociated);
 				}
@@ -224,17 +289,17 @@ public class ETLTuringTranslator {
 					url.append(SLASH);
 					url.append(config.getCDAContextName(siteNameAssociated));
 				}
-				
+
 				if (config.hasSiteName(siteNameAssociated) && normalizeText(siteNameAssociated) != null) {
 					url.append(SLASH);
 					url.append(normalizeText(siteNameAssociated));
 				}
-				
+
 				if (config.hasFormat(siteNameAssociated) && config.getCDAFormatName(siteNameAssociated) != null) {
 					url.append(SLASH);
 					url.append(config.getCDAFormatName(siteNameAssociated));
 				}
-				
+
 				return url.toString();
 
 			} else {
