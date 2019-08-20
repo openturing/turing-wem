@@ -17,6 +17,8 @@
 package com.viglet.turing.wem.mappers;
 
 import com.viglet.turing.wem.beans.TurCTDMappingMap;
+import com.viglet.turing.wem.broker.indexer.TurWEMDeindex;
+import com.viglet.turing.wem.broker.indexer.TurWEMIndexer;
 import com.viglet.turing.wem.config.IHandlerConfiguration;
 import com.viglet.turing.wem.index.IValidToIndex;
 import com.vignette.as.client.javabean.ContentInstance;
@@ -51,7 +53,6 @@ public class MappingDefinitions {
 		return mappingDefinitions;
 	}
 
-
 	public void setMappingDefinitions(TurCTDMappingMap mappingDefinitions) {
 		this.mappingDefinitions = mappingDefinitions;
 	}
@@ -70,7 +71,7 @@ public class MappingDefinitions {
 	}
 
 	public IValidToIndex validToIndex(ObjectType ot, IHandlerConfiguration config) {
-		
+
 		try {
 			String contentTypeName;
 			contentTypeName = ot.getData().getName();
@@ -99,7 +100,7 @@ public class MappingDefinitions {
 
 	}
 
-	public boolean isClassValidToIndex(ContentInstance ci, IHandlerConfiguration config) {		
+	public boolean isClassValidToIndex(ContentInstance ci, IHandlerConfiguration config) {
 		try {
 			IValidToIndex iValidToIndex = validToIndex(ci.getObjectType(), config);
 			return (iValidToIndex != null && !iValidToIndex.isValid(ci, config)) ? false : true;

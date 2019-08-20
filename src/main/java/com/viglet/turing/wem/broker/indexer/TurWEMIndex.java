@@ -55,6 +55,11 @@ public class TurWEMIndex {
 					return postIndex(generateXMLToIndex(contentInstance, config), config);
 
 				} else {
+					if (mappingDefinitions.hasClassValidToIndex(mo.getObjectType().getData().getName())
+							&& mo.getContentManagementId() != null && mo.getContentManagementId().getId() != null) {
+						String GUID = mo.getContentManagementId().getId();
+						TurWEMDeindex.indexDelete(GUID, config);
+					}
 					if (log.isDebugEnabled())
 						log.debug(String.format(
 								"Mapping definition is not found in the mappingXML for the CTD and ignoring: %s",

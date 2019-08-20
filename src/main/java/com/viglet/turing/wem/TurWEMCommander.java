@@ -26,6 +26,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
+
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
@@ -137,6 +140,9 @@ public class TurWEMCommander {
 
 		try {
 			ConfigLog.initializeLogging("turing-wem.log", logLevel);
+			if (debug)
+				LogManager.getLogger("com.viglet").setLevel(Level.DEBUG);
+
 			System.setProperty(WORKING_DIR, workingDir);
 			ConfigUtil.setHasDataSource(false);
 			ConfigUtil.setContainerType(ConfigUtil.CONTAINER_TYPE_SERVLET);
