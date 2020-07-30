@@ -280,11 +280,11 @@ com.viglet.turing.listener.wem.DeploymentEventListener
 Deployment.ManagedObjectUpdate
 
 ```shell
-com.viglet.turing.listener.wem.DeploymentEventListener
+com.viglet.turing.wem.listener.DeploymentEventListener
 ```
 
 Deployment.ManagedObjectDelete
 
 ```shell
-com.viglet.turing.listener.wem.DeploymentEventListener
+com.viglet.turing.wem.listener.DeploymentEventListener
 ```
