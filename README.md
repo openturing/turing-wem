@@ -274,7 +274,7 @@ turing.mappingsxml=/opt/viglet/turing-wem/conf/CTD-Turing-Mappings.xml
 Deployment.ManagedObjectCreate
 
 ```shell
-com.viglet.turing.listener.wem.DeploymentEventListener
+com.viglet.turing.wem.listener.DeploymentEventListener
 ```
 
 Deployment.ManagedObjectUpdate
