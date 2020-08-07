@@ -15,35 +15,6 @@ sourceCompatibility = 1.6
 compileJava.options.encoding = "UTF-8"
 compileTestJava.options.encoding = "UTF-8"
 
-def javaExecutablesPath = new File(java6Home, 'bin')
-def javaExecutables = [:].withDefault { execName ->
-    def executable = new File(javaExecutablesPath, execName)
-    assert executable.exists() : "There is no ${execName} executable in ${javaExecutablesPath}"
-    executable
-}
-tasks.withType(AbstractCompile) {
-    options.with {
-        fork = true
-        forkOptions.javaHome = file(java6Home)
-    }
-}
-tasks.withType(JavaCompile) {
-	options.encoding = "UTF-8"
-}
-
-tasks.withType(Javadoc) {
-    executable = javaExecutables.javadoc
-}
-
-tasks.withType(Test) {
-    executable = javaExecutables.java
-    systemProperty "file.encoding", "UTF-8"
-}
-
-tasks.withType(JavaExec) {
-    executable = javaExecutables.java
-}
-
 repositories {
 		maven { url 'https://jitpack.io' }
         mavenCentral()
