@@ -37,5 +37,7 @@ public interface IHandlerConfiguration {
     boolean hasContext(String site);
     boolean hasFormat(String site);
 	boolean isLive();
+	String getLogin();
+	String getPassword();
    
 }

@@ -16,15 +16,20 @@
  */
 package com.viglet.turing.wem.util;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashSet;
 
 import java.util.List;
 import java.util.Set;
 import java.util.Map.Entry;
 
+import org.apache.commons.httpclient.HttpMethodBase;
+
 import com.viglet.turing.wem.beans.TuringTag;
 import com.viglet.turing.wem.beans.TuringTagMap;
+import com.viglet.turing.wem.config.IHandlerConfiguration;
 import com.vignette.as.client.common.AttributeData;
 import com.vignette.as.client.common.AttributeDefinitionData;
 import com.vignette.as.client.common.DataType;
@@ -99,4 +104,12 @@ public class TuringUtils {
 			return adds[0];
 	}
 
+	public static void basicAuth(IHandlerConfiguration config, HttpMethodBase method) {
+		if (config.getLogin() != null && config.getLogin().trim().length() > 0) {
+			String auth = String.format("%s:%s", config.getLogin(), config.getPassword());
+			String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8));
+			String authHeader = "Basic " + encodedAuth;
+			method.setRequestHeader("Authorization", authHeader);
+		}
+	}
 }

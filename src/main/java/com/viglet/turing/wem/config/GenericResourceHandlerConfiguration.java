@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2019 Alexandre Oliveira <alexandre.oliveira@viglet.com> 
+ * Copyright (C) 2016-2021 Alexandre Oliveira <alexandre.oliveira@viglet.com> 
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -45,6 +45,8 @@ public class GenericResourceHandlerConfiguration implements IHandlerConfiguratio
 	private String cdaFormatName;
 	private String sitesAssociationPriority;
 	private boolean isLive;
+	private String login;
+	private String password;
 
 	private static final ContextLogger log = ContextLogger.getLogger(GenericResourceHandlerConfiguration.class);
 
@@ -206,6 +208,7 @@ public class GenericResourceHandlerConfiguration implements IHandlerConfiguratio
 		isLive = Boolean.parseBoolean(properties.getProperty("otsn.isLive", "false"));
 	}
 
+	@Override
 	public boolean isLive() {
 		return isLive;
 	}
@@ -250,4 +253,23 @@ public class GenericResourceHandlerConfiguration implements IHandlerConfiguratio
 			return null;
 
 	}
+	
+	@Override
+	public String getLogin() {
+		return login;
+	}
+
+	public void setLogin(String login) {
+		this.login = login;
+	}
+
+	@Override
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+	
 }

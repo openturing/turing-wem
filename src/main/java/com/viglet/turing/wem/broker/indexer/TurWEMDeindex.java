@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2019 Alexandre Oliveira <alexandre.oliveira@viglet.com> 
+ * Copyright (C) 2016-2021 Alexandre Oliveira <alexandre.oliveira@viglet.com> 
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,10 +16,12 @@
  */
 package com.viglet.turing.wem.broker.indexer;
 
+
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.GetMethod;
 
 import com.viglet.turing.wem.config.IHandlerConfiguration;
+import com.viglet.turing.wem.util.TuringUtils;
 import com.vignette.logging.context.ContextLogger;
 
 public class TurWEMDeindex {
@@ -32,6 +34,7 @@ public class TurWEMDeindex {
 		try {
 			GetMethod get = new GetMethod(config.getTuringURL() + "/?action=delete&index=" + config.getIndex()
 					+ "&config=" + config.getConfig() + "&id=" + guid);
+			TuringUtils.basicAuth(config, get);
 			HttpClient httpclient = new HttpClient();
 			int result = httpclient.executeMethod(get);
 			if (log.isDebugEnabled()) {
@@ -56,6 +59,7 @@ public class TurWEMDeindex {
 		try {
 			GetMethod get = new GetMethod(config.getTuringURL() + "/?action=delete&index=" + config.getIndex()
 					+ "&config=" + config.getConfig() + "&type=" + typeName);
+			TuringUtils.basicAuth(config, get);
 			HttpClient httpclient = new HttpClient();
 			int result = httpclient.executeMethod(get);
 			if (log.isDebugEnabled()) {
@@ -73,4 +77,6 @@ public class TurWEMDeindex {
 
 		return success;
 	}
+	
+	
 }

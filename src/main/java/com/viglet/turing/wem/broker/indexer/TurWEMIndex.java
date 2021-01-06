@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2019 Alexandre Oliveira <alexandre.oliveira@viglet.com> 
+ * Copyright (C) 2016-2021 Alexandre Oliveira <alexandre.oliveira@viglet.com> 
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -179,6 +179,9 @@ public class TurWEMIndex {
 		post.setParameter("config", config.getConfig());
 		post.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=utf-8");
 		post.setRequestHeader("Accept-Encoding", "UTF-8");
+
+		TuringUtils.basicAuth(config, post);
+
 		HttpClient httpclient = new HttpClient();
 		int result = httpclient.executeMethod(post);
 
