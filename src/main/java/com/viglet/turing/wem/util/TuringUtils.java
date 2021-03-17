@@ -16,6 +16,9 @@
  */
 package com.viglet.turing.wem.util;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -40,6 +43,8 @@ import com.vignette.as.client.javabean.ContentInstance;
 import com.vignette.as.client.javabean.ContentType;
 import com.vignette.as.client.javabean.ManagedObject;
 import com.vignette.logging.context.ContextLogger;
+
+import javax.net.ssl.HttpsURLConnection;
 
 public class TuringUtils {
 	private static final ContextLogger log = ContextLogger.getLogger(TuringUtils.class);
@@ -112,4 +117,33 @@ public class TuringUtils {
 			method.setRequestHeader("Authorization", authHeader);
 		}
 	}
+
+	public static void basicAuth(IHandlerConfiguration config, HttpsURLConnection httpsURLConnection) {
+		if (config.getLogin() != null && config.getLogin().trim().length() > 0) {
+			String auth = String.format("%s:%s", config.getLogin(), config.getPassword());
+			String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8));
+			String authHeader = "Basic " + encodedAuth;
+			httpsURLConnection.setRequestProperty("Authorization", authHeader);
+		}
+	}
+	
+	public static String getResponseBody(HttpsURLConnection httpsURLConnection, int result) throws IOException {
+		StringBuffer responseBody = new StringBuffer();
+		if (result == 200) {
+			BufferedReader br = new BufferedReader(new InputStreamReader(httpsURLConnection.getInputStream()));
+			String strCurrentLine;
+			while ((strCurrentLine = br.readLine()) != null) {
+				responseBody.append(strCurrentLine);
+			}
+		} else {
+			BufferedReader br = new BufferedReader(new InputStreamReader(httpsURLConnection.getErrorStream()));
+			String strCurrentLine;
+			while ((strCurrentLine = br.readLine()) != null) {
+				responseBody.append(strCurrentLine);
+			}
+		}
+		
+		return responseBody.toString();
+	}
+
 }

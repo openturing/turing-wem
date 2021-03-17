@@ -16,13 +16,14 @@
  */
 package com.viglet.turing.wem.broker.indexer;
 
-import java.io.IOException;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.httpclient.methods.PostMethod;
+import com.viglet.turing.wem.broker.indexer.ssl.TSLSocketConnectionFactory;
 
 import com.viglet.turing.wem.beans.TurAttrDef;
 import com.viglet.turing.wem.beans.TurAttrDefContext;
@@ -38,6 +39,8 @@ import com.viglet.turing.wem.util.TuringUtils;
 import com.vignette.as.client.javabean.ContentInstance;
 import com.vignette.as.client.javabean.ManagedObject;
 import com.vignette.logging.context.ContextLogger;
+
+import javax.net.ssl.HttpsURLConnection;
 
 public class TurWEMIndex {
 
@@ -169,34 +172,60 @@ public class TurWEMIndex {
 
 	}
 
-	public static boolean postIndex(String xml, IHandlerConfiguration config) throws HttpException, IOException {
+	public static boolean postIndex(String xml, IHandlerConfiguration config){
+		
+		try {
 
-		PostMethod post = new PostMethod(
-				config.getTuringURL() + "/?index=" + config.getIndex() + "&config=" + config.getConfig());
+			URL url = new URL(config.getTuringURL() + "/?index=" + config.getIndex() + "&config=" + config.getConfig());
+			HttpsURLConnection httpsURLConnection = (HttpsURLConnection) url.openConnection();
 
-		post.setParameter("data", xml);
-		post.setParameter("index", config.getIndex());
-		post.setParameter("config", config.getConfig());
-		post.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=utf-8");
-		post.setRequestHeader("Accept-Encoding", "UTF-8");
+			httpsURLConnection.setSSLSocketFactory(new TSLSocketConnectionFactory());
+			httpsURLConnection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded; charset=utf-8");
+			httpsURLConnection.setRequestProperty("Accept-Encoding", "UTF-8");
 
-		TuringUtils.basicAuth(config, post);
+			TuringUtils.basicAuth(config, httpsURLConnection);
 
-		HttpClient httpclient = new HttpClient();
-		int result = httpclient.executeMethod(post);
+			Map<String, Object> params = new LinkedHashMap<String, Object>();
+			params.put("data", xml);
+			params.put("index", config.getIndex());
+			params.put("config", config.getConfig());
 
-		if (log.isDebugEnabled()) {
-			log.debug(String.format("Viglet Turing Index Request URI: %s", post.getURI()));
-			log.debug(String.format("Using the index: %s, config: %s", config.getIndex(), config.getConfig()));
-			log.debug(String.format("XML: %s", xml));
-			log.debug(String.format("Viglet Turing indexer response HTTP result is: %s, for request uri: %s", result,
-					post.getURI()));
-			log.debug(
-					String.format("Viglet Turing indexer response HTTP result is: %s", post.getResponseBodyAsString()));
+			StringBuilder postData = new StringBuilder();
+			for (Map.Entry<String, Object> param : params.entrySet()) {
+				if (postData.length() != 0)
+					postData.append('&');
+				postData.append(URLEncoder.encode(param.getKey(), "UTF-8"));
+				postData.append('=');
+				postData.append(URLEncoder.encode(String.valueOf(param.getValue()), "UTF-8"));
+			}
+			byte[] postDataBytes = postData.toString().getBytes("UTF-8");
+
+			try {
+				httpsURLConnection.setRequestMethod("POST");
+				httpsURLConnection.setDoOutput(true);
+				httpsURLConnection.getOutputStream().write(postDataBytes);
+				int result = httpsURLConnection.getResponseCode();
+				
+				if (log.isDebugEnabled()) {
+					log.debug(String.format("Viglet Turing Index Request URI: %s", httpsURLConnection.getURL()));
+					log.debug(String.format("Using the index: %s, config: %s", config.getIndex(), config.getConfig()));
+					log.debug(String.format("XML: %s", xml));
+					log.debug(String.format("Viglet Turing indexer response HTTP result is: %s, for request uri: %s",
+							result, httpsURLConnection.getURL()));
+					log.debug(String.format("Viglet Turing indexer response HTTP result is: %s",
+							TuringUtils.getResponseBody(httpsURLConnection, result)));
+				}
+				log.info(String.format("Viglet Turing indexer Processed Content Type:"));
+
+				return true;
+			} finally {
+				httpsURLConnection.disconnect();
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		post.releaseConnection();
-		log.info(String.format("Viglet Turing indexer Processed Content Type:"));
-		return true;
+		return false;
 	}
 
 	private static String createXMLAttribute(String tag, String value) {

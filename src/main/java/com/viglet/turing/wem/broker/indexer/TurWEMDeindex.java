@@ -16,10 +16,11 @@
  */
 package com.viglet.turing.wem.broker.indexer;
 
+import java.net.URL;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.methods.GetMethod;
+import javax.net.ssl.HttpsURLConnection;
 
+import com.viglet.turing.wem.broker.indexer.ssl.TSLSocketConnectionFactory;
 import com.viglet.turing.wem.config.IHandlerConfiguration;
 import com.viglet.turing.wem.util.TuringUtils;
 import com.vignette.logging.context.ContextLogger;
@@ -29,45 +30,42 @@ public class TurWEMDeindex {
 
 	// This method deletes the content to the Viglet Turing broker
 	public static boolean indexDelete(String guid, IHandlerConfiguration config) {
-
-		boolean success = false;
-		try {
-			GetMethod get = new GetMethod(config.getTuringURL() + "/?action=delete&index=" + config.getIndex()
-					+ "&config=" + config.getConfig() + "&id=" + guid);
-			TuringUtils.basicAuth(config, get);
-			HttpClient httpclient = new HttpClient();
-			int result = httpclient.executeMethod(get);
-			if (log.isDebugEnabled()) {
-				log.debug("Viglet Turing Delete Request URI:" + get.getURI());
-				log.debug("Viglet Turing indexer response HTTP result is: " + result);
-				log.debug("Viglet Turing indexer response HTTP result is: " + get.getResponseBodyAsString());
-			}
-			get.releaseConnection();
-			success = true;
-
-		} catch (Exception e) {
-
-			log.error("Can't DELETE in Viglet Turing index: " + e.getMessage());
-		}
-
-		return success;
-
+		String parameter = "&id=".concat(guid);
+		
+		return indexDeleteGeneric(parameter, config);
 	}
 
 	public static boolean indexDeleteByType(String typeName, IHandlerConfiguration config) {
+
+		String parameter =  "&type=".concat(typeName);
+		
+		return indexDeleteGeneric(parameter, config);
+	}
+
+	public static boolean indexDeleteGeneric(String parameter, IHandlerConfiguration config) {
+
 		boolean success = false;
 		try {
-			GetMethod get = new GetMethod(config.getTuringURL() + "/?action=delete&index=" + config.getIndex()
-					+ "&config=" + config.getConfig() + "&type=" + typeName);
-			TuringUtils.basicAuth(config, get);
-			HttpClient httpclient = new HttpClient();
-			int result = httpclient.executeMethod(get);
-			if (log.isDebugEnabled()) {
-				log.debug("Viglet Turing Delete Request URI:" + get.getURI());
-				log.debug("Viglet Turing indexer response HTTP result is: " + result);
-				log.debug("Viglet Turing indexer response HTTP result is: " + get.getResponseBodyAsString());
+			URL url = new URL( config.getTuringURL() + "/?action=delete&index=" + config.getIndex() + "&config="
+					+ config.getConfig() + parameter );
+			HttpsURLConnection httpsURLConnection = (HttpsURLConnection) url.openConnection();
+			httpsURLConnection.setSSLSocketFactory(new TSLSocketConnectionFactory());
+			TuringUtils.basicAuth(config, httpsURLConnection);
+			try {
+				httpsURLConnection.setRequestMethod("GET");
+				httpsURLConnection.setDoOutput(true);
+				int result = httpsURLConnection.getResponseCode();
+
+				TuringUtils.getResponseBody(httpsURLConnection, result);
+				if (log.isDebugEnabled()) {
+					log.debug("Viglet Turing Delete Request URI:" + httpsURLConnection.getURL());
+					log.debug("Viglet Turing indexer response HTTP result is: " + result);
+					log.debug("Viglet Turing indexer response HTTP result is: "
+							+ TuringUtils.getResponseBody(httpsURLConnection, result));
+				}
+			} finally {
+				httpsURLConnection.disconnect();
 			}
-			get.releaseConnection();
 			success = true;
 
 		} catch (Exception e) {
@@ -76,7 +74,7 @@ public class TurWEMDeindex {
 		}
 
 		return success;
+
 	}
-	
-	
+
 }

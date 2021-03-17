@@ -9,9 +9,11 @@ Open Text Web Experience Management (WEM) Listener to publish content to Viglet 
 ### 1. WEM Jar files
 Copy the following jar files to /lib directory:
 
-* \<WEM\_DIR>/Content/\<VERSION>/lib/sdk/thirdparty-combined.jar
-* \<WEM\_DIR>/Content/\<VERSION>/lib/sdk/vgn-appsvcs-cma.jar
-* \<WEM\_DIR>/Content/\<VERSION>/lib/vgn-shared-logging.jar
+* 8.5 - \<WEM\_DIR>/Content/\<VERSION>/lib/sdk/thirdparty-combined.jar 
+* 10.5+ - \<WEM\_DIR>/Content/\<VERSION>/lib/sdk/commons-httpclient.jar 
+* 10.5+ - \<WEM\_DIR>/Content/\<VERSION>/lib/sdk/castor-*.jar 
+* any - \<WEM\_DIR>/Content/\<VERSION>/lib/sdk/vgn-appsvcs-cma.jar
+* any - \<WEM\_DIR>/Content/\<VERSION>/lib/vgn-shared-logging.jar
 
 ### 2. Compile
 

@@ -38,6 +38,7 @@ dependencies {
     compile files(fileTree(dir: 'lib', includes: ['*.jar']))
     compile group: 'com.beust', name: 'jcommander', version: '1.47'	
     compile group: 'log4j', name: 'log4j', version: '1.2.7'
+    compile group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.53'
 }
 
 jar {
@@ -52,6 +53,9 @@ jar {
    version = 'all'
    exclude 'vgn-*.jar'
    exclude 'thirdparty-combined.jar'
+   exclude 'castor*.jar'
+   exclude 'commons-httpclient.jar'
+   
      dependencies {
       exclude(dependency('log4j:log4j'))
    }
