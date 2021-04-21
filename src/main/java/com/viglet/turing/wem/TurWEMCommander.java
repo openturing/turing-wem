@@ -125,7 +125,7 @@ public class TurWEMCommander {
 				return;
 			}
 
-			System.out.println("Viglet Turing WEM Indexer Tool.");
+			System.console().writer().println("Viglet Turing WEM Indexer Tool.");
 
 			main.run();
 		} catch (ParameterException e) {
@@ -155,10 +155,10 @@ public class TurWEMCommander {
 				List<Object> contentTypes = contentTypeIPagingList.asList();
 				contentTypes.add(StaticFile.getTypeObjectTypeRef().getObjectType());
 
-				System.out.println(String.format("Total number of Object Types: %d", contentTypes.size()));
+				System.console().writer().println(String.format("Total number of Object Types: %d", contentTypes.size()));
 				for (Object objectType : contentTypes) {
 					ObjectType ot = (ObjectType) objectType;
-					System.out.println(String.format("Retrieved Object Type: %s %s", ot.getData().getName(),
+					System.console().writer().println(String.format("Retrieved Object Type: %s %s", ot.getData().getName(),
 							ot.getContentManagementId().toString()));
 					this.indexByContentType(ot);
 				}
@@ -244,7 +244,7 @@ public class TurWEMCommander {
 				results = QueryManager.execute((Query) query, (AsObjectRequestParameters) rp);
 			}
 			totalEntries = results.size();
-			System.out.println(String.format("Number of Content Instances of type %s %s = %d",
+			System.console().writer().println(String.format("Number of Content Instances of type %s %s = %d",
 					objectType.getData().getName(), objectType.getContentManagementId().toString(), totalEntries));
 			totalPages = totalEntries > 0 ? (totalEntries + pageSize - 1) / pageSize : totalEntries / pageSize;
 			it = results.pageIterator(pageSize);
@@ -255,7 +255,7 @@ public class TurWEMCommander {
 		if (it != null) {
 			while (it.hasNext()) {
 				List<?> managedObjects = (List<?>) it.next();
-				System.out.println(String.format("Processing Page %d of %d pages", currentPage++, totalPages));
+				System.console().writer().println(String.format("Processing Page %d of %d pages", currentPage++, totalPages));
 				long start = System.currentTimeMillis();
 				try {
 					HashSet<ManagedObjectVCMRef> validGuids = new HashSet<ManagedObjectVCMRef>();
@@ -276,13 +276,13 @@ public class TurWEMCommander {
 					if (!validGuids.isEmpty())
 						guids = validGuids.toArray(new ManagedObjectVCMRef[0]);
 
-					System.out.println(String.format("Processing the registration of %d assets", validGuids.size()));
+					System.console().writer().println(String.format("Processing the registration of %d assets", validGuids.size()));
 					this.indexContentInstances(guids, objectMap);
 				} catch (Exception e) {
 					logger.error(e);
 				}
 				long elapsed = System.currentTimeMillis() - start;
-				System.out.println(String.format("%d items processed in %dms", managedObjects.size(), elapsed));
+				System.console().writer().println(String.format("%d items processed in %dms", managedObjects.size(), elapsed));
 
 			}
 		}
@@ -290,7 +290,7 @@ public class TurWEMCommander {
 
 	private void indexGUIDList(List<String> guids)
 			throws ValidationException, ApplicationException, ContentIndexException, ConfigException {
-		System.out.println(String.format("Processing a total of %d GUID Strings", guids.size()));
+		System.console().writer().println(String.format("Processing a total of %d GUID Strings", guids.size()));
 
 		ArrayList<ManagedObjectVCMRef> validGuids = new ArrayList<ManagedObjectVCMRef>();
 		for (String guid : guids) {
@@ -320,7 +320,7 @@ public class TurWEMCommander {
 				ManagedObject mo = (ManagedObject) object;
 				objectMap.put(mo.getContentManagementId().getId(), mo);
 			}
-			System.out.println(String.format("Processing the registration of %d assets", managedObjects.size()));
+			System.console().writer().println(String.format("Processing the registration of %d assets", managedObjects.size()));
 			this.indexContentInstances(managedObjectVCMRefs, objectMap);
 		}
 	}
