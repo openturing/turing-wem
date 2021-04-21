@@ -54,26 +54,27 @@ public class TurWEMUpdateContentSelectWidget {
 
 			CTDMappings ctdRelatedMappings = relatedMappings.get(contentTypeName);
 
-			if (ctdRelatedMappings == null && log.isErrorEnabled())
+			if (ctdRelatedMappings == null && log.isErrorEnabled()) {
 				log.error(String.format("Mapping definition is not found in the mappingXML for the CTD: %s",
 						contentTypeName));
+			} else {
+				// Process URL from Relation.
+				for (String tag : ctdRelatedMappings.getTagList()) {
+					TurAttrDefContext turAttrDefContextRelated = new TurAttrDefContext(turAttrDefContext);
+					turAttrDefContextRelated.setContentInstance(ciRelated);
+					for (TuringTag tagRelated : ctdRelatedMappings.getTuringTagMap().get(tag)) {
+						if (tag != null && tagRelated != null && tagRelated.getTagName() != null
+								&& tagRelated.getTagName().equals("url")) {
+							if (log.isDebugEnabled())
+								log.debug(String.format(
+										"Key Related: %s,  Tag Related: %s, relation: %s, content Type: %s ", tag,
+										tagRelated.getTagName(),
+										TuringUtils.listToString(tagRelated.getSrcAttributeRelation()),
+										tagRelated.getSrcAttributeType()));
+							attributesDefs = TurWEMAttrXML.attributeXML(turAttrDefContextRelated);
+						}
 
-			// Process URL from Relation.
-			for (String tag : ctdRelatedMappings.getTagList()) {
-				TurAttrDefContext turAttrDefContextRelated = new TurAttrDefContext(turAttrDefContext);
-				turAttrDefContextRelated.setContentInstance(ciRelated);
-				for (TuringTag tagRelated : ctdRelatedMappings.getTuringTagMap().get(tag)) {
-					if (tag != null && tagRelated != null && tagRelated.getTagName() != null
-							&& tagRelated.getTagName().equals("url")) {
-						if (log.isDebugEnabled())
-							log.debug(
-									String.format("Key Related: %s,  Tag Related: %s, relation: %s, content Type: %s ",
-											tag, tagRelated.getTagName(),
-											TuringUtils.listToString(tagRelated.getSrcAttributeRelation()),
-											tagRelated.getSrcAttributeType()));
-						attributesDefs = TurWEMAttrXML.attributeXML(turAttrDefContextRelated);
 					}
-
 				}
 			}
 		}

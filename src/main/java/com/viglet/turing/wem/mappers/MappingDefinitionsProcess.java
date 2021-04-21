@@ -145,17 +145,19 @@ public class MappingDefinitionsProcess {
 			commonIndexAttrMap.put(turingTag.getTagName(), turingTag);
 
 		for (TuringTag turingTag : indexAttrs) {
-			if (commonIndexAttrs != null && turingTag != null && turingTag.getSrcClassName() == null) {
-				if (commonIndexAttrMap.get(turingTag.getTagName()) != null) {
-					// Common always have one item
-					// Add ClassName of Common into Index, if doesn't have ClassName
-					turingTag.setSrcClassName(commonIndexAttrMap.get(turingTag.getTagName()).getSrcClassName());
+			if (turingTag != null) {
+				if (commonIndexAttrs != null && turingTag.getSrcClassName() == null) {
+					if (commonIndexAttrMap.get(turingTag.getTagName()) != null) {
+						// Common always have one item
+						// Add ClassName of Common into Index, if doesn't have ClassName
+						turingTag.setSrcClassName(commonIndexAttrMap.get(turingTag.getTagName()).getSrcClassName());
+					}
 				}
-			}
 
-			if (!indexAttrsMapMerged.containsKey(turingTag.getTagName()))
-				indexAttrsMapMerged.put(turingTag.getTagName(), new ArrayList<TuringTag>());
-			indexAttrsMapMerged.get(turingTag.getTagName()).add(turingTag);
+				if (!indexAttrsMapMerged.containsKey(turingTag.getTagName()))
+					indexAttrsMapMerged.put(turingTag.getTagName(), new ArrayList<TuringTag>());
+				indexAttrsMapMerged.get(turingTag.getTagName()).add(turingTag);
+			}
 		}
 
 		// Add only Mandatory Attributes

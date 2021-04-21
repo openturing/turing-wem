@@ -77,7 +77,7 @@ public class TuringTag {
 	public void setTagName(String tagName) {
 		this.tagName = tagName;
 	}
-	
+
 	public String getSrcXmlName() {
 		return srcXmlName;
 	}
@@ -93,6 +93,11 @@ public class TuringTag {
 		} else {
 			return false;
 		}
+	}
+
+	@Override
+	public int hashCode() {
+		return this.getTagName().hashCode();
 	}
 
 	public boolean isSrcUniqueValues() {

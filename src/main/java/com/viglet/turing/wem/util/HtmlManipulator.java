@@ -187,6 +187,9 @@ public final class HtmlManipulator {
 				html = html.replace(matcher.group(1), "");
 			}
 		}
+		else {
+			html = "";
+		}
 		return html;
 	}
 
