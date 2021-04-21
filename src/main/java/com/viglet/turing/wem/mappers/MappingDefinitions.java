@@ -17,8 +17,6 @@
 package com.viglet.turing.wem.mappers;
 
 import com.viglet.turing.wem.beans.TurCTDMappingMap;
-import com.viglet.turing.wem.broker.indexer.TurWEMDeindex;
-import com.viglet.turing.wem.broker.indexer.TurWEMIndexer;
 import com.viglet.turing.wem.config.IHandlerConfiguration;
 import com.viglet.turing.wem.index.IValidToIndex;
 import com.vignette.as.client.javabean.ContentInstance;
@@ -70,6 +68,7 @@ public class MappingDefinitions {
 		return status;
 	}
 
+	@SuppressWarnings("deprecation")
 	public IValidToIndex validToIndex(ObjectType ot, IHandlerConfiguration config) {
 
 		try {

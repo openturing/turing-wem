@@ -8,8 +8,21 @@ buildscript {
     }
 }
 
+plugins {
+  id "org.sonarqube" version "3.1.1"
+}
+
 apply plugin: 'java'
 apply plugin: 'com.github.johnrengelman.shadow'
+
+
+sonarqube {
+  properties {
+    property "sonar.projectKey", "openturing_turing-wem"
+    property "sonar.organization", "openturing"
+    property "sonar.host.url", "https://sonarcloud.io"
+  }
+}
 
 sourceCompatibility = 1.6
 compileJava.options.encoding = "UTF-8"
@@ -35,9 +48,11 @@ task compileOne (type: JavaCompile) {
 }
 
 dependencies {
-    compile files(fileTree(dir: 'lib', includes: ['*.jar']))
-    compile group: 'com.beust', name: 'jcommander', version: '1.47'	
-    compile group: 'log4j', name: 'log4j', version: '1.2.7'
+    implementation files(fileTree(dir: 'lib', includes: ['*.jar']))
+    implementation group: 'com.beust', name: 'jcommander', version: '1.47'	
+    implementation group: 'log4j', name: 'log4j', version: '1.2.7'
+    implementation group: 'commons-httpclient', name: 'commons-httpclient', version: '3.1'
+	implementation 'com.github.alegauss:dummy-vgn:70c73f31b5'
 }
 
 jar {
@@ -54,6 +69,8 @@ jar {
    exclude 'thirdparty-combined.jar'
      dependencies {
       exclude(dependency('log4j:log4j'))
+      exclude(dependency('commons-httpclient:commons-httpclient'))
+      exclude(dependency('com.github.alegauss:dummy-vgn'))
    }
 }
 
