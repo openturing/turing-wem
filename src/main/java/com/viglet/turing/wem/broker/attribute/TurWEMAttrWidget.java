@@ -33,6 +33,10 @@ import com.vignette.logging.context.ContextLogger;
 public class TurWEMAttrWidget {
 	private static final ContextLogger log = ContextLogger.getLogger(TurWEMAttrWidget.class);
 
+	private TurWEMAttrWidget() {
+		throw new IllegalStateException("TurWEMAttrWidget");
+	}
+	
 	public static List<TurAttrDef> attributeByWidget(TurAttrDefContext turAttrDefContext, AttributeData attributeData)
 			throws Exception {
 		TuringTag turingTag = turAttrDefContext.getTuringTag();
@@ -40,7 +44,7 @@ public class TurWEMAttrWidget {
 		String attributeName = turAttrDefContext.getTuringTag().getSrcXmlName();
 		String widgetName = null;
 
-		if (turingTag.getSrcAttributeRelation() != null && turingTag.getSrcAttributeRelation().size() > 0) {
+		if (turingTag.getSrcAttributeRelation() != null && !turingTag.getSrcAttributeRelation().isEmpty()) {
 			AttributedObject[] relation = ci.getRelations(turingTag.getSrcAttributeRelation().get(0));
 
 			if (turingTag.getSrcAttributeRelation().size() > 1) {

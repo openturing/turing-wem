@@ -31,35 +31,41 @@ import com.vignette.as.client.javabean.ContentInstance;
 import com.vignette.logging.context.ContextLogger;
 
 public class TurWEMAttrClass {
+
 	private static final ContextLogger log = ContextLogger.getLogger(TurWEMAttrXML.class);
+
+	private TurWEMAttrClass() {
+		throw new IllegalStateException("TurWEMAttrClass");
+	}
 
 	public static List<TurAttrDef> attributeByClass(TurAttrDefContext turAttrDefContext, AttributeData attributeData)
 			throws Exception {
-		
+
 		TuringTag turingTag = turAttrDefContext.getTuringTag();
 		ContentInstance ci = turAttrDefContext.getContentInstance();
-		IHandlerConfiguration config = turAttrDefContext.getiHandlerConfiguration();		
+		IHandlerConfiguration config = turAttrDefContext.getiHandlerConfiguration();
 		List<TurAttrDef> attributesDefs = new ArrayList<TurAttrDef>();
-		
+
 		if (turingTag.getSrcClassName() != null) {
 			String className = turingTag.getSrcClassName();
 			if (log.isDebugEnabled())
 				log.debug("ClassName : " + className);
 
 			Object extAttribute = Class.forName(className).newInstance();
-			TurMultiValue turMultiValue = ((ExtAttributeInterface) extAttribute).consume(turingTag, ci, attributeData, config);			
-			TurAttrDef turAttrDef = new TurAttrDef(turingTag.getTagName(),turMultiValue);
+			TurMultiValue turMultiValue = ((ExtAttributeInterface) extAttribute).consume(turingTag, ci, attributeData,
+					config);
+			TurAttrDef turAttrDef = new TurAttrDef(turingTag.getTagName(), turMultiValue);
 			attributesDefs.add(turAttrDef);
 		} else {
 			TurMultiValue turMultiValue = new TurMultiValue();
-			if (turingTag.getSrcAttributeType() != null && turingTag.getSrcAttributeType().equals("html")) {				
-				turMultiValue.add(HtmlManipulator.Html2Text(attributeData.getValue().toString()));							
-				TurAttrDef turAttrDef = new TurAttrDef(turingTag.getTagName(),turMultiValue);
+			if (turingTag.getSrcAttributeType() != null && turingTag.getSrcAttributeType().equals("html")) {
+				turMultiValue.add(HtmlManipulator.Html2Text(attributeData.getValue().toString()));
+				TurAttrDef turAttrDef = new TurAttrDef(turingTag.getTagName(), turMultiValue);
 				attributesDefs.add(turAttrDef);
 			} else if (attributeData != null && attributeData.getValue() != null) {
 				turMultiValue.add(attributeData.getValue().toString());
-				TurAttrDef turAttrDef = new TurAttrDef(turingTag.getTagName(),turMultiValue);
-				attributesDefs.add(turAttrDef);				
+				TurAttrDef turAttrDef = new TurAttrDef(turingTag.getTagName(), turMultiValue);
+				attributesDefs.add(turAttrDef);
 			}
 
 		}

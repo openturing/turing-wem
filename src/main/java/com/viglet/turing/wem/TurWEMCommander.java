@@ -163,7 +163,7 @@ public class TurWEMCommander {
 					this.indexByContentType(ot);
 				}
 			} else if (contentType != null) {
-				ObjectType objectType = ObjectType.findByName((String) contentType);
+				ObjectType objectType = ObjectType.findByName(contentType);
 				if (objectType != null)
 					this.indexByContentType(objectType);
 			} else if (guidFilePath != null) {
@@ -181,12 +181,12 @@ public class TurWEMCommander {
 
 						if (contentInstances.size() != pageSize)
 							continue;
-						if (contentInstances.size() > 0) {
+						if (!contentInstances.isEmpty()) {
 							this.indexGUIDList(contentInstances);
 							contentInstances = new ArrayList<String>();
 						}
 					}
-					if (contentInstances.size() > 0)
+					if (!contentInstances.isEmpty())
 						this.indexGUIDList(contentInstances);
 
 				} catch (IOException e) {
@@ -225,7 +225,7 @@ public class TurWEMCommander {
 			RequestParameters rp = new RequestParameters();
 			rp.setTopRelationOnly(false);
 			IPagingList results = null;
-			AsObjectType aot = AsObjectType.getInstance((ObjectTypeRef) new ObjectTypeRef((ManagedObject) objectType));
+			AsObjectType aot = AsObjectType.getInstance(new ObjectTypeRef((ManagedObject) objectType));
 			IValidToIndex instance = mappingDefinitions.validToIndex(objectType, turingConfig);
 			if (aot.isStaticFile()) {
 				StaticFileWhereClause clause = new StaticFileWhereClause();
@@ -273,7 +273,7 @@ public class TurWEMCommander {
 						validGuids.add(mo.getContentManagementId());
 					}
 					ManagedObjectVCMRef[] guids = null;
-					if (validGuids.size() > 0)
+					if (!validGuids.isEmpty())
 						guids = validGuids.toArray(new ManagedObjectVCMRef[0]);
 
 					System.out.println(String.format("Processing the registration of %d assets", validGuids.size()));
@@ -301,11 +301,10 @@ public class TurWEMCommander {
 				} catch (VgnIllegalArgumentException e) {
 					logger.error(e);
 				}
-				continue;
 			}
 		}
 		ManagedObjectVCMRef[] managedObjectVCMRefs = null;
-		if (validGuids.size() > 0)
+		if (!validGuids.isEmpty())
 			managedObjectVCMRefs = validGuids.toArray(new ManagedObjectVCMRef[0]);
 
 		if (managedObjectVCMRefs == null || managedObjectVCMRefs.length == 0)
@@ -314,7 +313,7 @@ public class TurWEMCommander {
 			RequestParameters params = new RequestParameters();
 			params.setTopRelationOnly(false);
 			IPagingList managedObjects = ManagedObject.findByContentManagementIds(
-					(ManagedObjectVCMRef[]) managedObjectVCMRefs, (RequestParameters) params);
+					managedObjectVCMRefs, params);
 			List<?> moList = managedObjects.asList();
 			HashMap<String, ManagedObject> objectMap = new HashMap<String, ManagedObject>(moList.size());
 			for (Object object : moList) {
@@ -330,11 +329,11 @@ public class TurWEMCommander {
 			throws ApplicationException, ConfigException, ContentIndexException {
 		for (ManagedObjectVCMRef ref : refs) {
 			ManagedObject mo = (ManagedObject) objects.get(ref.getId());
-			if (mo != null && mo instanceof ContentInstance) {
+			if (mo instanceof ContentInstance) {
 				if (logger.isDebugEnabled())
 					logger.debug(String.format("Attempting to index the Content Instance: %s",
 							mo.getContentManagementId().getId()));
-				TurWEMIndexer.indexCreate(mo, turingConfig, null, null);
+				TurWEMIndexer.indexCreate(mo, turingConfig, null);
 			}
 		}
 	}

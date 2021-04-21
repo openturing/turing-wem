@@ -27,45 +27,31 @@ import com.vignette.logging.context.ContextLogger;
 public class TurWEMDeindex {
 	private static final ContextLogger log = ContextLogger.getLogger(TurWEMDeindex.class);
 
+	private TurWEMDeindex() {
+		throw new IllegalStateException("TurWEMDeindex");
+	}
+	
 	// This method deletes the content to the Viglet Turing broker
 	public static boolean indexDelete(String guid, IHandlerConfiguration config) {
-
-		boolean success = false;
-		try {
-			GetMethod get = new GetMethod(config.getTuringURL() + "/?action=delete&index=" + config.getIndex()
-					+ "&config=" + config.getConfig() + "&id=" + guid);
-			TuringUtils.basicAuth(config, get);
-			HttpClient httpclient = new HttpClient();
-			int result = httpclient.executeMethod(get);
-			if (log.isDebugEnabled()) {
-				log.debug("Viglet Turing Delete Request URI:" + get.getURI());
-				log.debug("Viglet Turing indexer response HTTP result is: " + result);
-				log.debug("Viglet Turing indexer response HTTP result is: " + get.getResponseBodyAsString());
-			}
-			get.releaseConnection();
-			success = true;
-
-		} catch (Exception e) {
-
-			log.error("Can't DELETE in Viglet Turing index: " + e.getMessage());
-		}
-
-		return success;
-
+		return indexDeleteParam("&id=" + guid, config);
 	}
 
 	public static boolean indexDeleteByType(String typeName, IHandlerConfiguration config) {
+		return indexDeleteParam("&type=" + typeName, config);
+	}
+	
+	public static boolean indexDeleteParam(String param, IHandlerConfiguration config) {
 		boolean success = false;
 		try {
 			GetMethod get = new GetMethod(config.getTuringURL() + "/?action=delete&index=" + config.getIndex()
-					+ "&config=" + config.getConfig() + "&type=" + typeName);
+					+ "&config=" + config.getConfig() + param);
 			TuringUtils.basicAuth(config, get);
 			HttpClient httpclient = new HttpClient();
 			int result = httpclient.executeMethod(get);
 			if (log.isDebugEnabled()) {
 				log.debug("Viglet Turing Delete Request URI:" + get.getURI());
-				log.debug("Viglet Turing indexer response HTTP result is: " + result);
-				log.debug("Viglet Turing indexer response HTTP result is: " + get.getResponseBodyAsString());
+				log.debug("Viglet Turing indexer response HTTP Status Code is: " + result);
+				log.debug("Viglet Turing indexer response HTTP Result is: " + get.getResponseBodyAsString());
 			}
 			get.releaseConnection();
 			success = true;
@@ -77,6 +63,4 @@ public class TurWEMDeindex {
 
 		return success;
 	}
-	
-	
 }

@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.methods.PostMethod;
 
 import com.viglet.turing.wem.beans.TurAttrDef;
@@ -43,6 +42,10 @@ public class TurWEMIndex {
 
 	private static final ContextLogger log = ContextLogger.getLogger(TurWEMIndex.class);
 
+	private TurWEMIndex() {
+		throw new IllegalStateException("TurWEMIndex");
+	}
+	
 	public static boolean indexCreate(ManagedObject mo, IHandlerConfiguration config) {
 		MappingDefinitions mappingDefinitions = MappingDefinitionsProcess.getMappingDefinitions(config);
 		if ((mappingDefinitions != null) && (mo != null) && (mo instanceof ContentInstance)) {
@@ -57,8 +60,8 @@ public class TurWEMIndex {
 				} else {
 					if (mappingDefinitions.hasClassValidToIndex(mo.getObjectType().getData().getName())
 							&& mo.getContentManagementId() != null && mo.getContentManagementId().getId() != null) {
-						String GUID = mo.getContentManagementId().getId();
-						TurWEMDeindex.indexDelete(GUID, config);
+						String guid = mo.getContentManagementId().getId();
+						TurWEMDeindex.indexDelete(guid, config);
 					}
 					if (log.isDebugEnabled())
 						log.debug(String.format(
@@ -81,7 +84,7 @@ public class TurWEMIndex {
 
 		String contentTypeName = ci.getObjectType().getData().getName();
 
-		StringBuffer xml = new StringBuffer("<?xml version=\"1.0\" encoding=\"UTF-8\" ?><document>");
+		StringBuilder xml = new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\" ?><document>");
 		xml.append(createXMLAttribute("id", ci.getContentManagementId().getId()));
 
 		TurCTDMappingMap mappings = mappingDefinitions.getMappingDefinitions();
@@ -147,12 +150,12 @@ public class TurWEMIndex {
 				}
 
 				for (String value : turAttrDef.getMultiValue()) {
-					if ((value != null) && (value.toString().trim().length() > 0))
-						xml.append(createXMLAttribute(turAttrDef.getTagName(), value.toString()));
+					if ((value != null) && (value.trim().length() > 0))
+						xml.append(createXMLAttribute(turAttrDef.getTagName(), value));
 				}
 			}
 
-			String classifications[] = ci.getTaxonomyClassifications();
+			String[] classifications = ci.getTaxonomyClassifications();
 			if (classifications != null && classifications.length > 0) {
 				for (int i = 0; i < classifications.length; i++) {
 					String wemClassification = classifications[i].substring(classifications[i].lastIndexOf("/") + 1);
@@ -169,7 +172,7 @@ public class TurWEMIndex {
 
 	}
 
-	public static boolean postIndex(String xml, IHandlerConfiguration config) throws HttpException, IOException {
+	public static boolean postIndex(String xml, IHandlerConfiguration config) throws IOException {
 
 		PostMethod post = new PostMethod(
 				config.getTuringURL() + "/?index=" + config.getIndex() + "&config=" + config.getConfig());
@@ -195,12 +198,12 @@ public class TurWEMIndex {
 					String.format("Viglet Turing indexer response HTTP result is: %s", post.getResponseBodyAsString()));
 		}
 		post.releaseConnection();
-		log.info(String.format("Viglet Turing indexer Processed Content Type:"));
+		log.info("Viglet Turing indexer Processed Content Type.");
 		return true;
 	}
 
 	private static String createXMLAttribute(String tag, String value) {
-		return String.format("<%1$s><![CDATA[%2$s]]></%1$s>", tag, value.toString());
+		return String.format("<%1$s><![CDATA[%2$s]]></%1$s>", tag, value);
 	}
 
 }

@@ -27,6 +27,10 @@ import com.vignette.logging.context.ContextLogger;
 public class TurWEMRelator {
 	private static final ContextLogger log = ContextLogger.getLogger(TurWEMRelator.class);
 
+	private TurWEMRelator() {
+		throw new IllegalStateException("TurWEMRelator");
+	}
+	
 	public static AttributedObject[] nestedRelators(List<String> relationTag, List<AttributedObject[]> currentRelation,
 			int currentPosition) {
 		List<AttributedObject> relators = new ArrayList<AttributedObject>();

@@ -31,9 +31,13 @@ import com.vignette.logging.context.ContextLogger;
 public class TurWEMAttrXML {
 	private static final ContextLogger log = ContextLogger.getLogger(TurWEMAttrXML.class);
 
+	private TurWEMAttrXML() {
+		throw new IllegalStateException("TurWEMAttrXML");
+	}
+	
 	public static List<TurAttrDef> attributeXML(TurAttrDefContext turAttrDefContext) throws Exception {
 		TuringTag turingTag = turAttrDefContext.getTuringTag();
-		if (turingTag.getSrcAttributeRelation() != null && turingTag.getSrcAttributeRelation().size() > 0)
+		if (turingTag.getSrcAttributeRelation() != null && !turingTag.getSrcAttributeRelation().isEmpty())
 			return addAttributeWithRelator(turAttrDefContext);
 		else
 			return addAttributeWithoutRelator(turAttrDefContext);
