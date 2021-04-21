@@ -333,7 +333,7 @@ public class TurWEMCommander {
 				if (logger.isDebugEnabled())
 					logger.debug(String.format("Attempting to index the Content Instance: %s",
 							mo.getContentManagementId().getId()));
-				TurWEMIndexer.indexCreate(mo, turingConfig, null);
+				TurWEMIndexer.indexCreate(mo, turingConfig);
 			}
 		}
 	}

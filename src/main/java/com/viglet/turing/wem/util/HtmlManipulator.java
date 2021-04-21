@@ -197,6 +197,6 @@ public final class HtmlManipulator {
 	public static String html2Text(String text) {
 
 		return HtmlManipulator
-				.replaceHtmlEntities(HtmlManipulator.removeScriptContent(text).replaceAll("\\<.*?>", " "));
+				.replaceHtmlEntities(HtmlManipulator.removeScriptContent(text).replaceAll("\\<[^>]++>", " "));
 	}
 }

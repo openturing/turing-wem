@@ -56,7 +56,7 @@ public class MappingDefinitions {
 	}
 
 	public boolean hasContentType(String contentTypeName) {
-		return !(turCTDMappingMap.get(contentTypeName) == null);
+		return (turCTDMappingMap.get(contentTypeName) != null);
 	}
 
 	public boolean hasClassValidToIndex(String contentTypeName) {

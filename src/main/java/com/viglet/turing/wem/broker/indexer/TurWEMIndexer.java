@@ -28,7 +28,7 @@ public class TurWEMIndexer {
 		throw new IllegalStateException("TurWEMIndexer");
 	}
 	
-	public static boolean indexCreate(ManagedObject mo, IHandlerConfiguration config, String site) {
+	public static boolean indexCreate(ManagedObject mo, IHandlerConfiguration config) {
 		if (log.isDebugEnabled()) {
 			log.debug("Creating Object in Viglet Turing index");
 		}
@@ -36,7 +36,7 @@ public class TurWEMIndexer {
 		return true;
 	}
 
-	public static boolean indexUpdate(ManagedObject mo, IHandlerConfiguration config, String site) {
+	public static boolean indexUpdate(ManagedObject mo, IHandlerConfiguration config) {
 		if (log.isDebugEnabled()) {
 			log.debug("Updating Object in Viglet Turing index");
 		}
@@ -44,7 +44,7 @@ public class TurWEMIndexer {
 		return true;
 	}
 
-	public static boolean indexDelete(String guid, IHandlerConfiguration config, String site) {
+	public static boolean indexDelete(String guid, IHandlerConfiguration config) {
 		if (log.isDebugEnabled()) {
 			log.debug("Deleting Object in Viglet Turing index");
 		}
