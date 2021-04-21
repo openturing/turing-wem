@@ -67,7 +67,7 @@ public class TurWEMIndex {
 				}
 			} catch (Exception e) {
 				log.error(String.format("Can't Create to Viglet Turing indexer: %s", e.getMessage()));
-				e.printStackTrace();
+				log.error(e);
 			}
 		}
 		return false;

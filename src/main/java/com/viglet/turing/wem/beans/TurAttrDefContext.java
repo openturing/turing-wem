@@ -5,9 +5,11 @@ import com.viglet.turing.wem.mappers.MappingDefinitions;
 import com.vignette.as.client.common.AttributeData;
 import com.vignette.as.client.exception.ApplicationException;
 import com.vignette.as.client.javabean.ContentInstance;
+import com.vignette.logging.context.ContextLogger;
 
 public class TurAttrDefContext {
-
+	private static final ContextLogger logger = ContextLogger.getLogger(TurAttrDefContext.class);
+	
 	private ContentInstance contentInstance;
 	private TuringTag turingTag;
 	private IHandlerConfiguration iHandlerConfiguration;
@@ -69,7 +71,7 @@ public class TurAttrDefContext {
 		try {
 			return contentInstance.getAttribute(turingTag.getSrcXmlName());
 		} catch (ApplicationException e) {
-			e.printStackTrace();
+			logger.error(e);
 		}
 
 		return null;

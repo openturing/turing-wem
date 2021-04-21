@@ -26,7 +26,7 @@ import com.vignette.logging.context.ContextLogger;
 public class MappingDefinitions {
 	private TurCTDMappingMap mappingDefinitions;
 	private String mappingsXML;
-	private static final ContextLogger log = ContextLogger.getLogger(MappingDefinitions.class);
+	private static final ContextLogger logger = ContextLogger.getLogger(MappingDefinitions.class);
 
 	public String getMappingsXML() {
 		return mappingsXML;
@@ -40,8 +40,8 @@ public class MappingDefinitions {
 	}
 
 	public MappingDefinitions(String mappingsXML, TurCTDMappingMap mappingDefinitions) {
-		if (log.isDebugEnabled()) {
-			log.debug("initializing mapping definitions");
+		if (logger.isDebugEnabled()) {
+			logger.debug("initializing mapping definitions");
 		}
 		setMappingsXML(mappingsXML);
 		setMappingDefinitions(mappingDefinitions);
@@ -62,8 +62,8 @@ public class MappingDefinitions {
 	public boolean hasClassValidToIndex(String contentTypeName) {
 		CTDMappings ctdMappings = mappingDefinitions.get(contentTypeName);
 		boolean status = ctdMappings != null && ctdMappings.getClassValidToIndex() != null ? true : false;
-		if (!status && log.isDebugEnabled())
-			log.debug(String.format("Valid to Index className is not found in the mappingXML for the CTD: %s",
+		if (!status && logger.isDebugEnabled())
+			logger.debug(String.format("Valid to Index className is not found in the mappingXML for the CTD: %s",
 					contentTypeName));
 		return status;
 	}
@@ -83,8 +83,8 @@ public class MappingDefinitions {
 					Class<?> clazz = Class.forName(className);
 
 					if (clazz == null) {
-						if (log.isDebugEnabled())
-							log.debug(String.format("Valid to Index className is not found in the jar file: %s",
+						if (logger.isDebugEnabled())
+							logger.debug(String.format("Valid to Index className is not found in the jar file: %s",
 									className));
 
 					} else
@@ -93,7 +93,7 @@ public class MappingDefinitions {
 				return instance;
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error(e);
 		}
 		return null;
 
@@ -104,7 +104,7 @@ public class MappingDefinitions {
 			IValidToIndex iValidToIndex = validToIndex(ci.getObjectType(), config);
 			return (iValidToIndex != null && !iValidToIndex.isValid(ci, config)) ? false : true;
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error(e);
 		}
 		return false;
 	}
