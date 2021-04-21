@@ -88,7 +88,7 @@ public class TurWEMIndex {
 
 		CTDMappings ctdMappings = mappings.get(contentTypeName);
 
-		if (ctdMappings == null && log.isErrorEnabled()) {
+		if (ctdMappings == null) {
 			log.error(String.format("Mapping definition is not found in the mappingXML for the CTD: %s",
 					contentTypeName));
 		} else {

@@ -54,7 +54,7 @@ public class TurWEMUpdateContentSelectWidget {
 
 			CTDMappings ctdRelatedMappings = relatedMappings.get(contentTypeName);
 
-			if (ctdRelatedMappings == null && log.isErrorEnabled()) {
+			if (ctdRelatedMappings == null) {
 				log.error(String.format("Mapping definition is not found in the mappingXML for the CTD: %s",
 						contentTypeName));
 			} else {
