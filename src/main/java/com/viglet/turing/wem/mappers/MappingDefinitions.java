@@ -24,7 +24,7 @@ import com.vignette.as.client.javabean.ObjectType;
 import com.vignette.logging.context.ContextLogger;
 
 public class MappingDefinitions {
-	private TurCTDMappingMap mappingDefinitions;
+	private TurCTDMappingMap turCTDMappingMap;
 	private String mappingsXML;
 	private static final ContextLogger logger = ContextLogger.getLogger(MappingDefinitions.class);
 
@@ -39,29 +39,29 @@ public class MappingDefinitions {
 	public MappingDefinitions() {
 	}
 
-	public MappingDefinitions(String mappingsXML, TurCTDMappingMap mappingDefinitions) {
+	public MappingDefinitions(String mappingsXML, TurCTDMappingMap turCTDMappingMap) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("initializing mapping definitions");
 		}
 		setMappingsXML(mappingsXML);
-		setMappingDefinitions(mappingDefinitions);
+		setMappingDefinitions(turCTDMappingMap);
 	}
 
 	public TurCTDMappingMap getMappingDefinitions() {
-		return mappingDefinitions;
+		return turCTDMappingMap;
 	}
 
-	public void setMappingDefinitions(TurCTDMappingMap mappingDefinitions) {
-		this.mappingDefinitions = mappingDefinitions;
+	public void setMappingDefinitions(TurCTDMappingMap turCTDMappingMap) {
+		this.turCTDMappingMap = turCTDMappingMap;
 	}
 
 	public boolean hasContentType(String contentTypeName) {
-		return mappingDefinitions.get(contentTypeName) == null ? false : true;
+		return !(turCTDMappingMap.get(contentTypeName) == null);
 	}
 
 	public boolean hasClassValidToIndex(String contentTypeName) {
-		CTDMappings ctdMappings = mappingDefinitions.get(contentTypeName);
-		boolean status = ctdMappings != null && ctdMappings.getClassValidToIndex() != null ? true : false;
+		CTDMappings ctdMappings = turCTDMappingMap.get(contentTypeName);
+		boolean status = (ctdMappings != null && ctdMappings.getClassValidToIndex() != null);
 		if (!status && logger.isDebugEnabled())
 			logger.debug(String.format("Valid to Index className is not found in the mappingXML for the CTD: %s",
 					contentTypeName));
@@ -76,7 +76,7 @@ public class MappingDefinitions {
 			contentTypeName = ot.getData().getName();
 
 			if (this.hasClassValidToIndex(contentTypeName)) {
-				CTDMappings ctdMappings = mappingDefinitions.get(contentTypeName);
+				CTDMappings ctdMappings = turCTDMappingMap.get(contentTypeName);
 				IValidToIndex instance = null;
 				String className = ctdMappings.getClassValidToIndex();
 				if (className != null) {
@@ -102,7 +102,7 @@ public class MappingDefinitions {
 	public boolean isClassValidToIndex(ContentInstance ci, IHandlerConfiguration config) {
 		try {
 			IValidToIndex iValidToIndex = validToIndex(ci.getObjectType(), config);
-			return (iValidToIndex != null && !iValidToIndex.isValid(ci, config)) ? false : true;
+			return !(iValidToIndex != null && !iValidToIndex.isValid(ci, config));
 		} catch (Exception e) {
 			logger.error(e);
 		}

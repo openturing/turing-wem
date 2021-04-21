@@ -36,6 +36,10 @@ import com.vignette.logging.context.ContextLogger;
 public class TurWEMUpdateContentSelectWidget {
 	private static final ContextLogger log = ContextLogger.getLogger(TurWEMUpdateContentSelectWidget.class);
 
+	private TurWEMUpdateContentSelectWidget() {
+		throw new IllegalStateException("TurWEMUpdateContentSelectWidget");
+	}
+	
 	public static List<TurAttrDef> attributeContentSelectUpdate(TurAttrDefContext turAttrDefContext,
 			AttributeData attributeData) throws Exception {
 

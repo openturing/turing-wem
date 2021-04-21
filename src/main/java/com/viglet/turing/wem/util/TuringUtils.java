@@ -44,6 +44,10 @@ import com.vignette.logging.context.ContextLogger;
 public class TuringUtils {
 	private static final ContextLogger log = ContextLogger.getLogger(TuringUtils.class);
 
+	private TuringUtils() {
+		throw new IllegalStateException("TuringUtils");
+	}
+	
 	public static String listToString(List<String> stringList) {
 		StringBuilder sb = new StringBuilder();
 		int i = 0;
@@ -90,7 +94,7 @@ public class TuringUtils {
 	}
 
 	public static AttributeDefinitionData getKeyAttributeDefinitionData(ContentType ct) throws Exception {
-		AttributeDefinitionData adds[] = new AttributeDefinitionData[0];
+		AttributeDefinitionData[] adds = new AttributeDefinitionData[0];
 		adds = ct.getData().getTopRelation().getKeyAttributeDefinitions();
 		if (adds == null)
 			throw new Exception("Failed to retrieve primary key definition", null);

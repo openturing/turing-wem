@@ -194,7 +194,7 @@ public final class HtmlManipulator {
 	}
 
 	// This method strips the HTML tags out of some content
-	public static String Html2Text(String text) {
+	public static String html2Text(String text) {
 
 		return HtmlManipulator
 				.replaceHtmlEntities(HtmlManipulator.removeScriptContent(text).replaceAll("\\<.*?>", " "));

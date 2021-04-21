@@ -35,7 +35,7 @@ public class TurChannelPath implements ExtAttributeInterface {
 			log.debug("Executing TurChannelPath");
 
 		
-		StringBuffer channelPath = new StringBuffer();
+		StringBuilder channelPath = new StringBuilder();
 		ChannelRef[] cref = ci.getChannelAssociations();
 		for (int i = 0; i < cref.length; i++) {
 			Channel currentChannel = cref[i].getChannel();

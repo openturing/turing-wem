@@ -33,6 +33,10 @@ import com.vignette.logging.context.ContextLogger;
 public class TurWEMUpdateFileWidget {
 	private static final ContextLogger log = ContextLogger.getLogger(TurWEMUpdateFileWidget.class);
 
+	private TurWEMUpdateFileWidget() {
+		throw new IllegalStateException("TurWEMUpdateFileWidget");
+	}
+	
 	public static List<TurAttrDef> attributeFileWidgetUpdate(TurAttrDefContext turAttrDefContext,
 			AttributeData attributeData) throws Exception {
 

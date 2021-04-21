@@ -111,7 +111,7 @@ public class ETLTuringTranslator {
 			}
 
 			String siteName = null;
-			if (siteNames.size() > 0)
+			if (!siteNames.isEmpty())
 				siteName = this.chosenSite(siteNames);
 			
 			boolean foundSite = false;
@@ -155,7 +155,7 @@ public class ETLTuringTranslator {
 
 	private String channelBreadcrumb(Channel channel) throws ApplicationException, ValidationException {
 		if (channel != null) {
-			StringBuffer channelPath = new StringBuffer();
+			StringBuilder channelPath = new StringBuilder();
 			String chFurlName;
 			Channel[] breadcrumb = channel.getBreadcrumbPath(true);
 			for (int j = 0; j < breadcrumb.length; j++) {
@@ -172,7 +172,7 @@ public class ETLTuringTranslator {
 	}
 
 	public String normalizeText(String text) {
-		return text.replaceAll("-", "–").replaceAll(" ", "-").replaceAll("\\?", "%3F");
+		return text.replace("-", "–").replace(" ", "-").replace("\\?", "%3F");
 	}
 
 	public String getSiteName(ManagedObject mo)
@@ -190,7 +190,7 @@ public class ETLTuringTranslator {
 			this.getSiteNames(siteNames, channel);
 		}
 
-		if (siteNames.size() > 0) {
+		if (!siteNames.isEmpty()) {
 			return this.chosenSite(siteNames);
 		} else {
 			log.info("ETLTuringTranslator Content without Site:" + mo.getName().toString());
@@ -201,7 +201,7 @@ public class ETLTuringTranslator {
 
 	private String chosenSite(List<String> siteNames) {
 		String siteNameAssociated;
-		if (config.getSitesAssocPriority() != null && config.getSitesAssocPriority().size() > 0) {
+		if (config.getSitesAssocPriority() != null && !config.getSitesAssocPriority().isEmpty()) {
 			boolean foundSite = false;
 			String siteName = null;
 			for (String siteAssocPriority : config.getSitesAssocPriority()) {
@@ -270,7 +270,7 @@ public class ETLTuringTranslator {
 					this.getSiteNames(siteNames, channelRef.getChannel());
 				}
 
-				if (siteNames.size() > 0)
+				if (!siteNames.isEmpty())
 					siteNameAssociated = this.chosenSite(siteNames);
 			}
 

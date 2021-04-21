@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2019 Alexandre Oliveira <alexandre.oliveira@viglet.com> 
+ * Copyright (C) 2016-2021 Alexandre Oliveira <alexandre.oliveira@viglet.com> 
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,6 +36,7 @@ public class TuringTag {
 	}
 
 	public TuringTag() {
+		 throw new UnsupportedOperationException();
 	}
 
 	public String getSrcAttributeType() {

@@ -59,7 +59,7 @@ public class TurWEMAttrClass {
 		} else {
 			TurMultiValue turMultiValue = new TurMultiValue();
 			if (turingTag.getSrcAttributeType() != null && turingTag.getSrcAttributeType().equals("html")) {
-				turMultiValue.add(HtmlManipulator.Html2Text(attributeData.getValue().toString()));
+				turMultiValue.add(HtmlManipulator.html2Text(attributeData.getValue().toString()));
 				TurAttrDef turAttrDef = new TurAttrDef(turingTag.getTagName(), turMultiValue);
 				attributesDefs.add(turAttrDef);
 			} else if (attributeData != null && attributeData.getValue() != null) {

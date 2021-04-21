@@ -24,6 +24,7 @@ import javax.xml.parsers.DocumentBuilder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +43,10 @@ import com.vignette.logging.context.ContextLogger;
 // Open and process Mappping XML File structure
 public class MappingDefinitionsProcess {
 	private static final ContextLogger log = ContextLogger.getLogger(MappingDefinitionsProcess.class);
+
+	private MappingDefinitionsProcess() {
+		throw new IllegalStateException("MappingDefinitionsProcess");
+	}
 
 	public static MappingDefinitions loadMappings(String resourceXml) {
 		TurCTDMappingMap mappings = null;
@@ -148,12 +153,11 @@ public class MappingDefinitionsProcess {
 
 		for (TuringTag turingTag : indexAttrs) {
 			if (turingTag != null) {
-				if (commonIndexAttrs != null && turingTag.getSrcClassName() == null) {
-					if (commonIndexAttrMap.get(turingTag.getTagName()) != null) {
-						// Common always have one item
-						// Add ClassName of Common into Index, if doesn't have ClassName
-						turingTag.setSrcClassName(commonIndexAttrMap.get(turingTag.getTagName()).getSrcClassName());
-					}
+				if (commonIndexAttrs != null && turingTag.getSrcClassName() == null
+						&& commonIndexAttrMap.get(turingTag.getTagName()) != null) {
+					// Common always have one item
+					// Add ClassName of Common into Index, if doesn't have ClassName
+					turingTag.setSrcClassName(commonIndexAttrMap.get(turingTag.getTagName()).getSrcClassName());
 				}
 
 				if (!indexAttrsMapMerged.containsKey(turingTag.getTagName()))
@@ -165,12 +169,10 @@ public class MappingDefinitionsProcess {
 		// Add only Mandatory Attributes
 		for (TuringTag commonTuringTag : commonIndexAttrs) {
 			// Doesn't repeat tags that exist in Ctd
-			if (commonTuringTag.getSrcMandatory()) {
-				if (!indexAttrsMapMerged.containsKey(commonTuringTag.getTagName())) {
-					ArrayList<TuringTag> turingTags = new ArrayList<TuringTag>();
-					turingTags.add(commonTuringTag);
-					indexAttrsMapMerged.put(commonTuringTag.getTagName(), turingTags);
-				}
+			if (commonTuringTag.getSrcMandatory() && !indexAttrsMapMerged.containsKey(commonTuringTag.getTagName())) {
+				ArrayList<TuringTag> turingTags = new ArrayList<TuringTag>();
+				turingTags.add(commonTuringTag);
+				indexAttrsMapMerged.put(commonTuringTag.getTagName(), turingTags);
 			}
 		}
 
@@ -197,8 +199,8 @@ public class MappingDefinitionsProcess {
 	}
 
 	// Load <srcAttr/> List
-	public static List<TuringTag> loadAtributesFromAttrsElement(Element AttrsElement) {
-		NodeList srcNodeList = AttrsElement.getElementsByTagName("srcAttr");
+	public static List<TuringTag> loadAtributesFromAttrsElement(Element attrsElement) {
+		NodeList srcNodeList = attrsElement.getElementsByTagName("srcAttr");
 		List<TuringTag> turingTagsPerSrcAttr = new ArrayList<TuringTag>();
 
 		for (int i = 0; i < srcNodeList.getLength(); i++) {
@@ -234,7 +236,7 @@ public class MappingDefinitionsProcess {
 				log.debug(String.format("MANDATORY: %s", srcAttrNode.getAttribute(TurXMLConstant.MANDATORY_ATT)));
 
 			turingTag.setSrcMandatory(
-					Boolean.valueOf(srcAttrNode.getAttribute(TurXMLConstant.MANDATORY_ATT)).booleanValue());
+					Boolean.parseBoolean(srcAttrNode.getAttribute(TurXMLConstant.MANDATORY_ATT)));
 
 		} else
 			turingTag.setSrcMandatory(false);
@@ -244,7 +246,7 @@ public class MappingDefinitionsProcess {
 
 		if (srcAttrNode.hasAttribute(TurXMLConstant.UNIQUE_VALUES_ATT))
 			turingTag.setSrcUniqueValues(
-					Boolean.valueOf(srcAttrNode.getAttribute(TurXMLConstant.UNIQUE_VALUES_ATT)).booleanValue());
+					Boolean.parseBoolean(srcAttrNode.getAttribute(TurXMLConstant.UNIQUE_VALUES_ATT)));
 		else
 			turingTag.setSrcUniqueValues(false);
 
@@ -276,12 +278,12 @@ public class MappingDefinitionsProcess {
 
 				}
 			}
-			if (turingTags.size() > 0) {
+			if (!turingTags.isEmpty()) {
 				return turingTags;
 			}
 
 		}
-		return null;
+		return Collections.emptyList();
 	}
 
 	public static MappingDefinitions getMappingDefinitions(IHandlerConfiguration config) {

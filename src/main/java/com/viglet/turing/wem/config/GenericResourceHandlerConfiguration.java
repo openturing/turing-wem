@@ -25,6 +25,7 @@ import com.vignette.util.MsgObject;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
@@ -138,9 +139,7 @@ public class GenericResourceHandlerConfiguration implements IHandlerConfiguratio
 			}
 
 			if (propertiesBody == null) {
-				MsgObject msg = CustomerMsg
-						.getMsgObject("Generic Resource [" + RESOURCE_NAME + "] is empty or does not exist.");
-				log.error(msg);
+				genericResourceDoesNotExistMessage();
 			}
 
 			StringReader propsBodyStream = new StringReader(propertiesBody);
@@ -152,12 +151,9 @@ public class GenericResourceHandlerConfiguration implements IHandlerConfiguratio
 			parseProperties(properties);
 
 		} catch (ConfigException e) {
-			MsgObject msg = CustomerMsg.getMsgObject("Error loading generic resource [" + RESOURCE_NAME + "]");
-			log.error(msg, e);
+			errorLoadingGenericResourceMessage(e);
 		} catch (IOException e) {
-			MsgObject msg = CustomerMsg
-					.getMsgObject("Generic Resource [" + RESOURCE_NAME + "] is empty or does not exist.");
-			log.error(msg);
+			genericResourceDoesNotExistMessage();
 		}
 	}
 
@@ -169,9 +165,7 @@ public class GenericResourceHandlerConfiguration implements IHandlerConfiguratio
 			}
 
 			if (propertiesBody == null) {
-				MsgObject msg = CustomerMsg
-						.getMsgObject("Generic Resource [" + RESOURCE_NAME + "] is empty or does not exist.");
-				log.error(msg);
+				genericResourceDoesNotExistMessage();
 			}
 
 			StringReader propsBodyStream = new StringReader(propertiesBody);
@@ -183,14 +177,22 @@ public class GenericResourceHandlerConfiguration implements IHandlerConfiguratio
 			return properties.getProperty(property);
 
 		} catch (ConfigException e) {
-			MsgObject msg = CustomerMsg.getMsgObject("Error loading generic resource [" + RESOURCE_NAME + "]");
-			log.error(msg, e);
+			errorLoadingGenericResourceMessage(e);
 		} catch (IOException e) {
-			MsgObject msg = CustomerMsg
-					.getMsgObject("Generic Resource [" + RESOURCE_NAME + "] is empty or does not exist.");
-			log.error(msg);
+			genericResourceDoesNotExistMessage();
 		}
 		return null;
+	}
+
+	private void errorLoadingGenericResourceMessage(ConfigException e) {
+		MsgObject msg = CustomerMsg.getMsgObject("Error loading generic resource [" + RESOURCE_NAME + "]");
+		log.error(msg, e);
+	}
+
+	private void genericResourceDoesNotExistMessage() {
+		MsgObject msg = CustomerMsg
+				.getMsgObject("Generic Resource [" + RESOURCE_NAME + "] is empty or does not exist.");
+		log.error(msg);
 	}
 
 	private void parseProperties(Properties properties) {
@@ -220,19 +222,19 @@ public class GenericResourceHandlerConfiguration implements IHandlerConfiguratio
 	@Override
 	public boolean hasSiteName(String site) {
 		String hasSiteNameString = getDynamicProperties("cda." + site + ".hasSiteName");
-		return (hasSiteNameString == null) ? true : Boolean.parseBoolean(hasSiteNameString);
+		return (hasSiteNameString == null) || Boolean.parseBoolean(hasSiteNameString);
 	}
 
 	@Override
 	public boolean hasContext(String site) {
 		String hasContextString = getDynamicProperties("cda." + site + ".hasContext");
-		return (hasContextString == null) ? true : Boolean.parseBoolean(hasContextString);
+		return (hasContextString == null) || Boolean.parseBoolean(hasContextString);
 	}
 
 	@Override
 	public boolean hasFormat(String site) {
 		String hasFormatString = getDynamicProperties("cda." + site + ".hasFormat");
-		return (hasFormatString == null) ? true : Boolean.parseBoolean(hasFormatString);
+		return (hasFormatString == null) || Boolean.parseBoolean(hasFormatString);
 	}
 
 	@Override
@@ -244,13 +246,13 @@ public class GenericResourceHandlerConfiguration implements IHandlerConfiguratio
 			for (String site : sites) {
 				siteList.add(site.trim());
 			}
-			if (siteList.size() > 0)
+			if (!siteList.isEmpty())
 				return siteList;
 			else
-				return null;
+				return Collections.emptyList();
 
 		} else
-			return null;
+			return Collections.emptyList();
 
 	}
 	

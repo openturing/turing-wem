@@ -38,7 +38,7 @@ public class HTML2Text implements ExtAttributeInterface {
 		TurMultiValue turMultiValue = new TurMultiValue();
 
 		if (attributeData != null && attributeData.getValue() != null)
-			turMultiValue.add(HtmlManipulator.Html2Text(attributeData.getValue().toString()));		
+			turMultiValue.add(HtmlManipulator.html2Text(attributeData.getValue().toString()));		
 		else
 			turMultiValue.add(EMPTY_STRING);
 	

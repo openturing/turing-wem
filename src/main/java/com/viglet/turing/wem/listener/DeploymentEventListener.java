@@ -60,7 +60,7 @@ public class DeploymentEventListener implements IAsEventListener {
 	                if (log.isDebugEnabled()) {
 	                    log.debug("Viglet Turing DeploymentEvent() - Delete object");
 	                }
-	                handler.onManagedObjectDelete(mo, deploymentEvent);
+	                handler.onManagedObjectDelete(deploymentEvent);
 	            }
 	        }
     	} catch (Exception e) {

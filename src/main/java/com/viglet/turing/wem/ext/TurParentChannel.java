@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2019 Alexandre Oliveira <alexandre.oliveira@viglet.com> 
+ * Copyright (C) 2016-2021 Alexandre Oliveira <alexandre.oliveira@viglet.com> 
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,10 +22,8 @@ import com.viglet.turing.wem.config.IHandlerConfiguration;
 import com.viglet.turing.wem.util.ETLTuringTranslator;
 import com.vignette.as.client.common.AttributeData;
 import com.vignette.as.client.common.ref.ChannelRef;
-import com.vignette.as.client.common.ref.SiteRef;
 import com.vignette.as.client.javabean.Channel;
 import com.vignette.as.client.javabean.ContentInstance;
-import com.vignette.as.client.javabean.ManagedObject;
 import com.vignette.logging.context.ContextLogger;
 
 public class TurParentChannel implements ExtAttributeInterface {
