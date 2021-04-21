@@ -85,7 +85,6 @@ public class TurWEMIndex {
 		String contentTypeName = ci.getObjectType().getData().getName();
 
 		StringBuilder xml = new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\" ?><document>");
-		xml.append(createXMLAttribute("id", ci.getContentManagementId().getId()));
 
 		TurCTDMappingMap mappings = mappingDefinitions.getMappingDefinitions();
 
@@ -95,73 +94,13 @@ public class TurWEMIndex {
 			log.error(String.format("Mapping definition is not found in the mappingXML for the CTD: %s",
 					contentTypeName));
 		} else {
-			List<TurAttrDef> attributesDefs = new ArrayList<TurAttrDef>();
+			
+			xml.append(createXMLAttribute("id", ci.getContentManagementId().getId()));
+			
+			List<TurAttrDef> attributeDefs = prepareAttributeDefs(ci, config, mappingDefinitions, ctdMappings);
 
-			for (String tag : ctdMappings.getTagList()) {
-				if (log.isDebugEnabled()) {
-					log.debug("generateXMLToIndex: TagList");
-					for (String tags : ctdMappings.getTagList()) {
-						log.debug("generateXMLToIndex: Tags: " + tags);
-					}
-				}
-				for (TuringTag turingTag : ctdMappings.getTuringTagMap().get(tag)) {
-					if (tag != null && turingTag != null && turingTag.getTagName() != null) {
-
-						if (log.isDebugEnabled()) {
-							String debugRelation = turingTag.getSrcAttributeRelation() != null
-									? TuringUtils.listToString(turingTag.getSrcAttributeRelation())
-									: null;
-							log.debug(String.format("Tag:  %s, relation: %s, content Type: %s", turingTag.getTagName(),
-									debugRelation, turingTag.getSrcAttributeType()));
-						}
-
-						TurAttrDefContext turAttrDefContext = new TurAttrDefContext(ci, turingTag, config,
-								mappingDefinitions);
-						List<TurAttrDef> attributeDefsXML = TurWEMAttrXML.attributeXML(turAttrDefContext);
-
-						// Unique
-						if (turingTag.isSrcUniqueValues()) {
-
-							TurMultiValue multiValue = new TurMultiValue();
-							for (TurAttrDef turAttrDef : attributeDefsXML) {
-								for (String singleValue : turAttrDef.getMultiValue()) {
-									if (!multiValue.contains(singleValue)) {
-										multiValue.add(singleValue);
-									}
-								}
-							}
-							TurAttrDef turAttrDefUnique = new TurAttrDef(turingTag.getTagName(), multiValue);
-							attributesDefs.add(turAttrDefUnique);
-						} else {
-							attributesDefs.addAll(attributeDefsXML);
-						}
-					}
-				}
-			}
-
-			// Create xml of attributesDefs
-			for (TurAttrDef turAttrDef : attributesDefs) {
-				if (log.isDebugEnabled()) {
-					log.debug("AttributeDef - TagName: " + turAttrDef.getTagName());
-					for (String string : turAttrDef.getMultiValue()) {
-						log.debug("AttributeDef - Value: " + string);
-					}
-
-				}
-
-				for (String value : turAttrDef.getMultiValue()) {
-					if ((value != null) && (value.trim().length() > 0))
-						xml.append(createXMLAttribute(turAttrDef.getTagName(), value));
-				}
-			}
-
-			String[] classifications = ci.getTaxonomyClassifications();
-			if (classifications != null && classifications.length > 0) {
-				for (int i = 0; i < classifications.length; i++) {
-					String wemClassification = classifications[i].substring(classifications[i].lastIndexOf("/") + 1);
-					xml.append(createXMLAttribute("categories", wemClassification));
-				}
-			}
+			addAttributeDefsToXML(xml, attributeDefs);
+			addCategoriesToXML(ci, xml);
 
 			xml.append("</document>");
 
@@ -170,6 +109,82 @@ public class TurWEMIndex {
 		}
 		return xml.toString();
 
+	}
+
+	private static List<TurAttrDef> prepareAttributeDefs(ContentInstance ci, IHandlerConfiguration config,
+			MappingDefinitions mappingDefinitions, CTDMappings ctdMappings) throws Exception {
+		List<TurAttrDef> attributesDefs = new ArrayList<TurAttrDef>();
+
+		for (String tag : ctdMappings.getTagList()) {
+			if (log.isDebugEnabled()) {
+				log.debug("generateXMLToIndex: TagList");
+				for (String tags : ctdMappings.getTagList()) {
+					log.debug("generateXMLToIndex: Tags: " + tags);
+				}
+			}
+			for (TuringTag turingTag : ctdMappings.getTuringTagMap().get(tag)) {
+				if (tag != null && turingTag != null && turingTag.getTagName() != null) {
+
+					if (log.isDebugEnabled()) {
+						String debugRelation = turingTag.getSrcAttributeRelation() != null
+								? TuringUtils.listToString(turingTag.getSrcAttributeRelation())
+								: null;
+						log.debug(String.format("Tag:  %s, relation: %s, content Type: %s", turingTag.getTagName(),
+								debugRelation, turingTag.getSrcAttributeType()));
+					}
+
+					TurAttrDefContext turAttrDefContext = new TurAttrDefContext(ci, turingTag, config,
+							mappingDefinitions);
+					List<TurAttrDef> attributeDefsXML = TurWEMAttrXML.attributeXML(turAttrDefContext);
+
+					// Unique
+					if (turingTag.isSrcUniqueValues()) {
+
+						TurMultiValue multiValue = new TurMultiValue();
+						for (TurAttrDef turAttrDef : attributeDefsXML) {
+							for (String singleValue : turAttrDef.getMultiValue()) {
+								if (!multiValue.contains(singleValue)) {
+									multiValue.add(singleValue);
+								}
+							}
+						}
+						TurAttrDef turAttrDefUnique = new TurAttrDef(turingTag.getTagName(), multiValue);
+						attributesDefs.add(turAttrDefUnique);
+					} else {
+						attributesDefs.addAll(attributeDefsXML);
+					}
+				}
+			}
+		}
+		return attributesDefs;
+	}
+
+	private static void addCategoriesToXML(ContentInstance ci, StringBuilder xml) {
+		String[] classifications = ci.getTaxonomyClassifications();
+		if (classifications != null && classifications.length > 0) {
+			for (int i = 0; i < classifications.length; i++) {
+				String wemClassification = classifications[i].substring(classifications[i].lastIndexOf("/") + 1);
+				xml.append(createXMLAttribute("categories", wemClassification));
+			}
+		}
+	}
+
+	private static void addAttributeDefsToXML(StringBuilder xml, List<TurAttrDef> attributesDefs) {
+		// Create xml of attributesDefs
+		for (TurAttrDef turAttrDef : attributesDefs) {
+			if (log.isDebugEnabled()) {
+				log.debug("AttributeDef - TagName: " + turAttrDef.getTagName());
+				for (String string : turAttrDef.getMultiValue()) {
+					log.debug("AttributeDef - Value: " + string);
+				}
+
+			}
+
+			for (String value : turAttrDef.getMultiValue()) {
+				if ((value != null) && (value.trim().length() > 0))
+					xml.append(createXMLAttribute(turAttrDef.getTagName(), value));
+			}
+		}
 	}
 
 	public static boolean postIndex(String xml, IHandlerConfiguration config) throws IOException {

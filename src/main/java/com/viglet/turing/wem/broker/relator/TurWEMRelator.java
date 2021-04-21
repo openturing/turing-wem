@@ -38,36 +38,45 @@ public class TurWEMRelator {
 		int nextPosition = currentPosition + 1;
 
 		if (nextPosition < relationTag.size()) {
-			List<AttributedObject[]> nestedRelationChild = new ArrayList<AttributedObject[]>();
-			for (AttributedObject[] attributesFromRelation : currentRelation) {
-
-				for (AttributedObject attributeFromRelation : Arrays.asList(attributesFromRelation)) {
-					try {
-						AttributedObject[] childRelation = attributeFromRelation
-								.getRelations(relationTag.get(nextPosition));
-
-						nestedRelationChild.add(childRelation);
-
-					} catch (ApplicationException e) {
-						log.error(String.format("Error getting relations: %s of relation: %s",
-								relationTag.get(currentPosition), relationTag.get(currentPosition - 1)), e);
-					}
-				}
-			}
-			return nestedRelators(relationTag, nestedRelationChild, nextPosition);
-
+			return detectAttributesFromRelator(relationTag, currentRelation, currentPosition, nextPosition);
 		} else {
-			for (AttributedObject[] attributesFromRelation : currentRelation) {
-				if (attributesFromRelation != null) {
-					relators.addAll(Arrays.asList(attributesFromRelation));
-				}
-			}
-
-			AttributedObject[] relatorsArr = new AttributedObject[relators.size()];
-			relatorsArr = relators.toArray(relatorsArr);
-			return relatorsArr;
+			return generateRelatorAttributeArray(currentRelation, relators);
 		}
 
+	}
+
+	private static AttributedObject[] generateRelatorAttributeArray(List<AttributedObject[]> currentRelation,
+			List<AttributedObject> relators) {
+		for (AttributedObject[] attributesFromRelation : currentRelation) {
+			if (attributesFromRelation != null) {
+				relators.addAll(Arrays.asList(attributesFromRelation));
+			}
+		}
+
+		AttributedObject[] relatorsArr = new AttributedObject[relators.size()];
+		relatorsArr = relators.toArray(relatorsArr);
+		return relatorsArr;
+	}
+
+	private static AttributedObject[] detectAttributesFromRelator(List<String> relationTag,
+			List<AttributedObject[]> currentRelation, int currentPosition, int nextPosition) {
+		List<AttributedObject[]> nestedRelationChild = new ArrayList<AttributedObject[]>();
+		for (AttributedObject[] attributesFromRelation : currentRelation) {
+
+			for (AttributedObject attributeFromRelation : Arrays.asList(attributesFromRelation)) {
+				try {
+					AttributedObject[] childRelation = attributeFromRelation
+							.getRelations(relationTag.get(nextPosition));
+
+					nestedRelationChild.add(childRelation);
+
+				} catch (ApplicationException e) {
+					log.error(String.format("Error getting relations: %s of relation: %s",
+							relationTag.get(currentPosition), relationTag.get(currentPosition - 1)), e);
+				}
+			}
+		}
+		return nestedRelators(relationTag, nestedRelationChild, nextPosition);
 	}
 
 }

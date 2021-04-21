@@ -62,13 +62,25 @@ public class TurWEMAttrXML {
 		String attributeName = turAttrDefContext.getTuringTag().getSrcXmlName();
 		AttributedObject[] relation = ci.getRelations(turingTag.getSrcAttributeRelation().get(0));
 		List<TurAttrDef> attributesDefs = new ArrayList<TurAttrDef>();
+		
+		relation = getRelationIfExists(turingTag, relation);
+		addRelationAttributes(turAttrDefContext, attributeName, relation, attributesDefs);
+		
+		return attributesDefs;
+	}
+
+	private static AttributedObject[] getRelationIfExists(TuringTag turingTag, AttributedObject[] relation) {
 		if (turingTag.getSrcAttributeRelation().size() > 1) {
 			log.debug("Attribute has nested relator");
 			List<AttributedObject[]> nestedRelation = new ArrayList<AttributedObject[]>();
 			nestedRelation.add(relation);
 			relation = TurWEMRelator.nestedRelators(turingTag.getSrcAttributeRelation(), nestedRelation, 0);
 		}
+		return relation;
+	}
 
+	private static void addRelationAttributes(TurAttrDefContext turAttrDefContext, String attributeName,
+			AttributedObject[] relation, List<TurAttrDef> attributesDefs) throws Exception {
 		if (relation != null) {
 			for (AttributedObject attributedObject : relation) {
 				if (attributedObject.getAttributeValue(attributeName) != null) {
@@ -81,7 +93,6 @@ public class TurWEMAttrXML {
 				}
 			}
 		}
-		return attributesDefs;
 	}
 
 	private static List<TurAttrDef> addAttributeWithoutRelator(TurAttrDefContext turAttrDefContext) throws Exception {

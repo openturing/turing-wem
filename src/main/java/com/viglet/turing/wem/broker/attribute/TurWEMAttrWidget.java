@@ -45,17 +45,7 @@ public class TurWEMAttrWidget {
 		String widgetName = null;
 
 		if (turingTag.getSrcAttributeRelation() != null && !turingTag.getSrcAttributeRelation().isEmpty()) {
-			AttributedObject[] relation = ci.getRelations(turingTag.getSrcAttributeRelation().get(0));
-
-			if (turingTag.getSrcAttributeRelation().size() > 1) {
-				List<AttributedObject[]> nestedRelation = new ArrayList<AttributedObject[]>();
-				nestedRelation.add(relation);
-				relation = TurWEMRelator.nestedRelators(turingTag.getSrcAttributeRelation(), nestedRelation, 0);
-			}
-
-			if (relation.length > 0) {
-				widgetName = relation[0].getAttribute(attributeName).getAttributeDefinition().getWidgetName();
-			}
+			widgetName = relationWidgetName(turingTag, ci, attributeName, widgetName);
 
 		} else {
 			widgetName = ci.getAttribute(attributeName).getAttributeDefinition().getWidgetName();
@@ -82,5 +72,21 @@ public class TurWEMAttrWidget {
 					attributeData);
 		}
 
+	}
+
+	private static String relationWidgetName(TuringTag turingTag, ContentInstance ci, String attributeName,
+			String widgetName) {
+		AttributedObject[] relation = ci.getRelations(turingTag.getSrcAttributeRelation().get(0));
+
+		if (turingTag.getSrcAttributeRelation().size() > 1) {
+			List<AttributedObject[]> nestedRelation = new ArrayList<AttributedObject[]>();
+			nestedRelation.add(relation);
+			relation = TurWEMRelator.nestedRelators(turingTag.getSrcAttributeRelation(), nestedRelation, 0);
+		}
+
+		if (relation.length > 0) {
+			widgetName = relation[0].getAttribute(attributeName).getAttributeDefinition().getWidgetName();
+		}
+		return widgetName;
 	}
 }

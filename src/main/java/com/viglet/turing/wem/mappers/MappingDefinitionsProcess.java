@@ -86,11 +86,20 @@ public class MappingDefinitionsProcess {
 	 */
 	public static TurCTDMappingMap readCTDMappings(Element rootElement) {
 		TurCTDMappingMap mappings = new TurCTDMappingMap();
+		List<TuringTag> commonIndexAttrs = readCommonIndexAttrs(rootElement);
+		readMappingDefinition(rootElement, mappings, commonIndexAttrs);
+		return mappings;
+	}
 
+	private static List<TuringTag> readCommonIndexAttrs(Element rootElement) {
 		// Read <common-index-attrs/>
 		List<TuringTag> commonIndexAttrs = readIndexAttributeMappings(rootElement,
 				TurXMLConstant.TAG_COMMON_INDEX_DATA);
+		return commonIndexAttrs;
+	}
 
+	private static void readMappingDefinition(Element rootElement, TurCTDMappingMap mappings,
+			List<TuringTag> commonIndexAttrs) {
 		// Get <mappingdefinition/> List
 		NodeList ctdMappingDefList = rootElement.getElementsByTagName(TurXMLConstant.TAG_MAPPING_DEF);
 
@@ -119,28 +128,31 @@ public class MappingDefinitionsProcess {
 				/// HashMap of CTDs
 				mappings.put(ctdXmlName, ctdMapping);
 				if (log.isDebugEnabled()) {
-					int index = 0;
-					for (Entry<String, CTDMappings> mappingEntry : mappings.entrySet()) {
-						log.debug(String.format("%d - MappingEntry CTD : %s", index, mappingEntry.getKey()));
-						for (Entry<String, ArrayList<TuringTag>> turingTagEntry : mappingEntry.getValue()
-								.getTuringTagMap().entrySet()) {
-							log.debug("TuringTag Key (TagName): " + turingTagEntry.getKey());
-							for (TuringTag turingTag : turingTagEntry.getValue()) {
-								log.debug("TuringTag Item - getTagName : " + turingTag.getTagName());
-								log.debug("TuringTag Item - getSrcAttributeType : " + turingTag.getSrcAttributeType());
-								log.debug("TuringTag Item - getSrcClassName : " + turingTag.getSrcClassName());
-								log.debug("TuringTag Item - getSrcXmlName : " + turingTag.getSrcXmlName());
-								log.debug("TuringTag Item - getSrcAttributeRelation : "
-										+ turingTag.getSrcAttributeRelation());
-								log.debug("TuringTag Item - getSrcMandatory : " + turingTag.getSrcMandatory());
-							}
-						}
-						index++;
-					}
+					debuReadCTDMappings(mappings);
 				}
 			}
 		}
-		return mappings;
+	}
+
+	private static void debuReadCTDMappings(TurCTDMappingMap mappings) {
+		int index = 0;
+		for (Entry<String, CTDMappings> mappingEntry : mappings.entrySet()) {
+			log.debug(String.format("%d - MappingEntry CTD : %s", index, mappingEntry.getKey()));
+			for (Entry<String, ArrayList<TuringTag>> turingTagEntry : mappingEntry.getValue()
+					.getTuringTagMap().entrySet()) {
+				log.debug("TuringTag Key (TagName): " + turingTagEntry.getKey());
+				for (TuringTag turingTag : turingTagEntry.getValue()) {
+					log.debug("TuringTag Item - getTagName : " + turingTag.getTagName());
+					log.debug("TuringTag Item - getSrcAttributeType : " + turingTag.getSrcAttributeType());
+					log.debug("TuringTag Item - getSrcClassName : " + turingTag.getSrcClassName());
+					log.debug("TuringTag Item - getSrcXmlName : " + turingTag.getSrcXmlName());
+					log.debug("TuringTag Item - getSrcAttributeRelation : "
+							+ turingTag.getSrcAttributeRelation());
+					log.debug("TuringTag Item - getSrcMandatory : " + turingTag.getSrcMandatory());
+				}
+			}
+			index++;
+		}
 	}
 
 	public static TuringTagMap mergeCommonAttrs(List<TuringTag> commonIndexAttrs, List<TuringTag> indexAttrs) {
@@ -186,8 +198,7 @@ public class MappingDefinitionsProcess {
 		for (int i = 0; i < mappingList.getLength(); i++) {
 			// Load <srcAttr/> List
 			List<TuringTag> turingTagsPerSrcAttr = loadAtributesFromAttrsElement((Element) mappingList.item(i));
-			if (turingTagsPerSrcAttr != null)
-				turingTagMap.addAll(turingTagsPerSrcAttr);
+			turingTagMap.addAll(turingTagsPerSrcAttr);
 		}
 
 		if (log.isDebugEnabled()) {
@@ -217,6 +228,18 @@ public class MappingDefinitionsProcess {
 
 	// Read <srcAttr/>
 	public static List<TuringTag> loadSrcAttr(Element srcAttrNode) {
+		TuringTag turingTag = detectXMLAttributesOfSrcAttr(srcAttrNode);
+
+		if ((turingTag.getSrcXmlName() != null) || (turingTag.getSrcClassName() != null)) {
+			ArrayList<TuringTag> turingTags = readTagList(srcAttrNode, turingTag);
+			if (!turingTags.isEmpty()) {
+				return turingTags;
+			}
+		}
+		return Collections.emptyList();
+	}
+
+	private static TuringTag detectXMLAttributesOfSrcAttr(Element srcAttrNode) {
 		TuringTag turingTag = new TuringTag();
 		if (srcAttrNode.hasAttribute(TurXMLConstant.XML_NAME_ATT))
 			turingTag.setSrcXmlName(srcAttrNode.getAttribute(TurXMLConstant.XML_NAME_ATT));
@@ -240,50 +263,51 @@ public class MappingDefinitionsProcess {
 
 		} else
 			turingTag.setSrcMandatory(false);
-
 		if (log.isDebugEnabled())
 			log.debug(String.format("Mandatory: %b", turingTag.getSrcMandatory()));
 
+		readUniqueValuesAttr(srcAttrNode, turingTag);
+
+		return turingTag;
+	}
+
+	private static ArrayList<TuringTag> readTagList(Element srcAttrNode, TuringTag turingTag) {
+		NodeList tagList = (srcAttrNode).getElementsByTagName("tag");
+		if (log.isDebugEnabled()) {
+			log.debug("Node Parent: " + turingTag.getSrcXmlName());
+			log.debug("Node.getLength(): " + tagList.getLength());
+		}
+
+		ArrayList<TuringTag> turingTags = new ArrayList<TuringTag>();
+
+		for (int nodePos = 0; nodePos < tagList.getLength(); nodePos++) {
+			if (log.isDebugEnabled())
+				log.debug("Node: " + nodePos);
+
+			String tagName = null;
+			Node tagNode = tagList.item(nodePos);
+			tagName = tagNode.getFirstChild().getNodeValue();
+			if (log.isDebugEnabled())
+				log.debug("tagName:" + tagName);
+
+			if (tagName != null) {
+				turingTag.setTagName(tagName);
+				turingTags.add(turingTag);
+
+			}
+		}
+		return turingTags;
+	}
+
+	private static void readUniqueValuesAttr(Element srcAttrNode, TuringTag turingTag) {
 		if (srcAttrNode.hasAttribute(TurXMLConstant.UNIQUE_VALUES_ATT))
 			turingTag.setSrcUniqueValues(
 					Boolean.parseBoolean(srcAttrNode.getAttribute(TurXMLConstant.UNIQUE_VALUES_ATT)));
 		else
 			turingTag.setSrcUniqueValues(false);
-
 		if (log.isDebugEnabled())
 			log.debug(String.format("Unique Values: %b", turingTag.isSrcUniqueValues()));
 
-		if ((turingTag.getSrcXmlName() != null) || (turingTag.getSrcClassName() != null)) {
-			NodeList tagList = (srcAttrNode).getElementsByTagName("tag");
-			if (log.isDebugEnabled()) {
-				log.debug("Node Parent: " + turingTag.getSrcXmlName());
-				log.debug("Node.getLength(): " + tagList.getLength());
-			}
-
-			ArrayList<TuringTag> turingTags = new ArrayList<TuringTag>();
-
-			for (int nodePos = 0; nodePos < tagList.getLength(); nodePos++) {
-				if (log.isDebugEnabled())
-					log.debug("Node: " + nodePos);
-
-				String tagName = null;
-				Node tagNode = tagList.item(nodePos);
-				tagName = tagNode.getFirstChild().getNodeValue();
-				if (log.isDebugEnabled())
-					log.debug("tagName:" + tagName);
-
-				if (tagName != null) {
-					turingTag.setTagName(tagName);
-					turingTags.add(turingTag);
-
-				}
-			}
-			if (!turingTags.isEmpty()) {
-				return turingTags;
-			}
-
-		}
-		return Collections.emptyList();
 	}
 
 	public static MappingDefinitions getMappingDefinitions(IHandlerConfiguration config) {

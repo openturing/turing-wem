@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2019 Alexandre Oliveira <alexandre.oliveira@viglet.com> 
+ * Copyright (C) 2016-2021 Alexandre Oliveira <alexandre.oliveira@viglet.com> 
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -149,113 +149,146 @@ public class TurWEMCommander {
 
 			turingConfig = new GenericResourceHandlerConfiguration();
 			if (allObjectTypes) {
-
-				IPagingList contentTypeIPagingList = ContentType.findAll();
-				@SuppressWarnings("unchecked")
-				List<Object> contentTypes = contentTypeIPagingList.asList();
-				contentTypes.add(StaticFile.getTypeObjectTypeRef().getObjectType());
-
-				System.console().writer().println(String.format("Total number of Object Types: %d", contentTypes.size()));
-				for (Object objectType : contentTypes) {
-					ObjectType ot = (ObjectType) objectType;
-					System.console().writer().println(String.format("Retrieved Object Type: %s %s", ot.getData().getName(),
-							ot.getContentManagementId().toString()));
-					this.indexByContentType(ot);
-				}
+				runAllObjectTypes();
 			} else if (contentType != null) {
-				ObjectType objectType = ObjectType.findByName(contentType);
-				if (objectType != null)
-					this.indexByContentType(objectType);
+				runByContentType();
 			} else if (guidFilePath != null) {
-				ArrayList<String> contentInstances = new ArrayList<String>();
-				BufferedReader br = null;
-				FileReader fr = null;
-				try {
-					fr = new FileReader(guidFilePath);
-					br = new BufferedReader(fr);
-					String sCurrentLine;
-
-					while ((sCurrentLine = br.readLine()) != null) {
-						if (sCurrentLine.endsWith(STFL) || sCurrentLine.endsWith(RCRD))
-							contentInstances.add(sCurrentLine);
-
-						if (contentInstances.size() != pageSize)
-							continue;
-						if (!contentInstances.isEmpty()) {
-							this.indexGUIDList(contentInstances);
-							contentInstances = new ArrayList<String>();
-						}
-					}
-					if (!contentInstances.isEmpty())
-						this.indexGUIDList(contentInstances);
-
-				} catch (IOException e) {
-					logger.error(e);
-				} finally {
-					try {
-						if (br != null)
-							br.close();
-						if (fr != null)
-							fr.close();
-					} catch (IOException ex) {
-						logger.error(ex);
-					}
-				}
+				runByGuidList();
 			}
 
 		} catch (ConfigException exception) {
 			if (logger.isDebugEnabled())
 				logger.debug("Error into ConfigSpace configuration", exception);
 		} catch (VgnException vgnException) {
-			System.err.println("Logging does not started");
+			System.console().writer().println("Logging does not started");
 		} catch (Exception e) {
 			logger.error("Viglet Turing Index Error: ", e);
 
 		}
 	}
 
+	private void runByContentType()
+			throws ApplicationException, ContentIndexException, ConfigException, MalformedURLException {
+		ObjectType objectType = ObjectType.findByName(contentType);
+		if (objectType != null)
+			this.indexByContentType(objectType);
+	}
+
+	private void runByGuidList()
+			throws ValidationException, ApplicationException, ContentIndexException, ConfigException {
+		ArrayList<String> contentInstances = new ArrayList<String>();
+		BufferedReader br = null;
+		FileReader fr = null;
+		try {
+			fr = new FileReader(guidFilePath);
+			br = new BufferedReader(fr);
+			String sCurrentLine;
+
+			while ((sCurrentLine = br.readLine()) != null) {
+				if (sCurrentLine.endsWith(STFL) || sCurrentLine.endsWith(RCRD))
+					contentInstances.add(sCurrentLine);
+
+				if (contentInstances.size() != pageSize)
+					continue;
+				if (!contentInstances.isEmpty()) {
+					this.indexGUIDList(contentInstances);
+					contentInstances = new ArrayList<String>();
+				}
+			}
+			if (!contentInstances.isEmpty())
+				this.indexGUIDList(contentInstances);
+
+		} catch (IOException e) {
+			logger.error(e);
+		} finally {
+			try {
+				if (br != null)
+					br.close();
+				if (fr != null)
+					fr.close();
+			} catch (IOException ex) {
+				logger.error(ex);
+			}
+		}
+	}
+
+	private void runAllObjectTypes()
+			throws ApplicationException, ContentIndexException, ConfigException, MalformedURLException {
+		IPagingList contentTypeIPagingList = ContentType.findAll();
+		List<Object> contentTypes = contentTypeIPagingList.asList();
+		contentTypes.add(StaticFile.getTypeObjectTypeRef().getObjectType());
+
+		System.console().writer().println(String.format("Total number of Object Types: %d", contentTypes.size()));
+		for (Object objectType : contentTypes) {
+			ObjectType ot = (ObjectType) objectType;
+			System.console().writer().println(String.format("Retrieved Object Type: %s %s", ot.getData().getName(),
+					ot.getContentManagementId().toString()));
+			this.indexByContentType(ot);
+		}
+	}
+
 	private void indexByContentType(ObjectType objectType)
 			throws ApplicationException, ContentIndexException, ConfigException, MalformedURLException {
 		int totalPages = 0;
-		Iterator<?> it = null;
+		IPagingList results = null;
 		int totalEntries;
 		try {
 			TurWEMIndexer.indexDeleteByType(objectType.getData().getName(), turingConfig);
 			MappingDefinitions mappingDefinitions = MappingDefinitionsProcess.getMappingDefinitions(turingConfig);
 			RequestParameters rp = new RequestParameters();
 			rp.setTopRelationOnly(false);
-			IPagingList results = null;
+			
 			AsObjectType aot = AsObjectType.getInstance(new ObjectTypeRef((ManagedObject) objectType));
 			IValidToIndex instance = mappingDefinitions.validToIndex(objectType, turingConfig);
 			if (aot.isStaticFile()) {
-				StaticFileWhereClause clause = new StaticFileWhereClause();
-				StaticFileDBQuery query = new StaticFileDBQuery();
-				if (instance != null)
-					instance.whereToValid(clause, turingConfig);
-				query.setWhereClause((WhereClause) clause);
-				results = QueryManager.execute((Query) query, (AsObjectRequestParameters) rp);
+				results = queryStaticFilesList(rp, instance);
 			} else {
-				ContentInstanceWhereClause clause = new ContentInstanceWhereClause();
-				ContentInstanceDBQuery query = new ContentInstanceDBQuery(new ContentTypeRef(objectType.getId()));
-				if (instance != null)
-					instance.whereToValid(clause, turingConfig);
-
-				query.setWhereClause((WhereClause) clause);
-				results = QueryManager.execute((Query) query, (AsObjectRequestParameters) rp);
+				results = queryContentInstanceList(objectType, rp, instance);
 			}
 			totalEntries = results.size();
 			System.console().writer().println(String.format("Number of Content Instances of type %s %s = %d",
 					objectType.getData().getName(), objectType.getContentManagementId().toString(), totalEntries));
 			totalPages = totalEntries > 0 ? (totalEntries + pageSize - 1) / pageSize : totalEntries / pageSize;
-			it = results.pageIterator(pageSize);
+			
 		} catch (Exception e) {
 			logger.error(e);
 		}
+		indexByContentTypeProcess(totalPages, results);
+	}
+
+	private IPagingList queryContentInstanceList(ObjectType objectType, RequestParameters rp, IValidToIndex instance)
+			throws Exception {
+		
+		IPagingList results;
+		ContentInstanceWhereClause clause = new ContentInstanceWhereClause();
+		ContentInstanceDBQuery query = new ContentInstanceDBQuery(new ContentTypeRef(objectType.getId()));
+		if (instance != null)
+			instance.whereToValid(clause, turingConfig);
+
+		query.setWhereClause((WhereClause) clause);
+		results = QueryManager.execute((Query) query, (AsObjectRequestParameters) rp);
+		return results;
+	}
+
+	private IPagingList queryStaticFilesList(RequestParameters rp, IValidToIndex instance) throws Exception {
+		IPagingList results;
+		StaticFileWhereClause clause = new StaticFileWhereClause();
+		StaticFileDBQuery query = new StaticFileDBQuery();
+		if (instance != null)
+			instance.whereToValid(clause, turingConfig);
+		query.setWhereClause((WhereClause) clause);
+		results = QueryManager.execute((Query) query, (AsObjectRequestParameters) rp);
+		return results;
+	}
+
+	private void indexByContentTypeProcess(int totalPages, IPagingList results) {
+		Iterator<?> it = results.pageIterator(pageSize);
 		int currentPage = 1;
 		if (it != null) {
 			while (it.hasNext()) {
 				List<?> managedObjects = (List<?>) it.next();
-				System.console().writer().println(String.format("Processing Page %d of %d pages", currentPage++, totalPages));
+				System.console().writer()
+						.println(String.format("Processing Page %d of %d pages", currentPage++, totalPages));
 				long start = System.currentTimeMillis();
 				try {
 					HashSet<ManagedObjectVCMRef> validGuids = new HashSet<ManagedObjectVCMRef>();
@@ -276,13 +309,15 @@ public class TurWEMCommander {
 					if (!validGuids.isEmpty())
 						guids = validGuids.toArray(new ManagedObjectVCMRef[0]);
 
-					System.console().writer().println(String.format("Processing the registration of %d assets", validGuids.size()));
+					System.console().writer()
+							.println(String.format("Processing the registration of %d assets", validGuids.size()));
 					this.indexContentInstances(guids, objectMap);
 				} catch (Exception e) {
 					logger.error(e);
 				}
 				long elapsed = System.currentTimeMillis() - start;
-				System.console().writer().println(String.format("%d items processed in %dms", managedObjects.size(), elapsed));
+				System.console().writer()
+						.println(String.format("%d items processed in %dms", managedObjects.size(), elapsed));
 
 			}
 		}
@@ -312,15 +347,15 @@ public class TurWEMCommander {
 		else {
 			RequestParameters params = new RequestParameters();
 			params.setTopRelationOnly(false);
-			IPagingList managedObjects = ManagedObject.findByContentManagementIds(
-					managedObjectVCMRefs, params);
+			IPagingList managedObjects = ManagedObject.findByContentManagementIds(managedObjectVCMRefs, params);
 			List<?> moList = managedObjects.asList();
 			HashMap<String, ManagedObject> objectMap = new HashMap<String, ManagedObject>(moList.size());
 			for (Object object : moList) {
 				ManagedObject mo = (ManagedObject) object;
 				objectMap.put(mo.getContentManagementId().getId(), mo);
 			}
-			System.console().writer().println(String.format("Processing the registration of %d assets", managedObjects.size()));
+			System.console().writer()
+					.println(String.format("Processing the registration of %d assets", managedObjects.size()));
 			this.indexContentInstances(managedObjectVCMRefs, objectMap);
 		}
 	}

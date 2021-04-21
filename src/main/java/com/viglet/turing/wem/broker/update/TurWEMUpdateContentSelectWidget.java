@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2019 Alexandre Oliveira <alexandre.oliveira@viglet.com> 
+ * Copyright (C) 2016-2021 Alexandre Oliveira <alexandre.oliveira@viglet.com> 
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,6 +48,16 @@ public class TurWEMUpdateContentSelectWidget {
 
 		ContentInstance ciRelated = (ContentInstance) ManagedObject
 				.findByContentManagementId(new ManagedObjectVCMRef(attributeData.getValue().toString()));
+		
+		attributesDefs = processContentInstanceRelated(turAttrDefContext, mappingDefinitions, attributesDefs,
+				ciRelated);
+		
+		return attributesDefs;
+	}
+
+	private static List<TurAttrDef> processContentInstanceRelated(TurAttrDefContext turAttrDefContext,
+			MappingDefinitions mappingDefinitions, List<TurAttrDef> attributesDefs, ContentInstance ciRelated)
+			throws Exception {
 		if (ciRelated != null) {
 			String contentTypeName = ciRelated.getObjectType().getData().getName();
 			if (log.isDebugEnabled())
@@ -62,24 +72,32 @@ public class TurWEMUpdateContentSelectWidget {
 				log.error(String.format("Mapping definition is not found in the mappingXML for the CTD: %s",
 						contentTypeName));
 			} else {
-				// Process URL from Relation.
-				for (String tag : ctdRelatedMappings.getTagList()) {
-					TurAttrDefContext turAttrDefContextRelated = new TurAttrDefContext(turAttrDefContext);
-					turAttrDefContextRelated.setContentInstance(ciRelated);
-					for (TuringTag tagRelated : ctdRelatedMappings.getTuringTagMap().get(tag)) {
-						if (tag != null && tagRelated != null && tagRelated.getTagName() != null
-								&& tagRelated.getTagName().equals("url")) {
-							if (log.isDebugEnabled())
-								log.debug(String.format(
-										"Key Related: %s,  Tag Related: %s, relation: %s, content Type: %s ", tag,
-										tagRelated.getTagName(),
-										TuringUtils.listToString(tagRelated.getSrcAttributeRelation()),
-										tagRelated.getSrcAttributeType()));
-							attributesDefs = TurWEMAttrXML.attributeXML(turAttrDefContextRelated);
-						}
+				attributesDefs = processURLFromRelation(turAttrDefContext, attributesDefs, ciRelated,
+						ctdRelatedMappings);
+			}
+		}
+		return attributesDefs;
+	}
 
-					}
+	private static List<TurAttrDef> processURLFromRelation(TurAttrDefContext turAttrDefContext,
+			List<TurAttrDef> attributesDefs, ContentInstance ciRelated, CTDMappings ctdRelatedMappings)
+			throws Exception {
+		// Process URL from Relation.
+		for (String tag : ctdRelatedMappings.getTagList()) {
+			TurAttrDefContext turAttrDefContextRelated = new TurAttrDefContext(turAttrDefContext);
+			turAttrDefContextRelated.setContentInstance(ciRelated);
+			for (TuringTag tagRelated : ctdRelatedMappings.getTuringTagMap().get(tag)) {
+				if (tag != null && tagRelated != null && tagRelated.getTagName() != null
+						&& tagRelated.getTagName().equals("url")) {
+					if (log.isDebugEnabled())
+						log.debug(String.format(
+								"Key Related: %s,  Tag Related: %s, relation: %s, content Type: %s ", tag,
+								tagRelated.getTagName(),
+								TuringUtils.listToString(tagRelated.getSrcAttributeRelation()),
+								tagRelated.getSrcAttributeType()));
+					attributesDefs = TurWEMAttrXML.attributeXML(turAttrDefContextRelated);
 				}
+
 			}
 		}
 		return attributesDefs;

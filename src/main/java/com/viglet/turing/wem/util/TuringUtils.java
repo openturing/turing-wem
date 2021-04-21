@@ -94,8 +94,7 @@ public class TuringUtils {
 	}
 
 	public static AttributeDefinitionData getKeyAttributeDefinitionData(ContentType ct) throws Exception {
-		AttributeDefinitionData[] adds = new AttributeDefinitionData[0];
-		adds = ct.getData().getTopRelation().getKeyAttributeDefinitions();
+		AttributeDefinitionData[] adds = ct.getData().getTopRelation().getKeyAttributeDefinitions();
 		if (adds == null)
 			throw new Exception("Failed to retrieve primary key definition", null);
 		if (adds.length == 0)
