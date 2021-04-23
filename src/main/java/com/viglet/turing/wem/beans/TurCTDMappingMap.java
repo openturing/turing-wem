@@ -18,9 +18,9 @@ package com.viglet.turing.wem.beans;
 
 import java.util.HashMap;
 
-import com.viglet.turing.wem.mappers.CTDMappings;
+import com.viglet.turing.wem.mapping.MappingDefinition;
 
-public class TurCTDMappingMap extends HashMap<String, CTDMappings> {
+public class TurCTDMappingMap extends HashMap<String, MappingDefinition> {
 
 	private static final long serialVersionUID = 1L;
 

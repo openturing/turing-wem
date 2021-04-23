@@ -35,19 +35,17 @@ import com.vignette.as.client.common.AttributeDefinitionData;
 import com.vignette.as.client.common.DataType;
 import com.vignette.as.client.common.ref.ManagedObjectRef;
 import com.vignette.as.client.common.ref.ObjectTypeRef;
-import com.vignette.as.client.exception.ApplicationException;
 import com.vignette.as.client.javabean.ContentInstance;
 import com.vignette.as.client.javabean.ContentType;
 import com.vignette.as.client.javabean.ManagedObject;
-import com.vignette.logging.context.ContextLogger;
+import com.vignette.util.VgnException;
 
 public class TuringUtils {
-	private static final ContextLogger log = ContextLogger.getLogger(TuringUtils.class);
 
 	private TuringUtils() {
 		throw new IllegalStateException("TuringUtils");
 	}
-	
+
 	public static String listToString(List<String> stringList) {
 		StringBuilder sb = new StringBuilder();
 		int i = 0;
@@ -72,37 +70,36 @@ public class TuringUtils {
 	}
 
 	public static ContentInstance findContentInstanceByKey(ContentType contentType, String primaryKeyValue)
-			throws Exception {
+			throws VgnException {
 
 		ContentInstance ci = null;
-		try {
-			AttributeDefinitionData add = getKeyAttributeDefinitionData(contentType);
-			DataType dt = add.getDataType();
-			Object val = primaryKeyValue;
-			if (dt.isInt() || dt.isNumerical() || dt.isTinyInt())
-				val = Integer.valueOf(primaryKeyValue);
-			ObjectTypeRef otr = new ObjectTypeRef(contentType);
-			AttributeData atd = new AttributeData(add, val, otr);
-			ManagedObjectRef ref = new ManagedObjectRef(otr, new AttributeData[] { atd });
 
-			ci = (ContentInstance) ManagedObject.findById(ref);
-		} catch (ApplicationException e) {
-			log.error(e.getStackTrace());
-		}
+		AttributeDefinitionData add;
+		add = getKeyAttributeDefinitionData(contentType);
+
+		DataType dt = add.getDataType();
+		Object val = primaryKeyValue;
+		if (dt.isInt() || dt.isNumerical() || dt.isTinyInt())
+			val = Integer.valueOf(primaryKeyValue);
+		ObjectTypeRef otr = new ObjectTypeRef(contentType);
+		AttributeData atd = new AttributeData(add, val, otr);
+		ManagedObjectRef ref = new ManagedObjectRef(otr, new AttributeData[] { atd });
+
+		ci = (ContentInstance) ManagedObject.findById(ref);
 
 		return ci;
 	}
 
-	public static AttributeDefinitionData getKeyAttributeDefinitionData(ContentType ct) throws Exception {
+	public static AttributeDefinitionData getKeyAttributeDefinitionData(ContentType ct) throws VgnException {
 		AttributeDefinitionData[] adds = ct.getData().getTopRelation().getKeyAttributeDefinitions();
 		if (adds == null)
-			throw new Exception("Failed to retrieve primary key definition", null);
+			throw new VgnException("Failed to retrieve primary key definition", null);
 		if (adds.length == 0)
-			throw new Exception("No primary key found", null);
+			throw new VgnException("No primary key found", null);
 		if (adds.length > 1) {
 			StringBuilder sb = new StringBuilder();
 			sb.append("Works with one primary key only: ").append(adds.length);
-			throw new Exception(sb.toString(), null);
+			throw new VgnException(sb.toString(), null);
 		} else
 			return adds[0];
 	}

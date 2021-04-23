@@ -52,6 +52,7 @@ import com.vignette.as.client.common.ref.ContentTypeRef;
 import com.vignette.as.client.common.ref.ManagedObjectVCMRef;
 import com.vignette.as.client.common.ref.ObjectTypeRef;
 import com.vignette.as.client.exception.ApplicationException;
+import com.vignette.as.client.exception.AuthorizationException;
 import com.vignette.as.client.exception.ValidationException;
 import com.vignette.as.client.javabean.ContentInstance;
 import com.vignette.as.client.javabean.ContentItem;
@@ -168,7 +169,7 @@ public class TurWEMCommander {
 	}
 
 	private void runByContentType()
-			throws ApplicationException, ContentIndexException, ConfigException, MalformedURLException {
+			throws ApplicationException, ContentIndexException, ConfigException, ValidationException {
 		ObjectType objectType = ObjectType.findByName(contentType);
 		if (objectType != null)
 			this.indexByContentType(objectType);
@@ -213,7 +214,7 @@ public class TurWEMCommander {
 	}
 
 	private void runAllObjectTypes()
-			throws ApplicationException, ContentIndexException, ConfigException, MalformedURLException {
+			throws ApplicationException, ContentIndexException, ConfigException, MalformedURLException, ValidationException {
 		IPagingList contentTypeIPagingList = ContentType.findAll();
 		List<Object> contentTypes = contentTypeIPagingList.asList();
 		contentTypes.add(StaticFile.getTypeObjectTypeRef().getObjectType());
@@ -228,7 +229,7 @@ public class TurWEMCommander {
 	}
 
 	private void indexByContentType(ObjectType objectType)
-			throws ApplicationException, ContentIndexException, ConfigException, MalformedURLException {
+			throws ApplicationException {
 		int totalPages = 0;
 		IPagingList results = null;
 		int totalEntries;
@@ -237,7 +238,7 @@ public class TurWEMCommander {
 			MappingDefinitions mappingDefinitions = MappingDefinitionsProcess.getMappingDefinitions(turingConfig);
 			RequestParameters rp = new RequestParameters();
 			rp.setTopRelationOnly(false);
-			
+
 			AsObjectType aot = AsObjectType.getInstance(new ObjectTypeRef((ManagedObject) objectType));
 			IValidToIndex instance = mappingDefinitions.validToIndex(objectType, turingConfig);
 			if (aot.isStaticFile()) {
@@ -249,7 +250,7 @@ public class TurWEMCommander {
 			System.console().writer().println(String.format("Number of Content Instances of type %s %s = %d",
 					objectType.getData().getName(), objectType.getContentManagementId().toString(), totalEntries));
 			totalPages = totalEntries > 0 ? (totalEntries + pageSize - 1) / pageSize : totalEntries / pageSize;
-			
+
 		} catch (Exception e) {
 			logger.error(e);
 		}
@@ -258,7 +259,7 @@ public class TurWEMCommander {
 
 	private IPagingList queryContentInstanceList(ObjectType objectType, RequestParameters rp, IValidToIndex instance)
 			throws Exception {
-		
+
 		IPagingList results;
 		ContentInstanceWhereClause clause = new ContentInstanceWhereClause();
 		ContentInstanceDBQuery query = new ContentInstanceDBQuery(new ContentTypeRef(objectType.getId()));
@@ -281,45 +282,59 @@ public class TurWEMCommander {
 		return results;
 	}
 
-	private void indexByContentTypeProcess(int totalPages, IPagingList results) {
+	private void indexByContentTypeProcess(int totalPages, IPagingList results) throws ApplicationException {
 		Iterator<?> it = results.pageIterator(pageSize);
 		int currentPage = 1;
 		if (it != null) {
 			while (it.hasNext()) {
-				List<?> managedObjects = (List<?>) it.next();
 				System.console().writer()
 						.println(String.format("Processing Page %d of %d pages", currentPage++, totalPages));
 				long start = System.currentTimeMillis();
-				try {
-					HashSet<ManagedObjectVCMRef> validGuids = new HashSet<ManagedObjectVCMRef>();
-					HashMap<String, ManagedObject> objectMap = new HashMap<String, ManagedObject>(
-							managedObjects.size());
-					for (Object object : managedObjects) {
-						ManagedObject mo = (ManagedObject) object;
-						if (mo instanceof ContentItem) {
-							ContentItem ci = (ContentItem) mo;
-							if (ci.getChannelAssociations() == null || ci.getChannelAssociations().length == 0)
-								continue;
-
-						}
-						objectMap.put(mo.getContentManagementId().getId(), mo);
-						validGuids.add(mo.getContentManagementId());
-					}
-					ManagedObjectVCMRef[] guids = null;
-					if (!validGuids.isEmpty())
-						guids = validGuids.toArray(new ManagedObjectVCMRef[0]);
-
-					System.console().writer()
-							.println(String.format("Processing the registration of %d assets", validGuids.size()));
-					this.indexContentInstances(guids, objectMap);
-				} catch (Exception e) {
-					logger.error(e);
-				}
-				long elapsed = System.currentTimeMillis() - start;
-				System.console().writer()
-						.println(String.format("%d items processed in %dms", managedObjects.size(), elapsed));
+				List<?> managedObjects = (List<?>) it.next();
+				indexValidContentInstances(managedObjects);
+				outputTimeToProcessed(managedObjects, start);
 
 			}
+		}
+	}
+
+	private void indexValidContentInstances(List<?> managedObjects) {
+		try {
+			HashSet<ManagedObjectVCMRef> validGuids = new HashSet<ManagedObjectVCMRef>();
+			HashMap<String, ManagedObject> objectMap = new HashMap<String, ManagedObject>(
+					managedObjects.size());
+			readValidContentInstances(managedObjects, validGuids, objectMap);
+			
+			if (!validGuids.isEmpty()) {
+				ManagedObjectVCMRef[] guids = validGuids.toArray(new ManagedObjectVCMRef[0]);
+
+				System.console().writer()
+						.println(String.format("Processing the registration of %d assets", validGuids.size()));
+				this.indexContentInstances(guids, objectMap);
+			}
+		} catch (Exception e) {
+			logger.error(e);
+		}
+	}
+
+	private void outputTimeToProcessed(List<?> managedObjects, long start) {
+		long elapsed = System.currentTimeMillis() - start;
+		System.console().writer()
+				.println(String.format("%d items processed in %dms", managedObjects.size(), elapsed));
+	}
+
+	private void readValidContentInstances(List<?> managedObjects, HashSet<ManagedObjectVCMRef> validGuids,
+			HashMap<String, ManagedObject> objectMap) throws ApplicationException, AuthorizationException, ValidationException {
+		for (Object object : managedObjects) {
+			ManagedObject mo = (ManagedObject) object;
+			if (mo instanceof ContentItem) {
+				ContentItem ci = (ContentItem) mo;
+				if (ci.getChannelAssociations() == null || ci.getChannelAssociations().length == 0)
+					continue;
+
+			}
+			objectMap.put(mo.getContentManagementId().getId(), mo);
+			validGuids.add(mo.getContentManagementId());
 		}
 	}
 

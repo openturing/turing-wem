@@ -1,7 +1,7 @@
 package com.viglet.turing.wem.beans;
 
 import com.viglet.turing.wem.config.IHandlerConfiguration;
-import com.viglet.turing.wem.mappers.MappingDefinitions;
+import com.viglet.turing.wem.mapping.MappingDefinitions;
 import com.vignette.as.client.common.AttributeData;
 import com.vignette.as.client.exception.ApplicationException;
 import com.vignette.as.client.javabean.ContentInstance;

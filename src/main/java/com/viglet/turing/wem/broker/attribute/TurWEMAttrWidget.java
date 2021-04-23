@@ -26,6 +26,7 @@ import com.viglet.turing.wem.broker.relator.TurWEMRelator;
 import com.viglet.turing.wem.broker.update.TurWEMUpdateContentSelectWidget;
 import com.viglet.turing.wem.broker.update.TurWEMUpdateFileWidget;
 import com.vignette.as.client.common.AttributeData;
+import com.vignette.as.client.exception.ApplicationException;
 import com.vignette.as.client.javabean.AttributedObject;
 import com.vignette.as.client.javabean.ContentInstance;
 import com.vignette.logging.context.ContextLogger;
@@ -75,7 +76,7 @@ public class TurWEMAttrWidget {
 	}
 
 	private static String relationWidgetName(TuringTag turingTag, ContentInstance ci, String attributeName,
-			String widgetName) {
+			String widgetName) throws ApplicationException {
 		AttributedObject[] relation = ci.getRelations(turingTag.getSrcAttributeRelation().get(0));
 
 		if (turingTag.getSrcAttributeRelation().size() > 1) {

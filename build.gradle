@@ -52,7 +52,8 @@ dependencies {
     implementation group: 'com.beust', name: 'jcommander', version: '1.47'	
     implementation group: 'log4j', name: 'log4j', version: '1.2.7'
     implementation group: 'commons-httpclient', name: 'commons-httpclient', version: '3.1'
-	implementation 'com.github.alegauss:dummy-vgn:70c73f31b5'
+    implementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.2.8'
+	//implementation 'com.github.alegauss:dummy-vgn:65db7f0e74'
 }
 
 jar {

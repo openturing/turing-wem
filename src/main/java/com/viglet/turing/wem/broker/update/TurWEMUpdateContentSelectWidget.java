@@ -24,8 +24,9 @@ import com.viglet.turing.wem.beans.TurAttrDefContext;
 import com.viglet.turing.wem.beans.TurCTDMappingMap;
 import com.viglet.turing.wem.beans.TuringTag;
 import com.viglet.turing.wem.broker.attribute.TurWEMAttrXML;
-import com.viglet.turing.wem.mappers.CTDMappings;
-import com.viglet.turing.wem.mappers.MappingDefinitions;
+import com.viglet.turing.wem.mappers.MappingDefinitionsUtils;
+import com.viglet.turing.wem.mapping.MappingDefinition;
+import com.viglet.turing.wem.mapping.MappingDefinitions;
 import com.viglet.turing.wem.util.TuringUtils;
 import com.vignette.as.client.common.AttributeData;
 import com.vignette.as.client.common.ref.ManagedObjectVCMRef;
@@ -63,24 +64,22 @@ public class TurWEMUpdateContentSelectWidget {
 			if (log.isDebugEnabled())
 				log.debug(String.format("CTD Related: %s", contentTypeName));
 
-			// we force the type on the Viglet Turing side
-			TurCTDMappingMap relatedMappings = mappingDefinitions.getMappingDefinitions();
-
-			CTDMappings ctdRelatedMappings = relatedMappings.get(contentTypeName);
-
-			if (ctdRelatedMappings == null) {
+			MappingDefinitionsUtils mappingDefinitionsUtils = new MappingDefinitionsUtils(mappingDefinitions);
+			MappingDefinition mappingDefinition = mappingDefinitionsUtils.getContentType(contentTypeName);
+			
+			if (mappingDefinition == null) {
 				log.error(String.format("Mapping definition is not found in the mappingXML for the CTD: %s",
 						contentTypeName));
 			} else {
 				attributesDefs = processURLFromRelation(turAttrDefContext, attributesDefs, ciRelated,
-						ctdRelatedMappings);
+						mappingDefinition);
 			}
 		}
 		return attributesDefs;
 	}
 
 	private static List<TurAttrDef> processURLFromRelation(TurAttrDefContext turAttrDefContext,
-			List<TurAttrDef> attributesDefs, ContentInstance ciRelated, CTDMappings ctdRelatedMappings)
+			List<TurAttrDef> attributesDefs, ContentInstance ciRelated, MappingDefinition mappingDefinition)
 			throws Exception {
 		// Process URL from Relation.
 		for (String tag : ctdRelatedMappings.getTagList()) {

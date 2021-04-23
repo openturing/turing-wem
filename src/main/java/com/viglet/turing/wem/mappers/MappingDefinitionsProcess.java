@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2019 Alexandre Oliveira <alexandre.oliveira@viglet.com> 
+ * Copyright (C) 2016-2021 Alexandre Oliveira <alexandre.oliveira@viglet.com> 
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,28 +16,18 @@
  */
 package com.viglet.turing.wem.mappers;
 
-import org.w3c.dom.*;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
 
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.XMLConstants;
-import javax.xml.parsers.DocumentBuilder;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+import java.io.File;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
 
-import com.viglet.turing.wem.beans.TurCTDMappingMap;
 import com.viglet.turing.wem.beans.TuringTag;
 import com.viglet.turing.wem.beans.TuringTagMap;
 import com.viglet.turing.wem.config.IHandlerConfiguration;
-import com.viglet.turing.wem.config.TurXMLConstant;
+import com.viglet.turing.wem.mapping.MappingDefinitions;
 import com.vignette.logging.context.ContextLogger;
 
 // Open and process Mappping XML File structure
@@ -49,112 +39,31 @@ public class MappingDefinitionsProcess {
 	}
 
 	public static MappingDefinitions loadMappings(String resourceXml) {
-		TurCTDMappingMap mappings = null;
-
+		MappingDefinitions mappingDefinitions = null;
+		File packageBodyFile = new File(resourceXml);
+		JAXBContext jaxbContext;
 		try {
-			DocumentBuilderFactory dlf = DocumentBuilderFactory.newInstance();
-			dlf.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
-			dlf.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
-			DocumentBuilder db = dlf.newDocumentBuilder();
-
-			File f = new File(resourceXml);
-			if (f.isFile() && f.canRead()) {
-				InputStream resourceInputStream = new FileInputStream(resourceXml);
-
-				Document document = db.parse(resourceInputStream);
-				Element rootElement = document.getDocumentElement();
-
-				// Loading mapping definitions
-				mappings = readCTDMappings(rootElement);
-
-			} else {
-				return null;
-			}
-
-		} catch (Exception e) {
-			log.error("Error when loading mappings", e);
-			return null;
+			jaxbContext = JAXBContext.newInstance(MappingDefinitions.class);
+		
+		Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
+		mappingDefinitions = (MappingDefinitions) unmarshaller.unmarshal(packageBodyFile);
+		} catch (JAXBException e) {
+			log.error(e);
 		}
-		return new MappingDefinitions(resourceXml, mappings);
+	
+		return mappingDefinitions;
 	}
+	
+	public static MappingDefinitions getMappingDefinitions(IHandlerConfiguration config) {
 
-	/**
-	 * Loading mapping definitions
-	 * 
-	 * @param rootElement
-	 * @return TurCTDMappingMap
-	 */
-	public static TurCTDMappingMap readCTDMappings(Element rootElement) {
-		TurCTDMappingMap mappings = new TurCTDMappingMap();
-		List<TuringTag> commonIndexAttrs = readCommonIndexAttrs(rootElement);
-		readMappingDefinition(rootElement, mappings, commonIndexAttrs);
-		return mappings;
+		MappingDefinitions mappingDefinitions = MappingDefinitionsProcess.loadMappings(config.getMappingsXML());
+
+		if (mappingDefinitions == null && log.isDebugEnabled())
+			log.error("Mapping definitions are not loaded properly from mappingsXML: " + config.getMappingsXML());
+
+		return mappingDefinitions;
 	}
-
-	private static List<TuringTag> readCommonIndexAttrs(Element rootElement) {
-		// Read <common-index-attrs/>
-		List<TuringTag> commonIndexAttrs = readIndexAttributeMappings(rootElement,
-				TurXMLConstant.TAG_COMMON_INDEX_DATA);
-		return commonIndexAttrs;
-	}
-
-	private static void readMappingDefinition(Element rootElement, TurCTDMappingMap mappings,
-			List<TuringTag> commonIndexAttrs) {
-		// Get <mappingdefinition/> List
-		NodeList ctdMappingDefList = rootElement.getElementsByTagName(TurXMLConstant.TAG_MAPPING_DEF);
-
-		for (int i = 0; i < ctdMappingDefList.getLength(); i++) {
-			Element mappingDefinition = (Element) ctdMappingDefList.item(i);
-
-			// If it have contenttype attribute
-			if (mappingDefinition.hasAttribute(TurXMLConstant.TAG_ATT_MAPPING_DEF)) {
-				String ctdXmlName = mappingDefinition.getAttribute(TurXMLConstant.TAG_ATT_MAPPING_DEF);
-
-				// Read <index-attr/>
-				List<TuringTag> indexAttrs = readIndexAttributeMappings((Element) ctdMappingDefList.item(i),
-						TurXMLConstant.TAG_INDEX_DATA);
-
-				// Merge CommonIndexAttrs into IndexAttrs
-				TuringTagMap turingTagMap = mergeCommonAttrs(commonIndexAttrs, indexAttrs);
-
-				// Add attributes common and index attributes into CTDMapping
-				CTDMappings ctdMapping = new CTDMappings(turingTagMap);
-
-				// Set isValidToIndex
-				if (mappingDefinition.hasAttribute(TurXMLConstant.TAG_ATT_CLASS_VALID_TOINDEX))
-					ctdMapping.setClassValidToIndex(
-							mappingDefinition.getAttribute(TurXMLConstant.TAG_ATT_CLASS_VALID_TOINDEX));
-
-				/// HashMap of CTDs
-				mappings.put(ctdXmlName, ctdMapping);
-				if (log.isDebugEnabled()) {
-					debuReadCTDMappings(mappings);
-				}
-			}
-		}
-	}
-
-	private static void debuReadCTDMappings(TurCTDMappingMap mappings) {
-		int index = 0;
-		for (Entry<String, CTDMappings> mappingEntry : mappings.entrySet()) {
-			log.debug(String.format("%d - MappingEntry CTD : %s", index, mappingEntry.getKey()));
-			for (Entry<String, ArrayList<TuringTag>> turingTagEntry : mappingEntry.getValue()
-					.getTuringTagMap().entrySet()) {
-				log.debug("TuringTag Key (TagName): " + turingTagEntry.getKey());
-				for (TuringTag turingTag : turingTagEntry.getValue()) {
-					log.debug("TuringTag Item - getTagName : " + turingTag.getTagName());
-					log.debug("TuringTag Item - getSrcAttributeType : " + turingTag.getSrcAttributeType());
-					log.debug("TuringTag Item - getSrcClassName : " + turingTag.getSrcClassName());
-					log.debug("TuringTag Item - getSrcXmlName : " + turingTag.getSrcXmlName());
-					log.debug("TuringTag Item - getSrcAttributeRelation : "
-							+ turingTag.getSrcAttributeRelation());
-					log.debug("TuringTag Item - getSrcMandatory : " + turingTag.getSrcMandatory());
-				}
-			}
-			index++;
-		}
-	}
-
+	
 	public static TuringTagMap mergeCommonAttrs(List<TuringTag> commonIndexAttrs, List<TuringTag> indexAttrs) {
 
 		TuringTagMap indexAttrsMapMerged = new TuringTagMap();
@@ -182,7 +91,7 @@ public class MappingDefinitionsProcess {
 		for (TuringTag commonTuringTag : commonIndexAttrs) {
 			// Doesn't repeat tags that exist in Ctd
 			if (commonTuringTag.getSrcMandatory() && !indexAttrsMapMerged.containsKey(commonTuringTag.getTagName())) {
-				ArrayList<TuringTag> turingTags = new ArrayList<TuringTag>();
+				List<TuringTag> turingTags = new ArrayList<TuringTag>();
 				turingTags.add(commonTuringTag);
 				indexAttrsMapMerged.put(commonTuringTag.getTagName(), turingTags);
 			}
@@ -190,134 +99,4 @@ public class MappingDefinitionsProcess {
 
 		return indexAttrsMapMerged;
 	}
-
-	// Read <index-attrs/> or <common-index-attrs/>
-	public static List<TuringTag> readIndexAttributeMappings(Element rootElement, String genericIndexAttrsTag) {
-		List<TuringTag> turingTagMap = new ArrayList<TuringTag>();
-		NodeList mappingList = rootElement.getElementsByTagName(genericIndexAttrsTag);
-		for (int i = 0; i < mappingList.getLength(); i++) {
-			// Load <srcAttr/> List
-			List<TuringTag> turingTagsPerSrcAttr = loadAtributesFromAttrsElement((Element) mappingList.item(i));
-			turingTagMap.addAll(turingTagsPerSrcAttr);
-		}
-
-		if (log.isDebugEnabled()) {
-			log.debug(String.format("%s Attributes", genericIndexAttrsTag));
-			for (TuringTag turingTag : turingTagMap)
-				log.debug(String.format(" Tag %s - Attribute %s", turingTag.getTagName(), turingTag.getSrcXmlName()));
-		}
-		return turingTagMap;
-	}
-
-	// Load <srcAttr/> List
-	public static List<TuringTag> loadAtributesFromAttrsElement(Element attrsElement) {
-		NodeList srcNodeList = attrsElement.getElementsByTagName("srcAttr");
-		List<TuringTag> turingTagsPerSrcAttr = new ArrayList<TuringTag>();
-
-		for (int i = 0; i < srcNodeList.getLength(); i++) {
-			Element srcAttrNode = (Element) srcNodeList.item(i);
-			if (srcAttrNode.hasAttributes() && (srcAttrNode.hasAttribute(TurXMLConstant.XML_NAME_ATT)
-					|| srcAttrNode.hasAttribute(TurXMLConstant.CLASS_NAME_ATT))) {
-				List<TuringTag> turingTags = loadSrcAttr(srcAttrNode);
-				if (turingTags != null)
-					turingTagsPerSrcAttr.addAll(turingTags);
-			}
-		}
-		return turingTagsPerSrcAttr;
-	}
-
-	// Read <srcAttr/>
-	public static List<TuringTag> loadSrcAttr(Element srcAttrNode) {
-		TuringTag turingTag = detectXMLAttributesOfSrcAttr(srcAttrNode);
-
-		if ((turingTag.getSrcXmlName() != null) || (turingTag.getSrcClassName() != null)) {
-			ArrayList<TuringTag> turingTags = readTagList(srcAttrNode, turingTag);
-			if (!turingTags.isEmpty()) {
-				return turingTags;
-			}
-		}
-		return Collections.emptyList();
-	}
-
-	private static TuringTag detectXMLAttributesOfSrcAttr(Element srcAttrNode) {
-		TuringTag turingTag = new TuringTag();
-		if (srcAttrNode.hasAttribute(TurXMLConstant.XML_NAME_ATT))
-			turingTag.setSrcXmlName(srcAttrNode.getAttribute(TurXMLConstant.XML_NAME_ATT));
-
-		if (srcAttrNode.hasAttribute(TurXMLConstant.CLASS_NAME_ATT))
-			turingTag.setSrcClassName(srcAttrNode.getAttribute(TurXMLConstant.CLASS_NAME_ATT));
-
-		if (srcAttrNode.hasAttribute(TurXMLConstant.VALUE_TYPE_ATT))
-			turingTag.setSrcAttributeType(srcAttrNode.getAttribute(TurXMLConstant.VALUE_TYPE_ATT));
-
-		if (srcAttrNode.hasAttribute(TurXMLConstant.RELATION_ATT))
-			turingTag.setSrcAttributeRelation(
-					Arrays.asList(srcAttrNode.getAttribute(TurXMLConstant.RELATION_ATT).split("\\.")));
-
-		if (srcAttrNode.hasAttribute(TurXMLConstant.MANDATORY_ATT)) {
-			if (log.isDebugEnabled())
-				log.debug(String.format("MANDATORY: %s", srcAttrNode.getAttribute(TurXMLConstant.MANDATORY_ATT)));
-
-			turingTag.setSrcMandatory(
-					Boolean.parseBoolean(srcAttrNode.getAttribute(TurXMLConstant.MANDATORY_ATT)));
-
-		} else
-			turingTag.setSrcMandatory(false);
-		if (log.isDebugEnabled())
-			log.debug(String.format("Mandatory: %b", turingTag.getSrcMandatory()));
-
-		readUniqueValuesAttr(srcAttrNode, turingTag);
-
-		return turingTag;
-	}
-
-	private static ArrayList<TuringTag> readTagList(Element srcAttrNode, TuringTag turingTag) {
-		NodeList tagList = (srcAttrNode).getElementsByTagName("tag");
-		if (log.isDebugEnabled()) {
-			log.debug("Node Parent: " + turingTag.getSrcXmlName());
-			log.debug("Node.getLength(): " + tagList.getLength());
-		}
-
-		ArrayList<TuringTag> turingTags = new ArrayList<TuringTag>();
-
-		for (int nodePos = 0; nodePos < tagList.getLength(); nodePos++) {
-			if (log.isDebugEnabled())
-				log.debug("Node: " + nodePos);
-
-			String tagName = null;
-			Node tagNode = tagList.item(nodePos);
-			tagName = tagNode.getFirstChild().getNodeValue();
-			if (log.isDebugEnabled())
-				log.debug("tagName:" + tagName);
-
-			if (tagName != null) {
-				turingTag.setTagName(tagName);
-				turingTags.add(turingTag);
-
-			}
-		}
-		return turingTags;
-	}
-
-	private static void readUniqueValuesAttr(Element srcAttrNode, TuringTag turingTag) {
-		if (srcAttrNode.hasAttribute(TurXMLConstant.UNIQUE_VALUES_ATT))
-			turingTag.setSrcUniqueValues(
-					Boolean.parseBoolean(srcAttrNode.getAttribute(TurXMLConstant.UNIQUE_VALUES_ATT)));
-		else
-			turingTag.setSrcUniqueValues(false);
-		if (log.isDebugEnabled())
-			log.debug(String.format("Unique Values: %b", turingTag.isSrcUniqueValues()));
-
-	}
-
-	public static MappingDefinitions getMappingDefinitions(IHandlerConfiguration config) {
-
-		MappingDefinitions mappingDefinitions = MappingDefinitionsProcess.loadMappings(config.getMappingsXML());
-
-		if (mappingDefinitions == null && log.isDebugEnabled())
-			log.error("Mapping definitions are not loaded properly from mappingsXML: " + config.getMappingsXML());
-
-		return mappingDefinitions;
-	}
-
 }

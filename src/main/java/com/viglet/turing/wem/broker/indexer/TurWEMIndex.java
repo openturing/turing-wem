@@ -30,9 +30,10 @@ import com.viglet.turing.wem.beans.TurMultiValue;
 import com.viglet.turing.wem.beans.TuringTag;
 import com.viglet.turing.wem.broker.attribute.TurWEMAttrXML;
 import com.viglet.turing.wem.config.IHandlerConfiguration;
-import com.viglet.turing.wem.mappers.CTDMappings;
-import com.viglet.turing.wem.mappers.MappingDefinitions;
 import com.viglet.turing.wem.mappers.MappingDefinitionsProcess;
+import com.viglet.turing.wem.mappers.MappingDefinitionsUtils;
+import com.viglet.turing.wem.mapping.MappingDefinition;
+import com.viglet.turing.wem.mapping.MappingDefinitions;
 import com.viglet.turing.wem.util.TuringUtils;
 import com.vignette.as.client.javabean.ContentInstance;
 import com.vignette.as.client.javabean.ManagedObject;
@@ -52,13 +53,14 @@ public class TurWEMIndex {
 			try {
 				ContentInstance contentInstance = (ContentInstance) mo;
 				String contentTypeName = contentInstance.getObjectType().getData().getName();
-
-				if (mappingDefinitions.isClassValidToIndex(contentInstance, config)) {
+				MappingDefinitionsUtils mappingDefinitionsUtils = new MappingDefinitionsUtils(mappingDefinitions);
+				
+				if (mappingDefinitionsUtils.isClassValidToIndex(contentInstance, config)) {
 					log.info(String.format("Viglet Turing indexer Processing Content Type: %s", contentTypeName));
 					return postIndex(generateXMLToIndex(contentInstance, config), config);
 
 				} else {
-					if (mappingDefinitions.hasClassValidToIndex(mo.getObjectType().getData().getName())
+					if (mappingDefinitionsUtils.hasClassValidToIndex(mo.getObjectType().getData().getName())
 							&& mo.getContentManagementId() != null && mo.getContentManagementId().getId() != null) {
 						String guid = mo.getContentManagementId().getId();
 						TurWEMDeindex.indexDelete(guid, config);
@@ -85,20 +87,19 @@ public class TurWEMIndex {
 		String contentTypeName = ci.getObjectType().getData().getName();
 
 		StringBuilder xml = new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\" ?><document>");
+		MappingDefinitionsUtils mappingDefinitionsUtils = new MappingDefinitionsUtils(mappingDefinitions);
+		MappingDefinition mappingDefinition = mappingDefinitionsUtils.getContentType(contentTypeName);
 
-		TurCTDMappingMap mappings = mappingDefinitions.getMappingDefinitions();
-
-		CTDMappings ctdMappings = mappings.get(contentTypeName);
-
-		if (ctdMappings == null) {
+		if (mappingDefinition == null) {
 			log.error(String.format("Mapping definition is not found in the mappingXML for the CTD: %s",
 					contentTypeName));
 		} else {
 			
 			xml.append(createXMLAttribute("id", ci.getContentManagementId().getId()));
 			
-			List<TurAttrDef> attributeDefs = prepareAttributeDefs(ci, config, mappingDefinitions, ctdMappings);
+			List<TurAttrDef> attributeDefs = prepareAttributeDefs(ci, config, mappingDefinitions);
 
+			
 			addAttributeDefsToXML(xml, attributeDefs);
 			addCategoriesToXML(ci, xml);
 
@@ -112,7 +113,7 @@ public class TurWEMIndex {
 	}
 
 	private static List<TurAttrDef> prepareAttributeDefs(ContentInstance ci, IHandlerConfiguration config,
-			MappingDefinitions mappingDefinitions, CTDMappings ctdMappings) throws Exception {
+			MappingDefinitions mappingDefinitions) throws Exception {
 		List<TurAttrDef> attributesDefs = new ArrayList<TurAttrDef>();
 
 		for (String tag : ctdMappings.getTagList()) {

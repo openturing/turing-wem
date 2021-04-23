@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+  <xs:element name="mappingDefinitions">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="misc-attrs"/>
+        <xs:element ref="common-index-attrs"/>
+        <xs:element maxOccurs="unbounded" ref="mappingDefinition"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="misc-attrs">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="attr"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="attr">
+    <xs:complexType>
+      <xs:attribute name="key" use="required" type="xs:NCName"/>
+      <xs:attribute name="value" use="required" type="xs:NMTOKEN"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="common-index-attrs">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="srcAttr"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="mappingDefinition">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="index-attrs"/>
+      </xs:sequence>
+      <xs:attribute name="contentType" use="required" type="xs:NCName"/>
+      <xs:attribute name="validToIndex"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="index-attrs">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="srcAttr"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="srcAttr">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="tag"/>
+      </xs:sequence>
+      <xs:attribute name="className"/>
+      <xs:attribute name="mandatory" type="xs:boolean"/>
+      <xs:attribute name="relation" type="xs:NCName"/>
+      <xs:attribute name="uniqueValues" type="xs:boolean"/>
+      <xs:attribute name="valueType" type="xs:NCName"/>
+      <xs:attribute name="xmlName" type="xs:NCName"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="tag" type="xs:NCName"/>
+</xs:schema>
