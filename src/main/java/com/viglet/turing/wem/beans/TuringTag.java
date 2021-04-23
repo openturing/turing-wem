@@ -36,7 +36,7 @@ public class TuringTag {
 	}
 
 	public TuringTag() {
-		 throw new UnsupportedOperationException();
+		super();
 	}
 
 	public String getSrcAttributeType() {

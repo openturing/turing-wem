@@ -87,7 +87,7 @@ public class MappingDefinitionsProcess {
 	public static TurCTDMappingMap readCTDMappings(Element rootElement) {
 		TurCTDMappingMap mappings = new TurCTDMappingMap();
 		List<TuringTag> commonIndexAttrs = readCommonIndexAttrs(rootElement);
-		readMappingDefinition(rootElement, mappings, commonIndexAttrs);
+		readMappingDefinitions(rootElement, mappings, commonIndexAttrs);
 		return mappings;
 	}
 
@@ -98,43 +98,48 @@ public class MappingDefinitionsProcess {
 		return commonIndexAttrs;
 	}
 
-	private static void readMappingDefinition(Element rootElement, TurCTDMappingMap mappings,
+	private static void readMappingDefinitions(Element rootElement, TurCTDMappingMap mappings,
 			List<TuringTag> commonIndexAttrs) {
 		// Get <mappingdefinition/> List
-		NodeList ctdMappingDefList = rootElement.getElementsByTagName(TurXMLConstant.TAG_MAPPING_DEF);
+		NodeList contentTypes = rootElement.getElementsByTagName(TurXMLConstant.TAG_MAPPING_DEF);
 
-		for (int i = 0; i < ctdMappingDefList.getLength(); i++) {
-			Element mappingDefinition = (Element) ctdMappingDefList.item(i);
+		for (int i = 0; i < contentTypes.getLength(); i++) {
+			readMappingDefinition(mappings, commonIndexAttrs, contentTypes, i);
+		}
+	}
 
-			// If it have contenttype attribute
-			if (mappingDefinition.hasAttribute(TurXMLConstant.TAG_ATT_MAPPING_DEF)) {
-				String ctdXmlName = mappingDefinition.getAttribute(TurXMLConstant.TAG_ATT_MAPPING_DEF);
+	private static void readMappingDefinition(TurCTDMappingMap mappings, List<TuringTag> commonIndexAttrs,
+			NodeList contentTypes, int i) {
+		Element mappingDefinition = (Element) contentTypes.item(i);
 
-				// Read <index-attr/>
-				List<TuringTag> indexAttrs = readIndexAttributeMappings((Element) ctdMappingDefList.item(i),
-						TurXMLConstant.TAG_INDEX_DATA);
+		// If it has content type attribute
+		if (mappingDefinition.hasAttribute(TurXMLConstant.TAG_ATT_MAPPING_DEF)) {
+			String ctdXmlName = mappingDefinition.getAttribute(TurXMLConstant.TAG_ATT_MAPPING_DEF);
 
-				// Merge CommonIndexAttrs into IndexAttrs
-				TuringTagMap turingTagMap = mergeCommonAttrs(commonIndexAttrs, indexAttrs);
+			// Read <index-attr/>
+			List<TuringTag> indexAttrs = readIndexAttributeMappings((Element) contentTypes.item(i),
+					TurXMLConstant.TAG_INDEX_DATA);
 
-				// Add attributes common and index attributes into CTDMapping
-				CTDMappings ctdMapping = new CTDMappings(turingTagMap);
+			// Merge CommonIndexAttrs into IndexAttrs
+			TuringTagMap turingTagMap = mergeCommonAttrs(commonIndexAttrs, indexAttrs);
 
-				// Set isValidToIndex
-				if (mappingDefinition.hasAttribute(TurXMLConstant.TAG_ATT_CLASS_VALID_TOINDEX))
-					ctdMapping.setClassValidToIndex(
-							mappingDefinition.getAttribute(TurXMLConstant.TAG_ATT_CLASS_VALID_TOINDEX));
+			// Add attributes common and index attributes into CTDMapping
+			CTDMappings ctdMapping = new CTDMappings(turingTagMap);
 
-				/// HashMap of CTDs
-				mappings.put(ctdXmlName, ctdMapping);
-				if (log.isDebugEnabled()) {
-					debuReadCTDMappings(mappings);
-				}
+			// Set isValidToIndex
+			if (mappingDefinition.hasAttribute(TurXMLConstant.TAG_ATT_CLASS_VALID_TOINDEX))
+				ctdMapping.setClassValidToIndex(
+						mappingDefinition.getAttribute(TurXMLConstant.TAG_ATT_CLASS_VALID_TOINDEX));
+
+			/// HashMap of CTDs
+			mappings.put(ctdXmlName, ctdMapping);
+			if (log.isDebugEnabled()) {
+				debugReadCTDMappings(mappings);
 			}
 		}
 	}
 
-	private static void debuReadCTDMappings(TurCTDMappingMap mappings) {
+	private static void debugReadCTDMappings(TurCTDMappingMap mappings) {
 		int index = 0;
 		for (Entry<String, CTDMappings> mappingEntry : mappings.entrySet()) {
 			log.debug(String.format("%d - MappingEntry CTD : %s", index, mappingEntry.getKey()));
@@ -168,7 +173,7 @@ public class MappingDefinitionsProcess {
 				if (commonIndexAttrs != null && turingTag.getSrcClassName() == null
 						&& commonIndexAttrMap.get(turingTag.getTagName()) != null) {
 					// Common always have one item
-					// Add ClassName of Common into Index, if doesn't have ClassName
+					// Add ClassName of Common into Index, if it doesn't have ClassName
 					turingTag.setSrcClassName(commonIndexAttrMap.get(turingTag.getTagName()).getSrcClassName());
 				}
 
@@ -194,10 +199,10 @@ public class MappingDefinitionsProcess {
 	// Read <index-attrs/> or <common-index-attrs/>
 	public static List<TuringTag> readIndexAttributeMappings(Element rootElement, String genericIndexAttrsTag) {
 		List<TuringTag> turingTagMap = new ArrayList<TuringTag>();
-		NodeList mappingList = rootElement.getElementsByTagName(genericIndexAttrsTag);
-		for (int i = 0; i < mappingList.getLength(); i++) {
+		NodeList attributes = rootElement.getElementsByTagName(genericIndexAttrsTag);
+		for (int i = 0; i < attributes.getLength(); i++) {
 			// Load <srcAttr/> List
-			List<TuringTag> turingTagsPerSrcAttr = loadAtributesFromAttrsElement((Element) mappingList.item(i));
+			List<TuringTag> turingTagsPerSrcAttr = loadAtributesFromAttrsElement((Element) attributes.item(i));
 			turingTagMap.addAll(turingTagsPerSrcAttr);
 		}
 
@@ -228,10 +233,10 @@ public class MappingDefinitionsProcess {
 
 	// Read <srcAttr/>
 	public static List<TuringTag> loadSrcAttr(Element srcAttrNode) {
-		TuringTag turingTag = detectXMLAttributesOfSrcAttr(srcAttrNode);
+		TuringTag turingTagCheck = detectXMLAttributesOfSrcAttr(srcAttrNode);
 
-		if ((turingTag.getSrcXmlName() != null) || (turingTag.getSrcClassName() != null)) {
-			ArrayList<TuringTag> turingTags = readTagList(srcAttrNode, turingTag);
+		if ((turingTagCheck.getSrcXmlName() != null) || (turingTagCheck.getSrcClassName() != null)) {
+			ArrayList<TuringTag> turingTags = readTagList(srcAttrNode);
 			if (!turingTags.isEmpty()) {
 				return turingTags;
 			}
@@ -271,16 +276,19 @@ public class MappingDefinitionsProcess {
 		return turingTag;
 	}
 
-	private static ArrayList<TuringTag> readTagList(Element srcAttrNode, TuringTag turingTag) {
+	private static ArrayList<TuringTag> readTagList(Element srcAttrNode) {
+		
 		NodeList tagList = (srcAttrNode).getElementsByTagName("tag");
-		if (log.isDebugEnabled()) {
-			log.debug("Node Parent: " + turingTag.getSrcXmlName());
-			log.debug("Node.getLength(): " + tagList.getLength());
-		}
-
+		
 		ArrayList<TuringTag> turingTags = new ArrayList<TuringTag>();
 
 		for (int nodePos = 0; nodePos < tagList.getLength(); nodePos++) {
+			TuringTag turingTag = detectXMLAttributesOfSrcAttr(srcAttrNode);
+			if (log.isDebugEnabled()) {
+				log.debug("Node Parent: " + turingTag.getSrcXmlName());
+				log.debug("Node.getLength(): " + tagList.getLength());
+			}
+
 			if (log.isDebugEnabled())
 				log.debug("Node: " + nodePos);
 

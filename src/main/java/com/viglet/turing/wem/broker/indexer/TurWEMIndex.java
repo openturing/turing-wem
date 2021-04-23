@@ -45,7 +45,7 @@ public class TurWEMIndex {
 	private TurWEMIndex() {
 		throw new IllegalStateException("TurWEMIndex");
 	}
-	
+
 	public static boolean indexCreate(ManagedObject mo, IHandlerConfiguration config) {
 		MappingDefinitions mappingDefinitions = MappingDefinitionsProcess.getMappingDefinitions(config);
 		if ((mappingDefinitions != null) && (mo != null) && (mo instanceof ContentInstance)) {
@@ -69,8 +69,7 @@ public class TurWEMIndex {
 								contentTypeName));
 				}
 			} catch (Exception e) {
-				log.error(String.format("Can't Create to Viglet Turing indexer: %s", e.getMessage()));
-				log.error(e);
+				log.error("Can't Create to Viglet Turing indexer.", e);
 			}
 		}
 		return false;
@@ -94,9 +93,9 @@ public class TurWEMIndex {
 			log.error(String.format("Mapping definition is not found in the mappingXML for the CTD: %s",
 					contentTypeName));
 		} else {
-			
+			log.info(String.format("Indexing Content ID: %s (%s)", ci.getContentManagementId().getId(), contentTypeName));
 			xml.append(createXMLAttribute("id", ci.getContentManagementId().getId()));
-			
+
 			List<TurAttrDef> attributeDefs = prepareAttributeDefs(ci, config, mappingDefinitions, ctdMappings);
 
 			addAttributeDefsToXML(xml, attributeDefs);
@@ -172,17 +171,21 @@ public class TurWEMIndex {
 	private static void addAttributeDefsToXML(StringBuilder xml, List<TurAttrDef> attributesDefs) {
 		// Create xml of attributesDefs
 		for (TurAttrDef turAttrDef : attributesDefs) {
-			if (log.isDebugEnabled()) {
-				log.debug("AttributeDef - TagName: " + turAttrDef.getTagName());
-				for (String string : turAttrDef.getMultiValue()) {
-					log.debug("AttributeDef - Value: " + string);
+			if (turAttrDef != null) {
+				if (log.isDebugEnabled()) {
+					log.debug("AttributeDef - TagName: " + turAttrDef.getTagName());
+					for (String string : turAttrDef.getMultiValue()) {
+						log.debug("AttributeDef - Value: " + string);
+					}
 				}
-
-			}
-
-			for (String value : turAttrDef.getMultiValue()) {
-				if ((value != null) && (value.trim().length() > 0))
-					xml.append(createXMLAttribute(turAttrDef.getTagName(), value));
+				if (turAttrDef.getMultiValue() != null && !turAttrDef.getMultiValue().isEmpty()) {
+					for (String value : turAttrDef.getMultiValue()) {
+						if ((value != null) && (value.trim().length() > 0))
+							xml.append(createXMLAttribute(turAttrDef.getTagName(), value));
+					}
+				} else {
+					log.warn(String.format("No attributes to index of %s tag.", turAttrDef.getTagName()));
+				}
 			}
 		}
 	}

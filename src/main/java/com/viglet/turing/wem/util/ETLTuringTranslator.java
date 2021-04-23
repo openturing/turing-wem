@@ -117,7 +117,7 @@ public class ETLTuringTranslator {
 	}
 
 	private String translateContentInstance(ManagedObject mo)
-			throws ApplicationException, RemoteException, ValidationException {
+			throws ApplicationException, RemoteException, ValidationException, AuthorizationException {
 		String chFurlName = "";
 		ChannelRef[] channelRefs;
 		String ciFurlName;
@@ -144,7 +144,7 @@ public class ETLTuringTranslator {
 		return moFurlName;
 	}
 
-	private Channel getChosenChannel(ChannelRef[] channelRefs, List<String> siteNames) {
+	private Channel getChosenChannel(ChannelRef[] channelRefs, List<String> siteNames) throws ApplicationException, ValidationException, RemoteException {
 		String siteName = null;
 		if (!siteNames.isEmpty())
 			siteName = this.chosenSite(siteNames);
@@ -161,7 +161,7 @@ public class ETLTuringTranslator {
 	}
 
 	private Channel channelsFromChosenSite(ChannelRef[] channelRefs, String siteName, boolean foundSite,
-			Channel chosenChannel) {
+			Channel chosenChannel) throws ApplicationException, ValidationException, RemoteException {
 		for (ChannelRef channelRef : channelRefs) {
 			for (SiteRef siteRef : channelRef.getChannel().getSiteRefs()) {
 				if (!foundSite && siteRef.getSite().getName().equals(siteName)) {
