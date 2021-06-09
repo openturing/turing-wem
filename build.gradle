@@ -52,7 +52,7 @@ dependencies {
     implementation group: 'com.beust', name: 'jcommander', version: '1.47'	
     implementation group: 'log4j', name: 'log4j', version: '1.2.7'
     implementation group: 'commons-httpclient', name: 'commons-httpclient', version: '3.1'
-	implementation 'com.github.alegauss:dummy-vgn:fe4f91c9bb'
+	implementation 'com.github.alegauss:dummy-vgn:1a42a92d66'
 	implementation group: 'com.github.openturing', name: 'turing-java-sdk', version: '0.3.3'
 }
 
@@ -67,11 +67,17 @@ jar {
    classifier = null
    version = 'all'
    exclude 'vgn-*.jar'
+   exclude 'castor-*.jar'
    exclude 'thirdparty-combined.jar'
      dependencies {
       exclude(dependency('log4j:log4j'))
+      exclude(dependency('org.apache.httpcomponents:httpcore'))
+      exclude(dependency('org.apache.httpcomponents:httpclient'))
       exclude(dependency('commons-httpclient:commons-httpclient'))
       exclude(dependency('com.github.alegauss:dummy-vgn'))
+      exclude(dependency('commons-codec:commons-codec'))
+      exclude(dependency('commons-logging:commons-logging'))
+      exclude(dependency('org.json:json'))
    }
 }
 
