@@ -17,6 +17,7 @@
 package com.viglet.turing.wem.broker.indexer;
 
 import com.viglet.turing.wem.config.IHandlerConfiguration;
+import com.vignette.as.client.javabean.ContentInstance;
 import com.vignette.as.client.javabean.ManagedObject;
 import com.vignette.logging.context.ContextLogger;
 
@@ -44,11 +45,11 @@ public class TurWEMIndexer {
 		return true;
 	}
 
-	public static boolean indexDelete(String guid, IHandlerConfiguration config) {
+	public static boolean indexDelete(ManagedObject mo, IHandlerConfiguration config) {
 		if (log.isDebugEnabled()) {
 			log.debug("Deleting Object in Viglet Turing index");
 		}
-		TurWEMDeindex.indexDelete(guid, config);
+		TurWEMDeindex.indexDelete((ContentInstance)mo, config);
 		return true;
 	}
 

@@ -16,51 +16,79 @@
  */
 package com.viglet.turing.wem.broker.indexer;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.http.HttpHeaders;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.viglet.turing.client.sn.job.TurSNJobAction;
+import com.viglet.turing.client.sn.job.TurSNJobItem;
+import com.viglet.turing.client.sn.job.TurSNJobItems;
 import com.viglet.turing.wem.config.IHandlerConfiguration;
 import com.viglet.turing.wem.util.TuringUtils;
+import com.vignette.as.client.common.AsLocaleData;
+import com.vignette.as.client.exception.ApplicationException;
+import com.vignette.as.client.javabean.ManagedObject;
 import com.vignette.logging.context.ContextLogger;
 
 public class TurWEMDeindex {
-	private static final ContextLogger log = ContextLogger.getLogger(TurWEMDeindex.class);
+	private static final ContextLogger logger = ContextLogger.getLogger(TurWEMDeindex.class);
 
 	private TurWEMDeindex() {
 		throw new IllegalStateException("TurWEMDeindex");
 	}
-	
+
 	// This method deletes the content to the Viglet Turing broker
-	public static boolean indexDelete(String guid, IHandlerConfiguration config) {
-		return indexDeleteParam("&id=" + guid, config);
-	}
+	public static void indexDelete(ManagedObject mo, IHandlerConfiguration config) {
+		final TurSNJobItems turSNJobItems = new TurSNJobItems();
+		final TurSNJobItem turSNJobItem = new TurSNJobItem();
+		turSNJobItem.setTurSNJobAction(TurSNJobAction.DELETE);
 
-	public static boolean indexDeleteByType(String typeName, IHandlerConfiguration config) {
-		return indexDeleteParam("&type=" + typeName, config);
-	}
-	
-	public static boolean indexDeleteParam(String param, IHandlerConfiguration config) {
-		boolean success = false;
+		Map<String, Object> attributes = new HashMap<String, Object>();
+		String guid = mo.getContentManagementId().getId();
+		attributes.put("id", guid);
+		turSNJobItem.setAttributes(attributes);
+		turSNJobItems.add(turSNJobItem);
 		try {
-			GetMethod get = new GetMethod(config.getTuringURL() + "/?action=delete&index=" + config.getIndex()
-					+ "&config=" + config.getConfig() + param);
-			TuringUtils.basicAuth(config, get);
-			HttpClient httpclient = new HttpClient();
-			int result = httpclient.executeMethod(get);
-			if (log.isDebugEnabled()) {
-				log.debug("Viglet Turing Delete Request URI:" + get.getURI());
-				log.debug("Viglet Turing indexer response HTTP Status Code is: " + result);
-				log.debug("Viglet Turing indexer response HTTP Result is: " + get.getResponseBodyAsString());
-			}
-			get.releaseConnection();
-			success = true;
 
-		} catch (Exception e) {
-
-			log.error("Can't DELETE in Viglet Turing index: " + e.getMessage());
+			AsLocaleData asLocaleData = null;
+			if (mo.getLocale() != null && mo.getLocale().getAsLocale() != null
+					&& mo.getLocale().getAsLocale().getData() != null)
+				asLocaleData = mo.getLocale().getAsLocale().getData();
+			TuringUtils.sendToTuring(turSNJobItems, config, asLocaleData);
+		} catch (IOException | ApplicationException e) {
+			logger.error(e);
 		}
+	}
 
-		return success;
+	public static void indexDeleteByType(String typeName, IHandlerConfiguration config) {
+		final TurSNJobItems turSNJobItems = new TurSNJobItems();
+		final TurSNJobItem turSNJobItem = new TurSNJobItem();
+		turSNJobItem.setTurSNJobAction(TurSNJobAction.DELETE);
+
+		Map<String, Object> attributes = new HashMap<String, Object>();
+		attributes.put("type", typeName);
+		turSNJobItem.setAttributes(attributes);
+		turSNJobItems.add(turSNJobItem);
+		try {
+			AsLocaleData asLocaleData = null;
+			TuringUtils.sendToTuring(turSNJobItems, config, asLocaleData);
+		} catch (IOException e) {
+			logger.error(e);
+		}
 	}
 }

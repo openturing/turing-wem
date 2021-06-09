@@ -18,13 +18,14 @@ package com.viglet.turing.wem.config;
 
 import java.util.List;
 
+import com.vignette.as.client.common.AsLocaleData;
+
 public interface IHandlerConfiguration {
 
     String getTuringURL();
-    String getIndex();
-    String getConfig();
-    String getLocale();
-    String getChannel();
+    String getSNSite();
+    String getSNSite(String locale);
+    String getSNSite(AsLocaleData asLocaleData);
     String getMappingsXML();
     List<String> getSitesAssocPriority();
     String getCDAContextName(); 

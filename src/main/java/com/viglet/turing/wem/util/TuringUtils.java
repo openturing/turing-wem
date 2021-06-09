@@ -16,6 +16,10 @@
  */
 package com.viglet.turing.wem.util;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -25,11 +29,20 @@ import java.util.List;
 import java.util.Set;
 import java.util.Map.Entry;
 
-import org.apache.commons.httpclient.HttpMethodBase;
+import org.apache.commons.httpclient.HttpMethod;
+import org.apache.http.HttpHeaders;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.viglet.turing.client.sn.job.TurSNJobItems;
 import com.viglet.turing.wem.beans.TuringTag;
 import com.viglet.turing.wem.beans.TuringTagMap;
 import com.viglet.turing.wem.config.IHandlerConfiguration;
+import com.vignette.as.client.common.AsLocaleData;
 import com.vignette.as.client.common.AttributeData;
 import com.vignette.as.client.common.AttributeDefinitionData;
 import com.vignette.as.client.common.DataType;
@@ -47,7 +60,7 @@ public class TuringUtils {
 	private TuringUtils() {
 		throw new IllegalStateException("TuringUtils");
 	}
-	
+
 	public static String listToString(List<String> stringList) {
 		StringBuilder sb = new StringBuilder();
 		int i = 0;
@@ -107,12 +120,63 @@ public class TuringUtils {
 			return adds[0];
 	}
 
-	public static void basicAuth(IHandlerConfiguration config, HttpMethodBase method) {
+	public static void basicAuth(IHandlerConfiguration config, HttpPost post) {
 		if (config.getLogin() != null && config.getLogin().trim().length() > 0) {
 			String auth = String.format("%s:%s", config.getLogin(), config.getPassword());
 			String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8));
 			String authHeader = "Basic " + encodedAuth;
-			method.setRequestHeader("Authorization", authHeader);
+			post.setHeader(HttpHeaders.AUTHORIZATION, authHeader);
 		}
 	}
+
+	public static void sendToTuring(TurSNJobItems turSNJobItems, IHandlerConfiguration config, AsLocaleData asLocale)
+			throws IOException {
+		CloseableHttpClient client = HttpClients.createDefault();
+		if (turSNJobItems.getTuringDocuments().size() > 0) {
+
+			String encoding = "UTF-8";
+
+			ObjectMapper mapper = new ObjectMapper();
+			String jsonResult = mapper.writeValueAsString(turSNJobItems);
+
+			Charset utf8Charset = Charset.forName("UTF-8");
+			Charset customCharset = Charset.forName(encoding);
+
+			ByteBuffer inputBuffer = ByteBuffer.wrap(jsonResult.getBytes());
+
+			// decode UTF-8
+			CharBuffer data = utf8Charset.decode(inputBuffer);
+
+			// encode
+			ByteBuffer outputBuffer = customCharset.encode(data);
+
+			byte[] outputData = new String(outputBuffer.array()).getBytes("UTF-8");
+			String jsonUTF8 = new String(outputData);
+
+			HttpPost httpPost = new HttpPost(
+					String.format("%s/api/sn/%s/import", config.getTuringURL(), config.getSNSite(asLocale)));
+
+			StringEntity entity = new StringEntity(new String(jsonUTF8), "UTF-8");
+			httpPost.setEntity(entity);
+			httpPost.setHeader("Accept", "application/json");
+			httpPost.setHeader("Content-type", "application/json");
+			httpPost.setHeader("Accept-Encoding", "UTF-8");
+
+			basicAuth(config, httpPost);
+
+			CloseableHttpResponse response = client.execute(httpPost);
+
+			if (log.isDebugEnabled()) {
+				log.debug(String.format("Viglet Turing Index Request URI: %s", httpPost.getURI()));
+				log.debug(String.format("JSON: %s", jsonResult));
+				log.debug(String.format("Viglet Turing indexer response HTTP result is: %s, for request uri: %s",
+						response.getStatusLine().getStatusCode(), httpPost.getURI()));
+				log.debug(String.format("Viglet Turing indexer response HTTP result is: %s",
+						((HttpMethod) httpPost).getResponseBodyAsString()));
+			}
+			turSNJobItems.getTuringDocuments().clear();
+
+		}
+	}
+
 }

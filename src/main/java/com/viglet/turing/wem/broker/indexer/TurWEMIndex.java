@@ -17,12 +17,23 @@
 package com.viglet.turing.wem.broker.indexer;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.methods.PostMethod;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+
+import com.viglet.turing.client.sn.job.TurSNJobAction;
+import com.viglet.turing.client.sn.job.TurSNJobItem;
+import com.viglet.turing.client.sn.job.TurSNJobItems;
 import com.viglet.turing.wem.beans.TurAttrDef;
 import com.viglet.turing.wem.beans.TurAttrDefContext;
 import com.viglet.turing.wem.beans.TurCTDMappingMap;
@@ -34,6 +45,7 @@ import com.viglet.turing.wem.mappers.CTDMappings;
 import com.viglet.turing.wem.mappers.MappingDefinitions;
 import com.viglet.turing.wem.mappers.MappingDefinitionsProcess;
 import com.viglet.turing.wem.util.TuringUtils;
+import com.vignette.as.client.common.AsLocaleData;
 import com.vignette.as.client.javabean.ContentInstance;
 import com.vignette.as.client.javabean.ManagedObject;
 import com.vignette.logging.context.ContextLogger;
@@ -51,17 +63,21 @@ public class TurWEMIndex {
 		if ((mappingDefinitions != null) && (mo != null) && (mo instanceof ContentInstance)) {
 			try {
 				ContentInstance contentInstance = (ContentInstance) mo;
+
 				String contentTypeName = contentInstance.getObjectType().getData().getName();
 
+				AsLocaleData asLocaleData = null;
+				if ((contentInstance.getLocale() != null) && (contentInstance.getLocale().getAsLocale() != null)
+						&& (contentInstance.getLocale().getAsLocale().getData() != null))
+					asLocaleData = contentInstance.getLocale().getAsLocale().getData();
 				if (mappingDefinitions.isClassValidToIndex(contentInstance, config)) {
 					log.info(String.format("Viglet Turing indexer Processing Content Type: %s", contentTypeName));
-					return postIndex(generateXMLToIndex(contentInstance, config), config);
+					return postIndex(generateXMLToIndex(contentInstance, config), asLocaleData, config);
 
 				} else {
 					if (mappingDefinitions.hasClassValidToIndex(mo.getObjectType().getData().getName())
-							&& mo.getContentManagementId() != null && mo.getContentManagementId().getId() != null) {
-						String guid = mo.getContentManagementId().getId();
-						TurWEMDeindex.indexDelete(guid, config);
+							&& mo.getContentManagementId() != null) {
+						TurWEMDeindex.indexDelete(mo, config);
 					}
 					if (log.isDebugEnabled())
 						log.debug(String.format(
@@ -93,7 +109,8 @@ public class TurWEMIndex {
 			log.error(String.format("Mapping definition is not found in the mappingXML for the CTD: %s",
 					contentTypeName));
 		} else {
-			log.info(String.format("Indexing Content ID: %s (%s)", ci.getContentManagementId().getId(), contentTypeName));
+			log.info(String.format("Indexing Content ID: %s (%s)", ci.getContentManagementId().getId(),
+					contentTypeName));
 			xml.append(createXMLAttribute("id", ci.getContentManagementId().getId()));
 
 			List<TurAttrDef> attributeDefs = prepareAttributeDefs(ci, config, mappingDefinitions, ctdMappings);
@@ -190,32 +207,57 @@ public class TurWEMIndex {
 		}
 	}
 
-	public static boolean postIndex(String xml, IHandlerConfiguration config) throws IOException {
+	public static boolean postIndex(String xml, AsLocaleData asLocaleData, IHandlerConfiguration config)
+			throws IOException {
 
-		PostMethod post = new PostMethod(
-				config.getTuringURL() + "/?index=" + config.getIndex() + "&config=" + config.getConfig());
-
-		post.setParameter("data", xml);
-		post.setParameter("index", config.getIndex());
-		post.setParameter("config", config.getConfig());
-		post.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=utf-8");
-		post.setRequestHeader("Accept-Encoding", "UTF-8");
-
-		TuringUtils.basicAuth(config, post);
-
-		HttpClient httpclient = new HttpClient();
-		int result = httpclient.executeMethod(post);
-
-		if (log.isDebugEnabled()) {
-			log.debug(String.format("Viglet Turing Index Request URI: %s", post.getURI()));
-			log.debug(String.format("Using the index: %s, config: %s", config.getIndex(), config.getConfig()));
-			log.debug(String.format("XML: %s", xml));
-			log.debug(String.format("Viglet Turing indexer response HTTP result is: %s, for request uri: %s", result,
-					post.getURI()));
-			log.debug(
-					String.format("Viglet Turing indexer response HTTP result is: %s", post.getResponseBodyAsString()));
+		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		DocumentBuilder builder;
+		Document document = null;
+		try {
+			builder = factory.newDocumentBuilder();
+			document = builder.parse(new InputSource(new StringReader(xml)));
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		post.releaseConnection();
+
+		if (document != null) {
+			Element element = document.getDocumentElement();
+
+			NodeList nodes = element.getChildNodes();
+			TurSNJobItems turSNJobItems = new TurSNJobItems();
+			TurSNJobItem turSNJobItem = new TurSNJobItem();
+			Map<String, Object> attributes = new HashMap<String, Object>();
+			for (int i = 0; i < nodes.getLength(); i++) {
+
+				String nodeName = nodes.item(i).getNodeName();
+				if (attributes.containsKey(nodeName)) {
+					if (!(attributes.get(nodeName) instanceof ArrayList)) {
+						List<Object> attributeValues = new ArrayList<Object>();
+						attributeValues.add(attributes.get(nodeName));
+						attributeValues.add(nodes.item(i).getTextContent());
+
+						attributes.put(nodeName, attributeValues);
+						turSNJobItem.setAttributes(attributes);
+					} else {
+						@SuppressWarnings("unchecked")
+						List<Object> attributeValues = (List<Object>) attributes.get(nodeName);
+						attributeValues.add(nodes.item(i).getTextContent());
+						attributes.put(nodeName, attributeValues);
+					}
+				} else {
+					attributes.put(nodeName, nodes.item(i).getTextContent());
+
+				}
+			}
+
+			turSNJobItem.setTurSNJobAction(TurSNJobAction.CREATE);
+			turSNJobItem.setAttributes(attributes);
+			turSNJobItems.add(turSNJobItem);
+
+			TuringUtils.sendToTuring(turSNJobItems, config, asLocaleData);
+			;
+		}
+
 		log.info("Viglet Turing indexer Processed Content Type.");
 		return true;
 	}

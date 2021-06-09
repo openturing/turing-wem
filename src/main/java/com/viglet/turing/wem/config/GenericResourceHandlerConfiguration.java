@@ -16,6 +16,7 @@
  */
 package com.viglet.turing.wem.config;
 
+import com.vignette.as.client.common.AsLocaleData;
 import com.vignette.as.config.ConfigUtil;
 import com.vignette.config.client.common.ConfigException;
 import com.vignette.logging.context.ContextLogger;
@@ -36,10 +37,7 @@ public class GenericResourceHandlerConfiguration implements IHandlerConfiguratio
 	public static final String RESOURCE_NAME = "VigletTuring";
 
 	private String turingURL;
-	private String index;
-	private String config;
-	private String locale;
-	private String channel;
+	private String snSite;
 	private String mappingsXML;
 	private String cdaContextName;
 	private String cdaURLPrefix;
@@ -66,23 +64,8 @@ public class GenericResourceHandlerConfiguration implements IHandlerConfiguratio
 	}
 
 	@Override
-	public String getConfig() {
-		return config;
-	}
-
-	@Override
-	public String getIndex() {
-		return index;
-	}
-
-	@Override
-	public String getChannel() {
-		return channel;
-	}
-
-	@Override
-	public String getLocale() {
-		return locale;
+	public String getSNSite() {
+		return snSite;
 	}
 
 	@Override
@@ -198,16 +181,16 @@ public class GenericResourceHandlerConfiguration implements IHandlerConfiguratio
 	private void parseProperties(Properties properties) {
 
 		turingURL = properties.getProperty("turing.url");
-		config = properties.getProperty("turing.config");
-		index = properties.getProperty("turing.index");
-		locale = properties.getProperty("turing.locale");
-		channel = properties.getProperty("turing.channel");
 		mappingsXML = properties.getProperty("turing.mappingsxml", "/CTD-Turing-Mappings.xml");
+		snSite = properties.getProperty("sn.default.site");
+
 		cdaContextName = properties.getProperty("cda.default.contextname");
 		cdaURLPrefix = properties.getProperty("cda.default.urlprefix");
 		cdaFormatName = properties.getProperty("cda.default.formatname");
 		sitesAssociationPriority = properties.getProperty("sites.association.priority");
 		isLive = Boolean.parseBoolean(properties.getProperty("otsn.isLive", "false"));
+		login = properties.getProperty("turing.login");
+		password = properties.getProperty("turing.password");
 	}
 
 	@Override
@@ -217,6 +200,27 @@ public class GenericResourceHandlerConfiguration implements IHandlerConfiguratio
 
 	public void setLive(boolean isLive) {
 		this.isLive = isLive;
+	}
+
+	@Override
+	public String getSNSite(String locale) {
+		return getDynamicProperties("sn." + locale + ".site");
+	}
+
+	@Override
+	public String getSNSite(AsLocaleData asLocaleData) {
+		String snSite = null;
+		if (asLocaleData != null && asLocaleData.getCountry() != null && asLocaleData.getLanguage() != null) {
+			String locale = String.format("%s_%s", asLocaleData.getLanguage(), asLocaleData.getCountry());
+			snSite = getSNSite(locale);
+		} else if (asLocaleData != null && asLocaleData.getLanguage() != null) {
+			snSite = getSNSite(asLocaleData.getCountry());
+		}
+		if (snSite == null) {
+			snSite = getSNSite("default");
+		}
+
+		return snSite;
 	}
 
 	@Override
@@ -255,7 +259,7 @@ public class GenericResourceHandlerConfiguration implements IHandlerConfiguratio
 			return Collections.emptyList();
 
 	}
-	
+
 	@Override
 	public String getLogin() {
 		return login;
@@ -273,5 +277,5 @@ public class GenericResourceHandlerConfiguration implements IHandlerConfiguratio
 	public void setPassword(String password) {
 		this.password = password;
 	}
-	
+
 }

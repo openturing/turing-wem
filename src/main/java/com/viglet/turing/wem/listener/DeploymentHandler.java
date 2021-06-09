@@ -43,9 +43,9 @@ public class DeploymentHandler {
         log.debug("Viglet Turing Indexing Update: " + result);
     }
 
-    public void onManagedObjectDelete(AsDeploymentEvent deploymentEvent) {
-        String guid = deploymentEvent.getManagedObjectVCMRef().getId();
-        boolean result = TurWEMIndexer.indexDelete(guid, config);
+    public void onManagedObjectDelete(ManagedObject mo, AsDeploymentEvent deploymentEvent) {
+       
+        boolean result = TurWEMIndexer.indexDelete(mo, config);
         log.debug("Viglet Turing Indexing Delete: " + result);
     }
 
