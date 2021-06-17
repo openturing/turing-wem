@@ -17,10 +17,11 @@
 package com.viglet.turing.wem.config;
 
 public class TurXMLConstant {
-	
+
 	private TurXMLConstant() {
 		throw new IllegalStateException("TurXMLConstant");
 	}
+
 	public static final String VALUE_TYPE_ATT = "valueType";
 	public static final String XML_NAME_ATT = "xmlName";
 	public static final String CLASS_NAME_ATT = "className";
@@ -33,4 +34,5 @@ public class TurXMLConstant {
 	public static final String TAG_ATT_CUSTOM_CLASS = "customClassName";
 	public static final String TAG_ATT_CLASS_VALID_TOINDEX = "validToIndex";
 	public static final String UNIQUE_VALUES_ATT = "uniqueValues";
+	public static final String TEXT_VALUE_ATT = "textValue";
 }
