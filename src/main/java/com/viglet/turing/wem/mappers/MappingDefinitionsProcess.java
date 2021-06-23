@@ -37,7 +37,6 @@ import com.viglet.turing.wem.beans.TurCTDMappingMap;
 import com.viglet.turing.wem.beans.TuringTag;
 import com.viglet.turing.wem.beans.TuringTagMap;
 import com.viglet.turing.wem.config.IHandlerConfiguration;
-import com.viglet.turing.wem.config.TurXMLConstant;
 import com.vignette.logging.context.ContextLogger;
 
 // Open and process Mappping XML File structure
